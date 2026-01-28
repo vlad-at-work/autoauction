@@ -65,7 +65,7 @@ export default function MiniAppInquiryFormPage() {
       comment: undefined,
       consent: false,
     },
-    mode: 'onTouched',
+    mode: 'onChange',
   });
 
   const watchedModel = useWatch({ control: form.control, name: 'model' });
@@ -362,8 +362,8 @@ export default function MiniAppInquiryFormPage() {
             </FieldGroup>
 
             <FieldGroup>
-              <Field orientation="horizontal" data-invalid={!!form.formState.errors.consent}>
-                <FieldLabel className="w-full">
+              <Field orientation="vertical" data-invalid={!!form.formState.errors.consent}>
+                <FieldLabel className="w-full cursor-pointer">
                   <Checkbox
                     checked={watchedConsent === true}
                     onCheckedChange={(checked) => {
@@ -384,7 +384,10 @@ export default function MiniAppInquiryFormPage() {
             </FieldGroup>
 
             <div className="flex flex-col gap-3">
-              <Button type="submit" disabled={submitState.status === 'submitting'}>
+              <Button
+                type="submit"
+                disabled={submitState.status === 'submitting' || !form.formState.isValid}
+              >
                 {submitState.status === 'submitting' ? 'Отправляем…' : 'Отправить'}
               </Button>
 
