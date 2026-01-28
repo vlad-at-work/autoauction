@@ -51,7 +51,7 @@ export default function MiniAppInquiryFormPage() {
     resolver: zodResolver(inquiryCreateSchema),
     defaultValues: {
       platform: 'max',
-      platformUserId: '',
+      platformUserId: `test_user_${randomSuffix}`,
       platformUserName: undefined,
       name: `Олег${randomSuffix}`,
       email: 'gleb@ub.am',
@@ -68,12 +68,13 @@ export default function MiniAppInquiryFormPage() {
     mode: 'onChange',
   });
 
-  const watchedModel = useWatch({ control: form.control, name: 'model' });
-  const watchedSubmodel = useWatch({ control: form.control, name: 'submodel' });
-  const watchedTransmission = useWatch({ control: form.control, name: 'transmission' });
-  const watchedColor = useWatch({ control: form.control, name: 'color' });
-  const watchedStatus = useWatch({ control: form.control, name: 'status' });
-  const watchedConsent = useWatch({ control: form.control, name: 'consent' });
+  const watched = useWatch({ control: form.control });
+  const watchedModel = watched.model;
+  const watchedSubmodel = watched.submodel;
+  const watchedTransmission = watched.transmission;
+  const watchedColor = watched.color;
+  const watchedStatus = watched.status;
+  const watchedConsent = watched.consent;
 
   useEffect(() => {
     let cancelled = false;
@@ -173,6 +174,10 @@ export default function MiniAppInquiryFormPage() {
           )}
 
           <form className="flex flex-col gap-6" onSubmit={form.handleSubmit(onSubmit)}>
+            <input type="hidden" {...form.register('platform')} />
+            <input type="hidden" {...form.register('platformUserId')} />
+            <input type="hidden" {...form.register('platformUserName')} />
+
             <FieldGroup>
               <Field orientation="vertical" data-invalid={!!form.formState.errors.name}>
                 <FieldLabel htmlFor="name">Имя</FieldLabel>
@@ -367,7 +372,7 @@ export default function MiniAppInquiryFormPage() {
                   <Checkbox
                     checked={watchedConsent === true}
                     onCheckedChange={(checked) => {
-                      form.setValue('consent', checked === true, { shouldValidate: true });
+                      form.setValue('consent', checked === true);
                     }}
                   />
                   <div className="flex flex-col">
