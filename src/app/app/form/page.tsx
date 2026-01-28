@@ -108,17 +108,18 @@ export default function MiniAppInquiryFormPage() {
     };
   }, [form]);
 
-  const submodels = useMemo(
-    () => MODEL_SUBMODELS[(watchedModel ?? 'Niva Travel') as Model],
-    [watchedModel]
-  );
+  const submodels = useMemo(() => {
+    const model = watchedModel || watchedModel === '' ? watchedModel : 'Niva Travel';
+    return model ? MODEL_SUBMODELS[model as Model] || [] : [];
+  }, [watchedModel]);
 
   useEffect(() => {
+    if (!watchedModel || submodels.length === 0) return;
     const current = watchedSubmodel ?? form.getValues('submodel');
     if (!submodels.includes(current as never)) {
       form.setValue('submodel', submodels[0], { shouldValidate: true });
     }
-  }, [form, submodels, watchedSubmodel]);
+  }, [form, submodels, watchedSubmodel, watchedModel]);
 
   async function onSubmit(values: InquiryCreateInput) {
     setSubmitState({ status: 'submitting' });
