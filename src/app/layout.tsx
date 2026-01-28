@@ -2,11 +2,7 @@ import type { Metadata } from 'next';
 import { Figtree } from 'next/font/google';
 import './globals.css';
 
-const figtree = Figtree({
-  variable: '--font-figtree',
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-});
+const fontSans = Figtree({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
   title: 'AutoAuction - Лучшие предложения от дилеров Lada',
@@ -19,8 +15,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru">
-      <body className={`${figtree.variable} font-sans antialiased`}>{children}</body>
+    <html lang="ru" className={fontSans.variable}>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }

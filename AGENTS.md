@@ -6,7 +6,11 @@ AutoAuction is a car inquiry/offer platform connecting buyers (via Max/Telegram)
 
 ## Important
 
-Do not create more .mds unless specifically asked
+- Do not commit unless specifically asked
+- Do not push unless specifically asked
+- Do not create more .mds unless specifically asked
+  End messages with Files changed/added, lines affected, commit message (even if there is no commit)
+  Always end with a brief (1-2 line) summary of changes / reasoning why.
 
 ## Tech Stack
 
