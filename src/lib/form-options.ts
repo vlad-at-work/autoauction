@@ -1,40 +1,40 @@
 export const MODEL_SUBMODELS = {
-  Granta: ['sedan', 'liftbek', 'khetchbek', 'universal', 'Cross', 'Drive Active'],
-  Vesta: ['sedan', 'Cross', 'SW', 'SW Cross'],
+  Granta: ['седан', 'лифтбек', 'хэтчбек', 'универсал', 'Cross', 'Drive Active'],
+  Vesta: ['седан', 'Cross', 'SW', 'SW Cross'],
   'Niva Travel': ['Niva Travel'],
-  Largus: ['universal', 'Cross', 'furgon'],
+  Largus: ['универсал', 'Cross', 'фургон'],
   'Niva Legend': ['Niva Legend', 'Niva Legend Bronto'],
-  Iskra: ['sedan', 'SW', 'SW Cross'],
+  Iskra: ['седан', 'SW', 'SW Cross'],
   Aura: ['Aura'],
   Sportivnye: [
     'Vesta Sportline',
     'Vesta SW Sportline',
     'Granta Sportline',
-    'Granta Sportline liftbek',
-    'Granta Sport sedan',
-    'Granta Sport liftbek',
+    'Granta Sportline лифтбек',
+    'Granta Sport седан',
+    'Granta Sport лифтбек',
   ],
 } as const;
 
 export const STATUS_OPTIONS = [
-  'Podderzhivayu rossiyskikh boytsov v zone SVO',
-  'Uchastnik SVO / mobilizovannyy',
-  'Semya uchastnika SVO',
-  'Veteran boyevykh deystviy',
-  'Drugoye',
+  'Поддерживаю российских бойцов в зоне СВО',
+  'Участник СВО / мобилизованный',
+  'Семья участника СВО',
+  'Ветеран боевых действий',
+  'Другое',
 ] as const;
 
-export const TRANSMISSION_OPTIONS = ['Mekhanika', 'Avtomat', 'Ne vazhno'] as const;
+export const TRANSMISSION_OPTIONS = ['Механика', 'Автомат', 'Не важно'] as const;
 
 export const COLOR_OPTIONS = [
-  'Belyy',
-  'Chernyy',
-  'Serebristyy',
-  'Seryy',
-  'Krasnyy',
-  'Siniy',
-  'Korichnevyy',
-  'Drugoye',
+  'Белый',
+  'Черный',
+  'Серебристый',
+  'Серый',
+  'Красный',
+  'Синий',
+  'Коричневый',
+  'Другое',
 ] as const;
 
 export type Model = keyof typeof MODEL_SUBMODELS;

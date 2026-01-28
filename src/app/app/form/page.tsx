@@ -58,8 +58,8 @@ export default function MiniAppInquiryFormPage() {
       phone: '89266754826',
       model: 'Niva Travel',
       submodel: 'Niva Travel',
-      transmission: 'Ne vazhno',
-      color: 'Serebristyy',
+      transmission: 'Не важно',
+      color: 'Серебристый',
       status: STATUS_OPTIONS[0],
       statusDescription: undefined,
       comment: undefined,
@@ -324,7 +324,7 @@ export default function MiniAppInquiryFormPage() {
 
               <Field
                 orientation="vertical"
-                className={cn(watchedStatus === 'Drugoye' ? 'block' : 'hidden')}
+                className={cn(watchedStatus === 'Другое' ? 'block' : 'hidden')}
                 data-invalid={!!form.formState.errors.statusDescription}
               >
                 <FieldLabel htmlFor="statusDescription">Описание статуса</FieldLabel>
