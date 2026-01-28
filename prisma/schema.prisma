@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Platform {
+  MAX
+  TELEGRAM
+}
+
+model Buyer {
+  id               String   @id @default(cuid())
+  platform         Platform
+  platformUserId   String
+  platformUserName String?
+
+  name  String
+  email String?
+  phone String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  inquiries Inquiry[]
+
+  @@unique([platform, platformUserId])
+}
+
+model Inquiry {
+  id     String @id @default(cuid())
+  buyer  Buyer  @relation(fields: [buyerId], references: [id])
+  buyerId String
+
+  status            String?
+  statusDescription String?
+
+  model        String
+  submodel     String
+  transmission String
+  color        String
+  comment      String?
+
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  offers Offer[]
+
+  @@index([expiresAt])
+  @@index([buyerId])
+}
+
+model Dealer {
+  id       String @id @default(cuid())
+  username String @unique
+  name     String?
+  active   Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  offers Offer[]
+}
+
+model Offer {
+  id       String @id @default(cuid())
+  inquiry  Inquiry @relation(fields: [inquiryId], references: [id])
+  inquiryId String
+
+  dealer  Dealer @relation(fields: [dealerId], references: [id])
+  dealerId String
+
+  price   Int
+  comment String?
+
+  acceptedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([inquiryId, dealerId])
+  @@index([inquiryId])
+  @@index([dealerId])
+}
+

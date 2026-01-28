@@ -1,0 +1,92 @@
+import Link from 'next/link';
+import { headers } from 'next/headers';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { prisma } from '@/lib/db';
+import { parseBasicAuthHeader } from '@/lib/auth/basic';
+
+export default async function DealerInquiriesPage() {
+  const headerList = await headers();
+  const auth = parseBasicAuthHeader(headerList.get('authorization'));
+
+  const dealer = auth
+    ? await prisma.dealer.upsert({
+        where: { username: auth.username },
+        update: {},
+        create: { username: auth.username },
+        select: { id: true },
+      })
+    : null;
+
+  const now = new Date();
+
+  const inquiries = await prisma.inquiry.findMany({
+    where: { expiresAt: { gt: now } },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      model: true,
+      submodel: true,
+      transmission: true,
+      color: true,
+      createdAt: true,
+      expiresAt: true,
+      offers: dealer
+        ? {
+            where: { dealerId: dealer.id },
+            select: { id: true, price: true, updatedAt: true, acceptedAt: true },
+          }
+        : { select: { id: true } },
+    },
+  });
+
+  return (
+    <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-10">
+      <Card>
+        <CardHeader>
+          <CardTitle>Заявки (активные 24 часа)</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          {inquiries.length === 0 ? (
+            <p className="text-muted-foreground text-sm">Пока нет активных заявок.</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {inquiries.map((inquiry) => {
+                const offer = inquiry.offers[0];
+                const hoursLeft = Math.max(
+                  0,
+                  Math.ceil((inquiry.expiresAt.getTime() - now.getTime()) / (60 * 60 * 1000))
+                );
+
+                return (
+                  <li key={inquiry.id}>
+                    <Link
+                      href={`/dealer/inquiries/${inquiry.id}`}
+                      className="hover:bg-muted/40 flex flex-col gap-1 rounded-lg border px-4 py-3 transition-colors"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="font-medium">
+                          {inquiry.model} • {inquiry.submodel}
+                        </div>
+                        <div className="text-muted-foreground text-xs">Осталось: ~{hoursLeft}ч</div>
+                      </div>
+                      <div className="text-muted-foreground text-sm">
+                        {inquiry.transmission} • {inquiry.color}
+                      </div>
+                      {offer && (
+                        <div className="text-sm">
+                          Ваше предложение: <span className="font-medium">{offer.price}</span>
+                          {offer.acceptedAt ? ' (принято)' : ''}
+                        </div>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

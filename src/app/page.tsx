@@ -1,9 +1,9 @@
 import { Car } from 'lucide-react';
 
-const BOT_NAME = 'id5010035001_bot';
+import { getMaxBotUrl } from '@/lib/bot-links';
 
 export default function Home() {
-  const maxBotUrl = `https://max.ru/${BOT_NAME}?startapp=inquiry`;
+  const maxBotUrl = getMaxBotUrl('inquiry');
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-zinc-950">
