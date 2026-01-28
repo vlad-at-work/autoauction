@@ -1,112 +1,113 @@
 'use client';
 
+import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useDebugMode } from '@/contexts/DebugModeContext';
+import { checkBuyerExists } from '@/lib/api/buyers';
 
-type MiniAppUserState = {
-  platformUserId?: string;
-  platformUserName?: string;
-  isInWebApp: boolean;
-};
+type LoadingState = 'loading' | 'checking' | 'redirect';
 
 export default function MiniAppHomePage() {
   const router = useRouter();
-  const [user, setUser] = useState<MiniAppUserState>({ isInWebApp: false });
+  const { debugMode } = useDebugMode();
+  const [loadingState, setLoadingState] = useState<LoadingState>('loading');
 
   useEffect(() => {
     let cancelled = false;
 
-    const tryLoadUser = (attempt = 0) => {
-      if (cancelled) return;
+    const detectUserAndRedirect = async () => {
+      // If in debug mode, use debug user ID
+      if (debugMode.enabled && debugMode.mockUserId) {
+        setLoadingState('checking');
+        await new Promise((resolve) => setTimeout(resolve, 500)); // Brief delay for UX
+        const { exists } = await checkBuyerExists(debugMode.mockUserId, 'max', debugMode);
 
-      const webApp = window.WebApp;
-      const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString();
-      const platformUserName = webApp?.initDataUnsafe?.user?.name;
-      const startParam = webApp?.initDataUnsafe?.start_param;
+        if (cancelled) return;
 
-      if (webApp || attempt === 40) {
-        setUser({
-          isInWebApp: !!webApp,
-          platformUserId,
-          platformUserName,
-        });
-
-        if (startParam === 'inquiry') {
+        setLoadingState('redirect');
+        if (exists) {
+          router.replace('/app/dashboard');
+        } else {
           router.replace('/app/form');
         }
         return;
       }
 
-      window.setTimeout(() => tryLoadUser(attempt + 1), 50);
+      // Production flow: poll for Max WebApp
+      const tryLoadUser = async (attempt = 0) => {
+        if (cancelled) return;
+
+        const webApp = window.WebApp;
+        const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString();
+        const startParam = webApp?.initDataUnsafe?.start_param;
+
+        if (webApp && platformUserId) {
+          setLoadingState('checking');
+
+          // Check if buyer exists
+          const { exists } = await checkBuyerExists(platformUserId, 'max');
+
+          if (cancelled) return;
+
+          setLoadingState('redirect');
+
+          // Handle deep link
+          if (startParam === 'inquiry') {
+            router.replace('/app/form');
+            return;
+          }
+
+          // Redirect based on existence
+          if (exists) {
+            router.replace('/app/dashboard');
+          } else {
+            router.replace('/app/form');
+          }
+          return;
+        }
+
+        // Max not loaded yet, keep polling
+        if (attempt < 40) {
+          window.setTimeout(() => tryLoadUser(attempt + 1), 50);
+        } else {
+          // Timeout - show error or debug option
+          setLoadingState('loading');
+        }
+      };
+
+      tryLoadUser();
     };
 
-    tryLoadUser();
+    detectUserAndRedirect();
 
     return () => {
       cancelled = true;
     };
-  }, [router]);
-
-  const title = useMemo(() => {
-    if (!user.isInWebApp) return 'Откройте эту страницу в Max';
-    if (user.platformUserName) return `Привет, ${user.platformUserName}!`;
-    return 'AutoAuction';
-  }, [user.isInWebApp, user.platformUserName]);
+  }, [router, debugMode]);
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col gap-6 px-4 py-10">
-      <Card>
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          {user.isInWebApp ? (
-            <div className="rounded-lg border bg-muted/30 p-3 text-sm">
-              <div className="mb-2 font-semibold">Max WebApp Debug Info:</div>
-              <div className="space-y-1 font-mono text-xs">
-                <div>
-                  <span className="text-muted-foreground">User ID:</span>{' '}
-                  <span className="text-foreground">{user.platformUserId ?? '—'}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Username:</span>{' '}
-                  <span className="text-foreground">{user.platformUserName ?? '—'}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Platform:</span>{' '}
-                  <span className="text-foreground">{window.WebApp?.platform ?? '—'}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Version:</span>{' '}
-                  <span className="text-foreground">{window.WebApp?.version ?? '—'}</span>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-sm">
-              Эта страница предназначена для мини‑приложения Max. Откройте её через бота.
-            </p>
-          )}
+    <div className="flex min-h-screen w-full items-center justify-center px-4">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 className="text-muted-foreground size-12 animate-spin" />
+        <p className="text-muted-foreground text-sm">
+          {loadingState === 'loading' && 'Загрузка...'}
+          {loadingState === 'checking' && 'Проверка аккаунта...'}
+          {loadingState === 'redirect' && 'Перенаправление...'}
+        </p>
 
-          <div className="flex gap-3">
-            <Button asChild>
-              <Link href="/app/form">Заполнить заявку</Link>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => window.WebApp?.close?.()}
-              disabled={!user.isInWebApp}
-            >
-              Закрыть
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-8 flex flex-col items-center gap-2">
+            <p className="text-muted-foreground text-xs">Режим разработки</p>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/app/debug">Открыть Debug режим</Link>
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
     </div>
   );
 }
