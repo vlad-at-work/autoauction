@@ -39,7 +39,7 @@ export default async function DealerInquiryPage({ params }: { params: { id: stri
             where: { dealerId: dealer.id },
             select: { id: true, price: true, comment: true, acceptedAt: true },
           }
-        : { select: { id: true } },
+        : false,
     },
   });
 

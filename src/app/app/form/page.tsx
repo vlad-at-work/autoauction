@@ -357,9 +357,11 @@ export default function MiniAppInquiryFormPage() {
                 <FieldLabel className="w-full">
                   <Checkbox
                     checked={watchedConsent === true}
-                    onCheckedChange={(checked) =>
-                      form.setValue('consent', checked === true, { shouldValidate: true })
-                    }
+                    onCheckedChange={(checked) => {
+                      if (checked === true) {
+                        form.setValue('consent', true, { shouldValidate: true });
+                      }
+                    }}
                   />
                   <div className="flex flex-col">
                     <div className="text-sm font-medium">Согласие</div>

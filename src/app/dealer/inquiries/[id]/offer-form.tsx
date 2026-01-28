@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
 const offerSchema = z.object({
-  price: z.coerce.number().int().positive(),
+  price: z.number().int().positive(),
   comment: z.string().max(1000).optional(),
 });
 

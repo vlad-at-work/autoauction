@@ -36,7 +36,7 @@ export default async function DealerInquiriesPage() {
             where: { dealerId: dealer.id },
             select: { id: true, price: true, updatedAt: true, acceptedAt: true },
           }
-        : { select: { id: true } },
+        : false,
     },
   });
 
