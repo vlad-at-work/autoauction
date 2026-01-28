@@ -51,10 +51,10 @@ export async function POST(request: Request) {
 
     const existing = await prisma.offer.findUnique({
       where: { inquiryId_dealerId: { inquiryId, dealerId: dealer.id } },
-      select: { id: true, acceptedAt: true },
+      select: { id: true, leads: { select: { id: true }, take: 1 } },
     });
 
-    if (existing?.acceptedAt) {
+    if (existing && existing.leads.length > 0) {
       return NextResponse.json({ error: 'Offer already accepted' }, { status: 409 });
     }
 

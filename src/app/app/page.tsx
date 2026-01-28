@@ -65,10 +65,25 @@ export default function MiniAppHomePage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {user.isInWebApp ? (
-            <div className="text-muted-foreground text-sm">
-              <div>
-                <span className="font-medium text-foreground">User ID:</span>{' '}
-                {user.platformUserId ?? '—'}
+            <div className="rounded-lg border bg-muted/30 p-3 text-sm">
+              <div className="mb-2 font-semibold">Max WebApp Debug Info:</div>
+              <div className="space-y-1 font-mono text-xs">
+                <div>
+                  <span className="text-muted-foreground">User ID:</span>{' '}
+                  <span className="text-foreground">{user.platformUserId ?? '—'}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Username:</span>{' '}
+                  <span className="text-foreground">{user.platformUserName ?? '—'}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Platform:</span>{' '}
+                  <span className="text-foreground">{window.WebApp?.platform ?? '—'}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Version:</span>{' '}
+                  <span className="text-foreground">{window.WebApp?.version ?? '—'}</span>
+                </div>
               </div>
             </div>
           ) : (

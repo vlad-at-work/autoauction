@@ -33,23 +33,20 @@ export async function POST(request: Request) {
         },
         update: {
           platformUserName: input.platformUserName,
-          name: input.name,
-          email: input.email,
-          phone: input.phone,
         },
         create: {
           platform,
           platformUserId: input.platformUserId,
           platformUserName: input.platformUserName,
-          name: input.name,
-          email: input.email,
-          phone: input.phone,
         },
       });
 
       return tx.inquiry.create({
         data: {
           buyerId: buyer.id,
+          name: input.name,
+          email: input.email,
+          phone: input.phone,
           status: input.status,
           statusDescription: input.statusDescription,
           model: input.model,

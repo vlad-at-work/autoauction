@@ -18,10 +18,6 @@ model Buyer {
   platformUserId   String
   platformUserName String?
 
-  name  String
-  email String?
-  phone String
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -31,9 +27,13 @@ model Buyer {
 }
 
 model Inquiry {
-  id     String @id @default(cuid())
-  buyer  Buyer  @relation(fields: [buyerId], references: [id])
+  id      String @id @default(cuid())
+  buyer   Buyer  @relation(fields: [buyerId], references: [id])
   buyerId String
+
+  name  String
+  email String?
+  phone String
 
   status            String?
   statusDescription String?
@@ -66,23 +66,36 @@ model Dealer {
 }
 
 model Offer {
-  id       String @id @default(cuid())
-  inquiry  Inquiry @relation(fields: [inquiryId], references: [id])
+  id        String  @id @default(cuid())
+  inquiry   Inquiry @relation(fields: [inquiryId], references: [id])
   inquiryId String
 
-  dealer  Dealer @relation(fields: [dealerId], references: [id])
+  dealer   Dealer @relation(fields: [dealerId], references: [id])
   dealerId String
 
   price   Int
   comment String?
 
-  acceptedAt DateTime?
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  leads Lead[]
 
   @@unique([inquiryId, dealerId])
   @@index([inquiryId])
   @@index([dealerId])
 }
 
+model Lead {
+  id      String @id @default(cuid())
+  offer   Offer  @relation(fields: [offerId], references: [id])
+  offerId String
+
+  buyerName  String
+  buyerEmail String?
+  buyerPhone String
+
+  acceptedAt DateTime @default(now())
+
+  @@index([offerId])
+}

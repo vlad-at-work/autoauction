@@ -34,7 +34,7 @@ export default async function DealerInquiriesPage() {
       offers: dealer
         ? {
             where: { dealerId: dealer.id },
-            select: { id: true, price: true, updatedAt: true, acceptedAt: true },
+            select: { id: true, price: true, updatedAt: true, leads: { select: { id: true } } },
           }
         : false,
     },
@@ -52,7 +52,9 @@ export default async function DealerInquiriesPage() {
           ) : (
             <ul className="flex flex-col gap-2">
               {inquiries.map((inquiry) => {
-                const offer = inquiry.offers[0];
+                const offer = inquiry.offers[0] as unknown as
+                  | { id: string; price: number; updatedAt: Date; leads: { id: string }[] }
+                  | undefined;
                 const hoursLeft = Math.max(
                   0,
                   Math.ceil((inquiry.expiresAt.getTime() - now.getTime()) / (60 * 60 * 1000))
@@ -76,7 +78,7 @@ export default async function DealerInquiriesPage() {
                       {offer && (
                         <div className="text-sm">
                           Ваше предложение: <span className="font-medium">{offer.price}</span>
-                          {offer.acceptedAt ? ' (принято)' : ''}
+                          {offer.leads.length > 0 ? ' (принято)' : ''}
                         </div>
                       )}
                     </Link>

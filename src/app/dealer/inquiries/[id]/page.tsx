@@ -37,7 +37,7 @@ export default async function DealerInquiryPage({ params }: { params: { id: stri
       offers: dealer
         ? {
             where: { dealerId: dealer.id },
-            select: { id: true, price: true, comment: true, acceptedAt: true },
+            select: { id: true, price: true, comment: true, leads: { select: { id: true } } },
           }
         : false,
     },
@@ -47,7 +47,9 @@ export default async function DealerInquiryPage({ params }: { params: { id: stri
 
   const now = new Date();
   const isExpired = inquiry.expiresAt <= now;
-  const offer = inquiry.offers[0];
+  const offer = inquiry.offers[0] as unknown as
+    | { id: string; price: number; comment: string | null; leads: { id: string }[] }
+    | undefined;
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-10">
@@ -87,7 +89,7 @@ export default async function DealerInquiryPage({ params }: { params: { id: stri
             <div className="rounded-md border border-muted bg-muted/30 px-3 py-2 text-sm">
               Заявка истекла — предложения больше не принимаются.
             </div>
-          ) : offer?.acceptedAt ? (
+          ) : offer && offer.leads.length > 0 ? (
             <div className="rounded-md border border-muted bg-muted/30 px-3 py-2 text-sm">
               Пользователь уже принял ваше предложение — редактирование отключено.
             </div>
@@ -99,7 +101,7 @@ export default async function DealerInquiryPage({ params }: { params: { id: stri
               inquiryId={inquiry.id}
               defaultPrice={offer?.price}
               defaultComment={offer?.comment}
-              disabled={isExpired || !!offer?.acceptedAt}
+              disabled={isExpired || (offer ? offer.leads.length > 0 : false)}
             />
           </div>
 
