@@ -260,14 +260,16 @@ export default function MiniAppInquiryFormPage() {
                     className="grid gap-2"
                   >
                     {TRANSMISSION_OPTIONS.map((value) => (
-                      <label
+                      <div
                         key={value}
-                        htmlFor={`transmission-${value}`}
                         className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm cursor-pointer hover:bg-accent"
+                        onClick={() =>
+                          form.setValue('transmission', value as never, { shouldValidate: true })
+                        }
                       >
-                        <RadioGroupItem id={`transmission-${value}`} value={value} />
+                        <RadioGroupItem value={value} />
                         <span>{value}</span>
-                      </label>
+                      </div>
                     ))}
                   </RadioGroup>
                   <FieldError errors={[form.formState.errors.transmission]} />
