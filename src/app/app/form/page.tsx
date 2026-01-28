@@ -252,6 +252,7 @@ export default function MiniAppInquiryFormPage() {
                 <FieldLabel>Коробка</FieldLabel>
                 <FieldContent>
                   <RadioGroup
+                    name="transmission"
                     value={watchedTransmission}
                     onValueChange={(value) =>
                       form.setValue('transmission', value as never, { shouldValidate: true })
@@ -262,7 +263,7 @@ export default function MiniAppInquiryFormPage() {
                       <label
                         key={value}
                         htmlFor={`transmission-${value}`}
-                        className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm cursor-pointer"
+                        className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm cursor-pointer hover:bg-accent"
                       >
                         <RadioGroupItem id={`transmission-${value}`} value={value} />
                         <span>{value}</span>
@@ -360,9 +361,7 @@ export default function MiniAppInquiryFormPage() {
                   <Checkbox
                     checked={watchedConsent === true}
                     onCheckedChange={(checked) => {
-                      if (checked === true) {
-                        form.setValue('consent', true, { shouldValidate: true });
-                      }
+                      form.setValue('consent', checked === true, { shouldValidate: true });
                     }}
                   />
                   <div className="flex flex-col">
