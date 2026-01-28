@@ -63,7 +63,7 @@ export default function MiniAppInquiryFormPage() {
       status: STATUS_OPTIONS[0],
       statusDescription: undefined,
       comment: undefined,
-      consent: true,
+      consent: false,
     },
     mode: 'onTouched',
   });
@@ -261,9 +261,10 @@ export default function MiniAppInquiryFormPage() {
                     {TRANSMISSION_OPTIONS.map((value) => (
                       <label
                         key={value}
-                        className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
+                        htmlFor={`transmission-${value}`}
+                        className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm cursor-pointer"
                       >
-                        <RadioGroupItem value={value} />
+                        <RadioGroupItem id={`transmission-${value}`} value={value} />
                         <span>{value}</span>
                       </label>
                     ))}
