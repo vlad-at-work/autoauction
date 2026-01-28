@@ -62,6 +62,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(inquiry);
   } catch (err) {
+    console.error('Inquiry creation error:', err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Internal error' },
       { status: 500 }
