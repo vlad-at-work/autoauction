@@ -2,6 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 
@@ -44,6 +45,7 @@ type SubmitState =
   | { status: 'error'; message: string };
 
 export default function MiniAppInquiryFormPage() {
+  const router = useRouter();
   const [submitState, setSubmitState] = useState<SubmitState>({ status: 'idle' });
   const [randomSuffix] = useState(() => Math.floor(Math.random() * 10000));
 
@@ -148,7 +150,7 @@ export default function MiniAppInquiryFormPage() {
       }
 
       setSubmitState({ status: 'success', inquiryId: json.id });
-      window.WebApp?.close?.();
+      router.push('/app/dashboard');
     } catch (err) {
       setSubmitState({
         status: 'error',
