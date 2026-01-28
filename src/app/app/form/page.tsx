@@ -56,8 +56,8 @@ export default function MiniAppInquiryFormPage() {
       name: `Олег${randomSuffix}`,
       email: 'gleb@ub.am',
       phone: '89266754826',
-      model: 'Niva Travel',
-      submodel: 'Niva Travel',
+      model: '',
+      submodel: '',
       transmission: 'Не важно',
       color: 'Серебристый',
       status: STATUS_OPTIONS[0],
@@ -368,15 +368,16 @@ export default function MiniAppInquiryFormPage() {
 
             <FieldGroup>
               <Field orientation="vertical" data-invalid={!!form.formState.errors.consent}>
-                <FieldLabel className="w-full cursor-pointer">
+                <FieldLabel className="w-full cursor-pointer flex gap-3 items-start">
                   <Checkbox
+                    className="size-6 mt-1 shrink-0"
                     checked={watchedConsent === true}
                     onCheckedChange={(checked) => {
                       form.setValue('consent', checked === true);
                     }}
                   />
-                  <div className="flex flex-col">
-                    <div className="text-sm font-medium">Согласие</div>
+                  <div className="flex flex-col gap-1">
+                    <div className="text-base font-medium">Согласие</div>
                     <FieldDescription>
                       Я согласен(на) на обработку данных для получения предложений от дилеров.
                     </FieldDescription>
@@ -391,6 +392,7 @@ export default function MiniAppInquiryFormPage() {
             <div className="flex flex-col gap-3">
               <Button
                 type="submit"
+                className="h-12 text-base"
                 disabled={submitState.status === 'submitting' || !form.formState.isValid}
               >
                 {submitState.status === 'submitting' ? 'Отправляем…' : 'Отправить'}
