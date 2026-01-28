@@ -4,6 +4,11 @@
 
 AutoAuction is a car inquiry/offer platform connecting buyers (via Max/Telegram) with dealers.
 
+## Hint for running with node 20:
+
+export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && nvm use v20.19.6 && cd /Users/vlad/Documents/\_projects/\_glebproj/autoauction && pkill -f "next dev" 2>/dev/null; sleep 1; bun run dev > /tmp/next-dev.log 2>&1 &
+sleep 5 && tail -50 /tmp/next-dev.log
+
 ## Important
 
 - Do not commit unless specifically asked

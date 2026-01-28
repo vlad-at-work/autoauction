@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
 import { Figtree } from 'next/font/google';
+import { Toaster } from 'sonner';
+
+import { DebugModeProvider } from '@/contexts/DebugModeContext';
 import './globals.css';
 
 const fontSans = Figtree({ subsets: ['latin'], variable: '--font-sans' });
@@ -64,7 +67,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" className={fontSans.variable}>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <DebugModeProvider>
+          {children}
+          <Toaster />
+        </DebugModeProvider>
+      </body>
     </html>
   );
 }
