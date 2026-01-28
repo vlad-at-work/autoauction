@@ -17,7 +17,7 @@ import {
   FieldLabel,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+
 import {
   Select,
   SelectContent,
@@ -251,27 +251,31 @@ export default function MiniAppInquiryFormPage() {
               <Field orientation="vertical" data-invalid={!!form.formState.errors.transmission}>
                 <FieldLabel>Коробка</FieldLabel>
                 <FieldContent>
-                  <RadioGroup
-                    name="transmission"
-                    value={watchedTransmission}
-                    onValueChange={(value) =>
-                      form.setValue('transmission', value as never, { shouldValidate: true })
-                    }
-                    className="grid gap-2"
-                  >
-                    {TRANSMISSION_OPTIONS.map((value) => (
+                  <div className="grid gap-2">
+                    {TRANSMISSION_OPTIONS.map((option) => (
                       <div
-                        key={value}
+                        key={option}
                         className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm cursor-pointer hover:bg-accent"
                         onClick={() =>
-                          form.setValue('transmission', value as never, { shouldValidate: true })
+                          form.setValue('transmission', option as never, { shouldValidate: true })
                         }
                       >
-                        <RadioGroupItem value={value} />
-                        <span>{value}</span>
+                        <div
+                          className={cn(
+                            'flex size-4 rounded-full border shrink-0 items-center justify-center',
+                            watchedTransmission === option
+                              ? 'bg-primary border-primary'
+                              : 'border-input'
+                          )}
+                        >
+                          {watchedTransmission === option && (
+                            <div className="size-2 rounded-full bg-white" />
+                          )}
+                        </div>
+                        <span>{option}</span>
                       </div>
                     ))}
-                  </RadioGroup>
+                  </div>
                   <FieldError errors={[form.formState.errors.transmission]} />
                 </FieldContent>
               </Field>
