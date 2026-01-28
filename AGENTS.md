@@ -4,6 +4,10 @@
 
 AutoAuction is a car inquiry/offer platform connecting buyers (via Max/Telegram) with dealers.
 
+## Important
+
+Do not create more .mds unless specifically asked
+
 ## Tech Stack
 
 - **Runtime**: Bun (use `bun` instead of `npm`/`yarn`)

@@ -1,6 +1,6 @@
 import { Car } from 'lucide-react';
 
-const BOT_NAME = 'autoauction_bot'; // TODO: Replace with actual bot name
+const BOT_NAME = 'id5010035001_bot';
 
 export default function Home() {
   const maxBotUrl = `https://max.ru/${BOT_NAME}?startapp=inquiry`;
