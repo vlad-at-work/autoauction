@@ -21,7 +21,7 @@ export default function InquiryDetailPage() {
   const [inquiry, setInquiry] = useState<MockInquiry | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const inquiryId = params.id as string;
+  const inquiryId = params.inquiryId as string;
 
   useEffect(() => {
     let cancelled = false;
