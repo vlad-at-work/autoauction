@@ -45,6 +45,7 @@ type SubmitState =
 
 export default function MiniAppInquiryFormPage() {
   const [submitState, setSubmitState] = useState<SubmitState>({ status: 'idle' });
+  const [randomSuffix] = useState(() => Math.floor(Math.random() * 10000));
 
   const form = useForm<InquiryCreateInput>({
     resolver: zodResolver(inquiryCreateSchema),
@@ -52,9 +53,9 @@ export default function MiniAppInquiryFormPage() {
       platform: 'max',
       platformUserId: '',
       platformUserName: undefined,
-      name: '',
-      email: undefined,
-      phone: '',
+      name: `Олег${randomSuffix}`,
+      email: 'gleb@ub.am',
+      phone: '89266754826',
       model: 'Niva Travel',
       submodel: 'Niva Travel',
       transmission: 'Ne vazhno',
