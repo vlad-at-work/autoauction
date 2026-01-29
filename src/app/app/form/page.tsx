@@ -34,7 +34,6 @@ import {
   MODEL_SUBMODELS,
   STATUS_OPTIONS,
   TRANSMISSION_OPTIONS,
-  type Model,
 } from '@/lib/form-options';
 import { inquiryCreateSchema, type InquiryCreateInput } from '@/lib/schemas/inquiry';
 
@@ -58,8 +57,6 @@ export default function MiniAppInquiryFormPage() {
       name: `Олег${randomSuffix}`,
       email: 'gleb@ub.am',
       phone: '89266754826',
-      model: '',
-      submodel: '',
       transmission: 'Не важно',
       color: 'Серебристый',
       status: STATUS_OPTIONS[0],
@@ -111,8 +108,8 @@ export default function MiniAppInquiryFormPage() {
   }, [form]);
 
   const submodels = useMemo(() => {
-    const model = watchedModel || watchedModel === '' ? watchedModel : 'Niva Travel';
-    return model ? MODEL_SUBMODELS[model as Model] || [] : [];
+    if (!watchedModel) return [];
+    return MODEL_SUBMODELS[watchedModel] ?? [];
   }, [watchedModel]);
 
   useEffect(() => {

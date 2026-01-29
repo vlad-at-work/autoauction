@@ -2,7 +2,8 @@
 
 ## Extremely important
 
-Start all coding sessions with `nvm use 22`
+- Start all coding sessions with `nvm use 22`
+- Before committing, `bun run build` needs to succeed.
 
 ## Project Overview
 
@@ -20,7 +21,6 @@ sleep 5 && tail -50 /tmp/next-dev.log
 - Do not create more .mds unless specifically asked
   End messages with Files changed/added, lines affected, commit message (even if there is no commit)
   Always end with a brief (1-2 line) summary of changes / reasoning why.
-- Before committing, `bun run dev`, then kill the process
 
 ## Tech Stack
 

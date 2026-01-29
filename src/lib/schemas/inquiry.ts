@@ -25,9 +25,9 @@ export const inquiryCreateSchema = z
     transmission: z.enum(TRANSMISSION_OPTIONS),
     color: z.enum(COLOR_OPTIONS),
     comment: z.string().max(1000, 'Максимум 1000 символов').optional(),
-    consent: z.literal(true, {
-      errorMap: () => ({ message: 'Необходимо дать согласие на обработку данных' }),
-    }),
+    consent: z
+      .boolean()
+      .refine((value) => value, { message: 'Необходимо дать согласие на обработку данных' }),
   })
   .superRefine((value, ctx) => {
     const allowedSubmodels = MODEL_SUBMODELS[value.model];
