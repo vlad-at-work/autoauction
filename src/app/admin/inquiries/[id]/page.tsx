@@ -40,26 +40,26 @@ export default async function InquiryDetailPage({ params }: { params: Params }) 
         <Button asChild variant="ghost" size="sm">
           <Link href="/admin/inquiries">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
+            Назад
           </Link>
         </Button>
-        <h1 className="text-2xl font-bold">Inquiry Details</h1>
+        <h1 className="text-2xl font-bold">Информация о заявке</h1>
         <Badge variant={isExpired ? 'secondary' : 'default'}>
-          {isExpired ? 'Expired' : 'Active'}
+          {isExpired ? 'Истекла' : 'Активна'}
         </Badge>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Inquiry Information</CardTitle>
+            <CardTitle>Данные заявки</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-2 text-sm">
               <span className="text-muted-foreground">ID:</span>
               <span className="font-mono">{inquiry.id}</span>
 
-              <span className="text-muted-foreground">Buyer:</span>
+              <span className="text-muted-foreground">Покупатель:</span>
               <Link
                 href={`/admin/buyers/${inquiry.buyerId}`}
                 className="text-primary hover:underline"
@@ -67,50 +67,50 @@ export default async function InquiryDetailPage({ params }: { params: Params }) 
                 {inquiry.buyer.platformUserName || inquiry.buyer.platformUserId}
               </Link>
 
-              <span className="text-muted-foreground">Name:</span>
+              <span className="text-muted-foreground">Имя:</span>
               <span>{inquiry.name}</span>
 
-              <span className="text-muted-foreground">Phone:</span>
+              <span className="text-muted-foreground">Телефон:</span>
               <span>{inquiry.phone}</span>
 
               <span className="text-muted-foreground">Email:</span>
               <span>{inquiry.email || '-'}</span>
 
-              <span className="text-muted-foreground">Model:</span>
+              <span className="text-muted-foreground">Модель:</span>
               <span>
                 {inquiry.model} {inquiry.submodel}
               </span>
 
-              <span className="text-muted-foreground">Transmission:</span>
+              <span className="text-muted-foreground">Коробка передач:</span>
               <span>{inquiry.transmission}</span>
 
-              <span className="text-muted-foreground">Color:</span>
+              <span className="text-muted-foreground">Цвет:</span>
               <span>{inquiry.color}</span>
 
               {inquiry.status && (
                 <>
-                  <span className="text-muted-foreground">Status:</span>
+                  <span className="text-muted-foreground">Статус:</span>
                   <span>{inquiry.status}</span>
                 </>
               )}
 
               {inquiry.comment && (
                 <>
-                  <span className="text-muted-foreground">Comment:</span>
+                  <span className="text-muted-foreground">Комментарий:</span>
                   <span>{inquiry.comment}</span>
                 </>
               )}
 
-              <span className="text-muted-foreground">Created:</span>
+              <span className="text-muted-foreground">Создана:</span>
               <span>{format(inquiry.createdAt, 'dd.MM.yyyy HH:mm')}</span>
 
-              <span className="text-muted-foreground">Expires:</span>
+              <span className="text-muted-foreground">Истекает:</span>
               <span>{format(inquiry.expiresAt, 'dd.MM.yyyy HH:mm')}</span>
             </div>
 
             <div className="pt-4 border-t">
               <DeleteDialog
-                entityName="Inquiry"
+                entityName="Заявка"
                 entityId={inquiry.id}
                 onDelete={deleteInquiry}
                 redirectTo="/admin/inquiries"
@@ -121,11 +121,11 @@ export default async function InquiryDetailPage({ params }: { params: Params }) 
 
         <Card>
           <CardHeader>
-            <CardTitle>Offers ({inquiry.offers.length})</CardTitle>
+            <CardTitle>Предложения ({inquiry.offers.length})</CardTitle>
           </CardHeader>
           <CardContent>
             {inquiry.offers.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No offers yet</p>
+              <p className="text-muted-foreground text-sm">Пока нет предложений</p>
             ) : (
               <div className="space-y-2">
                 {inquiry.offers.map((offer) => (

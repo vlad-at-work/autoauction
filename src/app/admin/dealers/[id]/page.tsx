@@ -39,44 +39,44 @@ export default async function DealerDetailPage({ params }: { params: Params }) {
         <Button asChild variant="ghost" size="sm">
           <Link href="/admin/dealers">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
+            Назад
           </Link>
         </Button>
-        <h1 className="text-2xl font-bold">Dealer Details</h1>
+        <h1 className="text-2xl font-bold">Информация о дилере</h1>
         <Badge variant={dealer.active ? 'default' : 'secondary'}>
-          {dealer.active ? 'Active' : 'Inactive'}
+          {dealer.active ? 'Активен' : 'Неактивен'}
         </Badge>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Dealer Information</CardTitle>
+            <CardTitle>Данные дилера</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-2 text-sm">
               <span className="text-muted-foreground">ID:</span>
               <span className="font-mono">{dealer.id}</span>
 
-              <span className="text-muted-foreground">Username:</span>
+              <span className="text-muted-foreground">Имя пользователя:</span>
               <span>{dealer.username}</span>
 
-              <span className="text-muted-foreground">Name:</span>
+              <span className="text-muted-foreground">Имя:</span>
               <span>{dealer.name || '-'}</span>
 
-              <span className="text-muted-foreground">Total Offers:</span>
+              <span className="text-muted-foreground">Всего предложений:</span>
               <span>{dealer._count.offers}</span>
 
-              <span className="text-muted-foreground">Created:</span>
+              <span className="text-muted-foreground">Создан:</span>
               <span>{format(dealer.createdAt, 'dd.MM.yyyy HH:mm')}</span>
 
-              <span className="text-muted-foreground">Updated:</span>
+              <span className="text-muted-foreground">Обновлён:</span>
               <span>{format(dealer.updatedAt, 'dd.MM.yyyy HH:mm')}</span>
             </div>
 
             <div className="pt-4 border-t">
               <DeleteDialog
-                entityName="Dealer"
+                entityName="Дилер"
                 entityId={dealer.id}
                 onDelete={deleteDealer}
                 redirectTo="/admin/dealers"
@@ -87,11 +87,11 @@ export default async function DealerDetailPage({ params }: { params: Params }) {
 
         <Card>
           <CardHeader>
-            <CardTitle>Recent Offers ({dealer.offers.length})</CardTitle>
+            <CardTitle>Последние предложения ({dealer.offers.length})</CardTitle>
           </CardHeader>
           <CardContent>
             {dealer.offers.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No offers yet</p>
+              <p className="text-muted-foreground text-sm">Пока нет предложений</p>
             ) : (
               <div className="space-y-2">
                 {dealer.offers.map((offer) => (

@@ -29,17 +29,17 @@ export default async function AdminDashboardPage() {
   const stats = await getStats();
 
   const cards = [
-    { label: 'Total Buyers', value: stats.buyersCount, icon: Users },
-    { label: 'Total Inquiries', value: stats.inquiriesCount, icon: FileText },
-    { label: 'Active Inquiries', value: stats.activeInquiriesCount, icon: FileText },
-    { label: 'Total Dealers', value: stats.dealersCount, icon: Store },
-    { label: 'Total Offers', value: stats.offersCount, icon: Tag },
-    { label: 'Total Leads', value: stats.leadsCount, icon: UserCheck },
+    { label: 'Всего покупателей', value: stats.buyersCount, icon: Users },
+    { label: 'Всего заявок', value: stats.inquiriesCount, icon: FileText },
+    { label: 'Активных заявок', value: stats.activeInquiriesCount, icon: FileText },
+    { label: 'Всего дилеров', value: stats.dealersCount, icon: Store },
+    { label: 'Всего предложений', value: stats.offersCount, icon: Tag },
+    { label: 'Всего лидов', value: stats.leadsCount, icon: UserCheck },
   ];
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Dashboard</h1>
+      <h1 className="mb-6 text-2xl font-bold">Дашборд</h1>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {cards.map((card) => (
           <Card key={card.label}>

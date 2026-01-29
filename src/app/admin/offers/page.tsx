@@ -35,30 +35,30 @@ export default async function OffersPage({ searchParams }: { searchParams: Searc
     { key: 'id', label: 'ID', render: (o: OfferWithRelations) => o.id.slice(0, 8) + '...' },
     {
       key: 'inquiry',
-      label: 'Inquiry',
+      label: 'Заявка',
       render: (o: OfferWithRelations) => `${o.inquiry.model} ${o.inquiry.submodel}`,
     },
     {
       key: 'dealer',
-      label: 'Dealer',
+      label: 'Дилер',
       render: (o: OfferWithRelations) => o.dealer.name || o.dealer.username,
     },
     {
       key: 'price',
-      label: 'Price',
+      label: 'Цена',
       render: (o: OfferWithRelations) => `${o.price.toLocaleString('ru-RU')} ₽`,
     },
-    { key: 'leads', label: 'Leads', render: (o: OfferWithRelations) => o._count.leads },
+    { key: 'leads', label: 'Лиды', render: (o: OfferWithRelations) => o._count.leads },
     {
       key: 'comment',
-      label: 'Comment',
+      label: 'Комментарий',
       render: (o: OfferWithRelations) => (
         <span className="max-w-[200px] truncate block">{o.comment || '-'}</span>
       ),
     },
     {
       key: 'createdAt',
-      label: 'Created',
+      label: 'Создано',
       render: (o: OfferWithRelations) => format(o.createdAt, 'dd.MM.yyyy HH:mm'),
     },
   ];
@@ -66,7 +66,7 @@ export default async function OffersPage({ searchParams }: { searchParams: Searc
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Offers</h1>
+        <h1 className="text-2xl font-bold">Предложения</h1>
       </div>
       <DataTable
         data={offers}

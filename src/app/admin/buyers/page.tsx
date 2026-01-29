@@ -59,7 +59,7 @@ export default async function BuyersPage({ searchParams }: { searchParams: Searc
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Buyers</h1>
+        <h1 className="text-2xl font-bold">Покупатели</h1>
       </div>
       <DataTable
         data={buyers}

@@ -45,31 +45,31 @@ export default async function InquiriesPage({ searchParams }: { searchParams: Se
     { key: 'id', label: 'ID', render: (i: InquiryWithRelations) => i.id.slice(0, 8) + '...' },
     {
       key: 'buyer',
-      label: 'Buyer',
+      label: 'Покупатель',
       render: (i: InquiryWithRelations) => i.buyer.platformUserName || i.buyer.platformUserId,
     },
     {
       key: 'model',
-      label: 'Model',
+      label: 'Модель',
       render: (i: InquiryWithRelations) => `${i.model} ${i.submodel}`,
     },
-    { key: 'phone', label: 'Phone' },
-    { key: 'offers', label: 'Offers', render: (i: InquiryWithRelations) => i._count.offers },
+    { key: 'phone', label: 'Телефон' },
+    { key: 'offers', label: 'Предложения', render: (i: InquiryWithRelations) => i._count.offers },
     {
       key: 'status',
-      label: 'Status',
+      label: 'Статус',
       render: (i: InquiryWithRelations) => {
         const isExpired = new Date(i.expiresAt) < now;
         return (
           <Badge variant={isExpired ? 'secondary' : 'default'}>
-            {isExpired ? 'Expired' : 'Active'}
+            {isExpired ? 'Истекла' : 'Активна'}
           </Badge>
         );
       },
     },
     {
       key: 'createdAt',
-      label: 'Created',
+      label: 'Создана',
       render: (i: InquiryWithRelations) => format(i.createdAt, 'dd.MM.yyyy HH:mm'),
     },
   ];
@@ -77,24 +77,24 @@ export default async function InquiriesPage({ searchParams }: { searchParams: Se
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Inquiries</h1>
+        <h1 className="text-2xl font-bold">Заявки</h1>
         <div className="flex gap-2">
           <Badge variant={!statusFilter ? 'default' : 'outline'} className="cursor-pointer" asChild>
-            <Link href="/admin/inquiries">All</Link>
+            <Link href="/admin/inquiries">Все</Link>
           </Badge>
           <Badge
             variant={statusFilter === 'active' ? 'default' : 'outline'}
             className="cursor-pointer"
             asChild
           >
-            <Link href="/admin/inquiries?status=active">Active</Link>
+            <Link href="/admin/inquiries?status=active">Активные</Link>
           </Badge>
           <Badge
             variant={statusFilter === 'expired' ? 'default' : 'outline'}
             className="cursor-pointer"
             asChild
           >
-            <Link href="/admin/inquiries?status=expired">Expired</Link>
+            <Link href="/admin/inquiries?status=expired">Истекшие</Link>
           </Badge>
         </div>
       </div>

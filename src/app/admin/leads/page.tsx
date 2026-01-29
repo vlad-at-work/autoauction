@@ -37,27 +37,27 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
 
   const columns = [
     { key: 'id', label: 'ID', render: (l: LeadWithRelations) => l.id.slice(0, 8) + '...' },
-    { key: 'buyerName', label: 'Buyer Name' },
-    { key: 'buyerPhone', label: 'Phone' },
+    { key: 'buyerName', label: 'Имя покупателя' },
+    { key: 'buyerPhone', label: 'Телефон' },
     { key: 'buyerEmail', label: 'Email', render: (l: LeadWithRelations) => l.buyerEmail || '-' },
     {
       key: 'inquiry',
-      label: 'Inquiry',
+      label: 'Заявка',
       render: (l: LeadWithRelations) => `${l.offer.inquiry.model} ${l.offer.inquiry.submodel}`,
     },
     {
       key: 'dealer',
-      label: 'Dealer',
+      label: 'Дилер',
       render: (l: LeadWithRelations) => l.offer.dealer.name || l.offer.dealer.username,
     },
     {
       key: 'price',
-      label: 'Price',
+      label: 'Цена',
       render: (l: LeadWithRelations) => `${l.offer.price.toLocaleString('ru-RU')} ₽`,
     },
     {
       key: 'acceptedAt',
-      label: 'Accepted',
+      label: 'Принято',
       render: (l: LeadWithRelations) => format(l.acceptedAt, 'dd.MM.yyyy HH:mm'),
     },
   ];
@@ -65,7 +65,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Leads</h1>
+        <h1 className="text-2xl font-bold">Лиды</h1>
       </div>
       <DataTable
         data={leads}

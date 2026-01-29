@@ -50,7 +50,7 @@ export function DataTable<T extends Record<string, unknown>>({
                   colSpan={columns.length}
                   className="px-4 py-8 text-center text-muted-foreground"
                 >
-                  No data found
+                  Данные не найдены
                 </td>
               </tr>
             ) : (

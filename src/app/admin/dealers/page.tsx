@@ -28,21 +28,21 @@ export default async function DealersPage({ searchParams }: { searchParams: Sear
 
   const columns = [
     { key: 'id', label: 'ID', render: (d: DealerWithCount) => d.id.slice(0, 8) + '...' },
-    { key: 'username', label: 'Username' },
-    { key: 'name', label: 'Name', render: (d: DealerWithCount) => d.name || '-' },
+    { key: 'username', label: 'Имя пользователя' },
+    { key: 'name', label: 'Имя', render: (d: DealerWithCount) => d.name || '-' },
     {
       key: 'active',
-      label: 'Status',
+      label: 'Статус',
       render: (d: DealerWithCount) => (
         <Badge variant={d.active ? 'default' : 'secondary'}>
-          {d.active ? 'Active' : 'Inactive'}
+          {d.active ? 'Активен' : 'Неактивен'}
         </Badge>
       ),
     },
-    { key: 'offers', label: 'Offers', render: (d: DealerWithCount) => d._count.offers },
+    { key: 'offers', label: 'Предложения', render: (d: DealerWithCount) => d._count.offers },
     {
       key: 'createdAt',
-      label: 'Created',
+      label: 'Создан',
       render: (d: DealerWithCount) => format(d.createdAt, 'dd.MM.yyyy HH:mm'),
     },
   ];
@@ -50,7 +50,7 @@ export default async function DealersPage({ searchParams }: { searchParams: Sear
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Dealers</h1>
+        <h1 className="text-2xl font-bold">Дилеры</h1>
       </div>
       <DataTable
         data={dealers}

@@ -56,25 +56,25 @@ export function DeleteDialog({ entityName, entityId, onDelete, redirectTo }: Del
       <AlertDialogTrigger asChild>
         <Button variant="destructive" size="sm">
           <Trash2 className="mr-2 h-4 w-4" />
-          Delete
+          Удалить
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete {entityName}?</AlertDialogTitle>
+          <AlertDialogTitle>Удалить {entityName.toLowerCase()}?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the{' '}
-            {entityName.toLowerCase()} and all related data.
+            Это действие невозможно отменить. Это безвозвратно удалит {entityName.toLowerCase()} и
+            все связанные данные.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={loading}>Отмена</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
             disabled={loading}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {loading ? 'Deleting...' : 'Delete'}
+            {loading ? 'Удаляется...' : 'Удалить'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
