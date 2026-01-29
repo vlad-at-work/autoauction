@@ -6,9 +6,9 @@ import { prisma } from '@/lib/db';
 config({ path: '.env.local' });
 
 /**
- * Integration tests for the complete buyer happy path flow.
- * Tests use real database with test_ prefix for isolation.
- * All test data is cleaned up after test completion.
+ * Happy-path integration tests for the complete buyer flow.
+ * Runs against a real database (isolated by `test_` prefixes).
+ * Intended to run on `pre-push`, not on every `pre-commit`.
  */
 
 const TEST_PREFIX = 'test_';
