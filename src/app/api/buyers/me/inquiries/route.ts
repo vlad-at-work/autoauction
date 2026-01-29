@@ -27,7 +27,8 @@ export async function GET(request: Request) {
     });
 
     if (!buyer) {
-      return NextResponse.json({ error: 'Buyer not found' }, { status: 404 });
+      // New user with no inquiries yet
+      return NextResponse.json([]);
     }
 
     const inquiries = await prisma.inquiry.findMany({

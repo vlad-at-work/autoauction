@@ -80,6 +80,23 @@ export default function DebugPage() {
     }
   };
 
+  const handleClearAllData = async () => {
+    if (!confirm('ВНИМАНИЕ: Это удалит ВСЕ данные из базы данных. Продолжить?')) {
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/debug/clear-all', { method: 'POST' });
+      if (!res.ok) throw new Error('Failed to clear all data');
+
+      const data = (await res.json()) as { deleted: number };
+      toast.success(`Удалено ${data.deleted} всех покупателей`);
+    } catch (error) {
+      toast.error('Ошибка при очистке всех данных');
+      console.error(error);
+    }
+  };
+
   const mockUserEntries = Object.entries(MOCK_USERS);
 
   return (
@@ -136,7 +153,14 @@ export default function DebugPage() {
                 Создать тестового покупателя
               </Button>
               <Button onClick={handleClearDebugData} variant="destructive">
-                Очистить все тестовые данные
+                Очистить тестовые данные (debug_*)
+              </Button>
+              <Button
+                onClick={handleClearAllData}
+                variant="destructive"
+                className="bg-red-600 hover:bg-red-700"
+              >
+                ⚠️ Очистить ВСЮ базу данных
               </Button>
             </div>
           </div>
