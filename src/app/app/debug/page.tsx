@@ -155,16 +155,24 @@ export default function DebugPage() {
           <div className="border-border border-t pt-6">
             <p className="mb-4 text-sm font-medium">Режим реальной БД:</p>
             <div className="flex flex-col gap-2">
-              <Button onClick={handleCreateDebugBuyer} variant="outline">
+              <Button
+                onClick={handleCreateDebugBuyer}
+                variant="outline"
+                className="h-auto whitespace-normal"
+              >
                 Создать тестового покупателя
               </Button>
-              <Button onClick={handleClearDebugData} variant="destructive">
+              <Button
+                onClick={handleClearDebugData}
+                variant="destructive"
+                className="h-auto whitespace-normal"
+              >
                 Очистить тестовые данные (debug_*)
               </Button>
               <Button
                 onClick={handleClearAllData}
                 variant="destructive"
-                className="bg-red-600 hover:bg-red-700"
+                className="h-auto whitespace-normal bg-red-600 hover:bg-red-700"
               >
                 ⚠️ Очистить ВСЮ базу данных
               </Button>
