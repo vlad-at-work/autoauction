@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 
 import { CountdownTimer } from '@/components/countdown-timer';
 import { OfferCard } from '@/components/offer-card';
+import { PageTransition } from '@/components/page-transition';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TopBar } from '@/components/ui/top-bar';
@@ -81,68 +82,70 @@ export default function InquiryDetailPage() {
   );
 
   return (
-    <div className="min-h-screen w-full">
-      <TopBar />
-      <div className="mx-auto max-w-2xl px-4 py-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {inquiry.model} {inquiry.submodel !== inquiry.model && inquiry.submodel}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <div className="grid gap-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Коробка:</span>
-                <span className="font-medium">{inquiry.transmission}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Цвет:</span>
-                <span className="font-medium">{inquiry.color}</span>
-              </div>
-              {inquiry.status && (
+    <PageTransition>
+      <div className="min-h-screen w-full">
+        <TopBar />
+        <div className="mx-auto max-w-2xl px-4 py-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {inquiry.model} {inquiry.submodel !== inquiry.model && inquiry.submodel}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <div className="grid gap-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Статус:</span>
-                  <span className="font-medium">{inquiry.status}</span>
+                  <span className="text-muted-foreground">Коробка:</span>
+                  <span className="font-medium">{inquiry.transmission}</span>
                 </div>
-              )}
-              {inquiry.comment && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-muted-foreground">Комментарий:</span>
-                  <span className="font-medium">{inquiry.comment}</span>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Цвет:</span>
+                  <span className="font-medium">{inquiry.color}</span>
                 </div>
-              )}
-              <div className="border-border mt-2 border-t pt-2">
-                <CountdownTimer expiresAt={inquiry.expiresAt} isExpired={isExpired} />
+                {inquiry.status && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Статус:</span>
+                    <span className="font-medium">{inquiry.status}</span>
+                  </div>
+                )}
+                {inquiry.comment && (
+                  <div className="flex flex-col gap-1">
+                    <span className="text-muted-foreground">Комментарий:</span>
+                    <span className="font-medium">{inquiry.comment}</span>
+                  </div>
+                )}
+                <div className="border-border mt-2 border-t pt-2">
+                  <CountdownTimer expiresAt={inquiry.expiresAt} isExpired={isExpired} />
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <div className="mt-6">
-          <h2 className="mb-4 text-lg font-semibold">Предложения дилеров ({offers.length})</h2>
-          {sortedOffers.length === 0 ? (
-            <div className="text-muted-foreground rounded-lg border bg-muted/30 p-6 text-center text-sm">
-              Пока нет предложений. Вы получите уведомление, когда дилеры ответят.
-            </div>
-          ) : (
-            <div className="grid gap-3">
-              {sortedOffers.map((offer) => (
-                <OfferCard key={offer.id} offer={offer} inquiryId={inquiry.id} />
-              ))}
-            </div>
-          )}
-        </div>
+          <div className="mt-6">
+            <h2 className="mb-4 text-lg font-semibold">Предложения дилеров ({offers.length})</h2>
+            {sortedOffers.length === 0 ? (
+              <div className="text-muted-foreground rounded-lg border bg-muted/30 p-6 text-center text-sm">
+                Пока нет предложений. Вы получите уведомление, когда дилеры ответят.
+              </div>
+            ) : (
+              <div className="grid gap-3">
+                {sortedOffers.map((offer) => (
+                  <OfferCard key={offer.id} offer={offer} inquiryId={inquiry.id} />
+                ))}
+              </div>
+            )}
+          </div>
 
-        <div className="mt-6">
-          <Button asChild variant="outline" className="w-full">
-            <Link href="/app/dashboard">
-              <ArrowLeft className="mr-2 size-4" />
-              Назад к заявкам
-            </Link>
-          </Button>
+          <div className="mt-6">
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/app/dashboard">
+                <ArrowLeft className="mr-2 size-4" />
+                Назад к заявкам
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </PageTransition>
   );
 }

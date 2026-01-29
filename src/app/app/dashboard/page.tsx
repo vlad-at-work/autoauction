@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { InquiryCard } from '@/components/inquiry-card';
+import { PageTransition } from '@/components/page-transition';
 import { TopBar } from '@/components/ui/top-bar';
 import { useDebugMode } from '@/contexts/DebugModeContext';
 import { getMyInquiries } from '@/lib/api/inquiries';
@@ -61,24 +62,26 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen w-full">
-      <TopBar />
-      <div className="mx-auto max-w-2xl px-4 py-6">
-        {inquiries.length === 0 ? (
-          <div className="text-muted-foreground flex flex-col items-center justify-center py-12 text-center">
-            <p className="text-base">Нет заявок</p>
-            <p className="mt-2 text-sm">
-              Используйте кнопку + в правом верхнем углу, чтобы создать первую заявку
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {inquiries.map((inquiry) => (
-              <InquiryCard key={inquiry.id} inquiry={inquiry} />
-            ))}
-          </div>
-        )}
+    <PageTransition>
+      <div className="min-h-screen w-full">
+        <TopBar />
+        <div className="mx-auto max-w-2xl px-4 py-6">
+          {inquiries.length === 0 ? (
+            <div className="text-muted-foreground flex flex-col items-center justify-center py-12 text-center">
+              <p className="text-base">Нет заявок</p>
+              <p className="mt-2 text-sm">
+                Используйте кнопку + в правом верхнем углу, чтобы создать первую заявку
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {inquiries.map((inquiry) => (
+                <InquiryCard key={inquiry.id} inquiry={inquiry} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </PageTransition>
   );
 }
