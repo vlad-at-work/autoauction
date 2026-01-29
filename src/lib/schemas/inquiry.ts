@@ -14,6 +14,7 @@ export const inquiryCreateSchema = z
   .object({
     platform: z.enum(['max', 'telegram']),
     platformUserId: z.string().min(1, 'Требуется ID пользователя'),
+    platformChatId: z.string().optional(), // Chat ID for bot notifications
     platformUserName: z.string().optional(),
     name: z.string().min(2, 'Имя должно содержать минимум 2 символа'),
     email: z.string().email('Некорректный адрес электронной почты').optional().or(z.literal('')),

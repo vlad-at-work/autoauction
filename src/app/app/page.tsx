@@ -34,10 +34,21 @@ export default function MiniAppHomePage() {
 
           setLoadingState('redirect');
 
-          // Handle deep link
+          // Handle deep links
           if (startParam === 'inquiry') {
             router.replace('/app/form');
             return;
+          }
+
+          // Deep link to specific offer: offer_[inquiryId]_[offerId]
+          if (startParam?.startsWith('offer_')) {
+            const parts = startParam.split('_');
+            if (parts.length >= 3) {
+              const inquiryId = parts[1];
+              const offerId = parts.slice(2).join('_'); // Handle IDs with underscores
+              router.replace(`/app/inquiry/${inquiryId}/offer/${offerId}`);
+              return;
+            }
           }
 
           // Redirect based on existence

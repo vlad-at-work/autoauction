@@ -7,8 +7,14 @@ declare global {
     username?: string;
   }
 
+  interface WebAppChat {
+    id?: string | number;
+    type?: string; // 'private', 'group', 'supergroup', 'channel'
+  }
+
   interface WebAppInitDataUnsafe {
     user?: WebAppUser;
+    chat?: WebAppChat;
     start_param?: string;
   }
 

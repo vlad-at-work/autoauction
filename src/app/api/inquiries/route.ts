@@ -33,10 +33,13 @@ export async function POST(request: Request) {
         },
         update: {
           platformUserName: input.platformUserName,
+          // Update chat_id if provided (may change between sessions)
+          ...(input.platformChatId && { platformChatId: input.platformChatId }),
         },
         create: {
           platform,
           platformUserId: input.platformUserId,
+          platformChatId: input.platformChatId,
           platformUserName: input.platformUserName,
         },
       });

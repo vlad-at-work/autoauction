@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import { prisma } from '@/lib/db';
 import { parseBasicAuthHeader } from '@/lib/auth/basic';
+import { notifyBuyerOfNewOffer } from '@/lib/notifications';
 
 const offerUpsertSchema = z.object({
   inquiryId: z.string().min(1),
@@ -31,7 +32,18 @@ export async function POST(request: Request) {
 
     const inquiry = await prisma.inquiry.findUnique({
       where: { id: inquiryId },
-      select: { expiresAt: true },
+      select: {
+        expiresAt: true,
+        model: true,
+        submodel: true,
+        buyer: {
+          select: {
+            platform: true,
+            platformUserId: true,
+            platformChatId: true,
+          },
+        },
+      },
     });
 
     if (!inquiry) {
@@ -58,12 +70,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Offer already accepted' }, { status: 409 });
     }
 
+    const isNewOffer = !existing;
+
     const offer = await prisma.offer.upsert({
       where: { inquiryId_dealerId: { inquiryId, dealerId: dealer.id } },
       update: { price, comment },
       create: { inquiryId, dealerId: dealer.id, price, comment },
       select: { id: true },
     });
+
+    // Send notification to buyer only for new offers (not updates)
+    if (isNewOffer) {
+      // Fire and forget - don't block response on notification delivery
+      notifyBuyerOfNewOffer(
+        inquiry.buyer,
+        inquiryId,
+        offer.id,
+        inquiry.model,
+        inquiry.submodel,
+        price
+      ).catch((err) => {
+        // Log error but don't fail the request
+        console.error('Failed to send notification:', err);
+      });
+    }
 
     return NextResponse.json(offer);
   } catch (err) {

@@ -13,10 +13,13 @@ enum Platform {
   TELEGRAM
 }
 
+// NOTE for YDB migration: Buyer uses composite unique constraint which may need
+// to be handled differently in YDB. Consider using a compound key or separate index.
 model Buyer {
   id               String   @id @default(cuid())
   platform         Platform
   platformUserId   String
+  platformChatId   String?  // Chat ID for sending bot notifications
   platformUserName String?
 
   createdAt DateTime @default(now())

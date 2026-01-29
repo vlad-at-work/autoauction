@@ -53,6 +53,7 @@ export default function MiniAppInquiryFormPage() {
     defaultValues: {
       platform: 'max',
       platformUserId: `test_user_${randomSuffix}`,
+      platformChatId: undefined,
       platformUserName: undefined,
       name: `Олег${randomSuffix}`,
       email: 'gleb@ub.am',
@@ -84,9 +85,15 @@ export default function MiniAppInquiryFormPage() {
       const webApp = window.WebApp;
       const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString();
       const platformUserName = webApp?.initDataUnsafe?.user?.name;
+      // Chat ID for sending notifications - in private chat, chat.id equals user.id
+      const platformChatId = webApp?.initDataUnsafe?.chat?.id?.toString() || platformUserId;
 
       if (platformUserId) {
         form.setValue('platformUserId', platformUserId, { shouldValidate: true });
+      }
+
+      if (platformChatId) {
+        form.setValue('platformChatId', platformChatId);
       }
 
       if (platformUserName) {
@@ -176,6 +183,7 @@ export default function MiniAppInquiryFormPage() {
           <form className="flex flex-col gap-6" onSubmit={form.handleSubmit(onSubmit)}>
             <input type="hidden" {...form.register('platform')} />
             <input type="hidden" {...form.register('platformUserId')} />
+            <input type="hidden" {...form.register('platformChatId')} />
             <input type="hidden" {...form.register('platformUserName')} />
 
             <FieldGroup>
