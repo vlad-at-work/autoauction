@@ -4,6 +4,12 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -164,6 +170,82 @@ export default function DebugPage() {
               </Button>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Справка по тестовым сценариям</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="item-1">
+              <AccordionTrigger>Олег Тестов (3 заявки)</AccordionTrigger>
+              <AccordionContent>
+                <p className="text-muted-foreground text-sm">
+                  Этот пользователь имеет 3 активные заявки с разным количеством предложений от
+                  дилеров:
+                </p>
+                <ul className="text-muted-foreground mt-2 list-inside list-disc space-y-1 text-sm">
+                  <li>Land Cruiser 250 First Edition - 2 предложения</li>
+                  <li>GR Yaris Rally - 0 предложений (новая заявка без откликов)</li>
+                  <li>Prius AWD-e - 1 предложение</li>
+                </ul>
+                <p className="text-muted-foreground mt-2 text-sm">
+                  Используйте этот сценарий для тестирования отображения карточек заявок с разными
+                  состояниями предложений.
+                </p>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-2">
+              <AccordionTrigger>Дима Пустой (0 заявок)</AccordionTrigger>
+              <AccordionContent>
+                <p className="text-muted-foreground text-sm">
+                  У этого пользователя нет ни одной заявки. Вы увидите пустое состояние панели с
+                  текстом: &quot;Используйте кнопку + в правом верхнем углу, чтобы создать свою
+                  первую заявку.&quot;
+                </p>
+                <p className="text-muted-foreground mt-2 text-sm">
+                  Используйте этот сценарий для тестирования UX для новых пользователей.
+                </p>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-3">
+              <AccordionTrigger>Сергей Просрочен (2 заявки)</AccordionTrigger>
+              <AccordionContent>
+                <p className="text-muted-foreground text-sm">
+                  Этот пользователь имеет 2 просроченные заявки (срок действия истек):
+                </p>
+                <ul className="text-muted-foreground mt-2 list-inside list-disc space-y-1 text-sm">
+                  <li>Camry Hybrid - истекла вчера, 3 предложения</li>
+                  <li>RAV4 Prime - истекла 2 дня назад, 1 предложение</li>
+                </ul>
+                <p className="text-muted-foreground mt-2 text-sm">
+                  Карточки отображаются серыми с надписью &quot;Истекло&quot; вместо таймера.
+                  Используйте этот сценарий для тестирования отображения просроченных заявок.
+                </p>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-4">
+              <AccordionTrigger>Анна Смешан (1 активная, 1 просроченная)</AccordionTrigger>
+              <AccordionContent>
+                <p className="text-muted-foreground text-sm">
+                  У этого пользователя смешанное состояние:
+                </p>
+                <ul className="text-muted-foreground mt-2 list-inside list-disc space-y-1 text-sm">
+                  <li>Corolla Cross - активная заявка с 2 предложениями</li>
+                  <li>Highlander Hybrid - просроченная заявка с 0 предложениями</li>
+                </ul>
+                <p className="text-muted-foreground mt-2 text-sm">
+                  Используйте этот сценарий для тестирования отображения активных и просроченных
+                  заявок вместе на одной панели.
+                </p>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </CardContent>
       </Card>
     </div>

@@ -1,5 +1,9 @@
 # AGENTS.md - Development Guidelines
 
+## Extremely important
+
+Start all coding sessions with `nvm use 22`
+
 ## Project Overview
 
 AutoAuction is a car inquiry/offer platform connecting buyers (via Max/Telegram) with dealers.
