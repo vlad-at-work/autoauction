@@ -26,14 +26,14 @@ export default function DebugPage() {
   if (process.env.NODE_ENV === 'production') {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Debug mode not available in production</p>
+        <p className="text-muted-foreground">Режим отладки недоступен в production</p>
       </div>
     );
   }
 
   const handleContinue = () => {
     if (!selectedUser) {
-      toast.error('Please select a user');
+      toast.error('Пожалуйста, выберите пользователя');
       return;
     }
 
@@ -59,10 +59,10 @@ export default function DebugPage() {
       if (!res.ok) throw new Error('Failed to create buyer');
 
       enableDebugMode(debugUserId, false);
-      toast.success(`Created ${debugName}`);
+      toast.success(`Создан ${debugName}`);
       router.push('/app/dashboard');
     } catch (error) {
-      toast.error('Failed to create debug buyer');
+      toast.error('Ошибка при создании тестового покупателя');
       console.error(error);
     }
   };
@@ -73,9 +73,9 @@ export default function DebugPage() {
       if (!res.ok) throw new Error('Failed to clear data');
 
       const data = (await res.json()) as { deleted: number };
-      toast.success(`Cleared ${data.deleted} debug buyers`);
+      toast.success(`Удалено ${data.deleted} тестовых покупателей`);
     } catch (error) {
-      toast.error('Failed to clear debug data');
+      toast.error('Ошибка при очистке данных');
       console.error(error);
     }
   };
@@ -86,7 +86,7 @@ export default function DebugPage() {
     <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col gap-6 px-4 py-10">
       <Card>
         <CardHeader>
-          <CardTitle>Debug Mode</CardTitle>
+          <CardTitle>Режим отладки</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
           <div className="flex items-center gap-2">
@@ -99,43 +99,44 @@ export default function DebugPage() {
               htmlFor="useMockData"
               className="cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
             >
-              Use Mock Data
+              Использовать тестовые данные
             </label>
           </div>
 
           {useMockData && (
             <div className="flex flex-col gap-2">
               <label htmlFor="userSelect" className="text-sm font-medium">
-                Select Test User:
+                Выберите тестового пользователя:
               </label>
               <Select value={selectedUser} onValueChange={setSelectedUser}>
                 <SelectTrigger id="userSelect">
-                  <SelectValue placeholder="Choose a user..." />
+                  <SelectValue placeholder="Выберите пользователя..." />
                 </SelectTrigger>
                 <SelectContent>
                   {mockUserEntries.map(([userId, user]) => (
                     <SelectItem key={userId} value={userId}>
-                      {user.name} ({user.inquiries.length} inquir
-                      {user.inquiries.length === 1 ? 'y' : 'ies'})
+                      {user.name} ({user.inquiries.length} заяв
+                      {user.inquiries.length === 1 ? 'ка' : 'ок'})
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
 
               <Button onClick={handleContinue} disabled={!selectedUser}>
-                Continue as {selectedUser ? MOCK_USERS[selectedUser]?.name : 'Selected User'}
+                Продолжить как{' '}
+                {selectedUser ? MOCK_USERS[selectedUser]?.name : 'Выбранный пользователь'}
               </Button>
             </div>
           )}
 
           <div className="border-border border-t pt-6">
-            <p className="mb-4 text-sm font-medium">Real DB Mode:</p>
+            <p className="mb-4 text-sm font-medium">Режим реальной БД:</p>
             <div className="flex flex-col gap-2">
               <Button onClick={handleCreateDebugBuyer} variant="outline">
-                Create New Debug Buyer
+                Создать тестового покупателя
               </Button>
               <Button onClick={handleClearDebugData} variant="destructive">
-                Clear All Debug Data
+                Очистить все тестовые данные
               </Button>
             </div>
           </div>
