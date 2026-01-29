@@ -4,6 +4,7 @@
  */
 
 const MAX_BOT_TOKEN = process.env.MAX_BOT_TOKEN;
+const MAX_BOT_NAME = process.env.MAX_BOT_NAME || 'AutoAuctionBot';
 const MAX_API_BASE = 'https://platform-api.max.ru';
 
 type SendMessageResult = {
@@ -13,6 +14,7 @@ type SendMessageResult = {
 
 /**
  * Send a text message to a MAX user
+ * Note: MAX API requires chat_id/user_id as query parameters, not in the body
  */
 export async function sendMaxMessage(chatId: string, text: string): Promise<SendMessageResult> {
   if (!MAX_BOT_TOKEN || MAX_BOT_TOKEN === '<from_vercel>') {
@@ -20,16 +22,16 @@ export async function sendMaxMessage(chatId: string, text: string): Promise<Send
   }
 
   try {
-    const response = await fetch(`${MAX_API_BASE}/messages`, {
+    const url = new URL(`${MAX_API_BASE}/messages`);
+    url.searchParams.set('chat_id', chatId);
+
+    const response = await fetch(url.toString(), {
       method: 'POST',
       headers: {
         Authorization: MAX_BOT_TOKEN,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        chat_id: parseInt(chatId, 10),
-        text,
-      }),
+      body: JSON.stringify({ text }),
     });
 
     if (!response.ok) {
@@ -51,6 +53,8 @@ export async function sendMaxMessage(chatId: string, text: string): Promise<Send
 
 /**
  * Send a message with an inline button that opens the mini-app
+ * Note: MAX API requires chat_id/user_id as query parameters, not in the body
+ * Uses 'link' button type with max.ru bot URL to open mini-app with startapp parameter
  */
 export async function sendMaxMessageWithButton(
   chatId: string,
@@ -63,14 +67,19 @@ export async function sendMaxMessageWithButton(
   }
 
   try {
-    const response = await fetch(`${MAX_API_BASE}/messages`, {
+    const url = new URL(`${MAX_API_BASE}/messages`);
+    url.searchParams.set('chat_id', chatId);
+
+    // Build the mini-app deep link URL
+    const appUrl = `https://max.ru/${MAX_BOT_NAME}?startapp=${encodeURIComponent(startParam)}`;
+
+    const response = await fetch(url.toString(), {
       method: 'POST',
       headers: {
         Authorization: MAX_BOT_TOKEN,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        chat_id: parseInt(chatId, 10),
         text,
         attachments: [
           {
@@ -79,9 +88,9 @@ export async function sendMaxMessageWithButton(
               buttons: [
                 [
                   {
-                    type: 'open_app',
+                    type: 'link',
                     text: buttonText,
-                    payload: startParam,
+                    url: appUrl,
                   },
                 ],
               ],
