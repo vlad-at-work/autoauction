@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 
+import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -82,11 +84,18 @@ export default function MiniAppInquiryFormPage() {
     const tryLoadUser = (attempt = 0) => {
       if (cancelled) return;
 
-      const webApp = window.WebApp;
+      const webApp = getWebApp();
+      const platform = detectPlatform();
       const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString();
-      const platformUserName = webApp?.initDataUnsafe?.user?.name;
+      // Telegram uses first_name, MAX uses name
+      const platformUserName =
+        webApp?.initDataUnsafe?.user?.name || webApp?.initDataUnsafe?.user?.first_name;
       // Chat ID for sending notifications - in private chat, chat.id equals user.id
       const platformChatId = webApp?.initDataUnsafe?.chat?.id?.toString() || platformUserId;
+
+      if (platform) {
+        form.setValue('platform', platform, { shouldValidate: true });
+      }
 
       if (platformUserId) {
         form.setValue('platformUserId', platformUserId, { shouldValidate: true });

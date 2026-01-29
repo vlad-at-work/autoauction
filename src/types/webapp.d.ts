@@ -4,7 +4,10 @@ declare global {
   interface WebAppUser {
     id?: string | number;
     name?: string;
+    first_name?: string;
+    last_name?: string;
     username?: string;
+    language_code?: string;
   }
 
   interface WebAppChat {
@@ -16,6 +19,8 @@ declare global {
     user?: WebAppUser;
     chat?: WebAppChat;
     start_param?: string;
+    auth_date?: number;
+    hash?: string;
   }
 
   interface WebAppBridge {
@@ -28,7 +33,13 @@ declare global {
     requestContact?: () => void;
   }
 
-  interface Window {
+  // Telegram uses window.Telegram.WebApp
+  interface TelegramWebApp {
     WebApp?: WebAppBridge;
+  }
+
+  interface Window {
+    WebApp?: WebAppBridge; // MAX
+    Telegram?: TelegramWebApp; // Telegram
   }
 }

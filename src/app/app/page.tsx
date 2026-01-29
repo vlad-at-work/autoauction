@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { checkBuyerExists } from '@/lib/api/buyers';
+import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 
 type LoadingState = 'loading' | 'checking' | 'redirect';
 
@@ -16,19 +17,20 @@ export default function MiniAppHomePage() {
     let cancelled = false;
 
     const detectUserAndRedirect = async () => {
-      // Poll for Max WebApp to load
+      // Poll for WebApp to load (MAX or Telegram)
       const tryLoadUser = async (attempt = 0) => {
         if (cancelled) return;
 
-        const webApp = window.WebApp;
+        const webApp = getWebApp();
+        const platform = detectPlatform();
         const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString();
         const startParam = webApp?.initDataUnsafe?.start_param;
 
-        if (webApp && platformUserId) {
+        if (webApp && platformUserId && platform) {
           setLoadingState('checking');
 
           // Check if buyer exists
-          const { exists } = await checkBuyerExists(platformUserId, 'max');
+          const { exists } = await checkBuyerExists(platformUserId, platform);
 
           if (cancelled) return;
 
@@ -60,11 +62,11 @@ export default function MiniAppHomePage() {
           return;
         }
 
-        // Max not loaded yet, keep polling
+        // WebApp not loaded yet, keep polling
         if (attempt < 40) {
           window.setTimeout(() => tryLoadUser(attempt + 1), 50);
         } else {
-          // Timeout - Max WebApp not available
+          // Timeout - WebApp not available
           setLoadingState('loading');
         }
       };
