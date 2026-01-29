@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { LayoutDashboard, Users, FileText, Store, Tag, UserCheck } from 'lucide-react';
 
+import { AdminMobileNav } from '@/components/admin/admin-mobile-nav';
+
 const navItems = [
   { href: '/admin', label: 'Дашборд', icon: LayoutDashboard },
   { href: '/admin/buyers', label: 'Покупатели', icon: Users },
@@ -11,9 +13,11 @@ const navItems = [
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const mobileNavItems = navItems.map(({ href, label }) => ({ href, label }));
+
   return (
     <div className="flex min-h-screen bg-background">
-      <aside className="w-64 border-r bg-card">
+      <aside className="hidden w-64 border-r bg-card md:block">
         <div className="flex h-16 items-center border-b px-6">
           <Link href="/admin" className="text-xl font-bold">
             Админ-панель
@@ -35,9 +39,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </ul>
         </nav>
       </aside>
-      <main className="flex-1 overflow-auto">
-        <div className="p-6">{children}</div>
-      </main>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex h-16 items-center gap-3 border-b bg-card px-4 md:hidden">
+          <AdminMobileNav items={mobileNavItems} />
+          <Link href="/admin" className="text-base font-bold">
+            Админ-панель
+          </Link>
+        </header>
+        <main className="min-w-0 flex-1 overflow-auto">
+          <div className="p-4 sm:p-6">{children}</div>
+        </main>
+      </div>
     </div>
   );
 }

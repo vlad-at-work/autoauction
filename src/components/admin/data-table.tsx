@@ -33,63 +33,74 @@ export function DataTable<T extends Record<string, unknown>>({
   return (
     <div className="space-y-4">
       <div className="rounded-md border">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b bg-muted/50">
-              {columns.map((col) => (
-                <th key={col.key} className="px-4 py-3 text-left text-sm font-medium">
-                  {col.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {data.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={columns.length}
-                  className="px-4 py-8 text-center text-muted-foreground"
-                >
-                  Данные не найдены
-                </td>
+        <div className="w-full overflow-x-auto">
+          <table className="w-full min-w-max">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                {columns.map((col) => (
+                  <th
+                    key={col.key}
+                    className="whitespace-nowrap px-3 py-2 text-left text-xs font-medium sm:px-4 sm:py-3 sm:text-sm"
+                  >
+                    {col.label}
+                  </th>
+                ))}
               </tr>
-            ) : (
-              data.map((item) => {
-                const cells = columns.map((col) => (
-                  <td key={col.key} className="px-4 py-3 text-sm">
-                    {col.render ? col.render(item) : String(item[col.key] ?? '-')}
+            </thead>
+            <tbody>
+              {data.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    className="px-3 py-8 text-center text-muted-foreground sm:px-4"
+                  >
+                    Данные не найдены
                   </td>
-                ));
+                </tr>
+              ) : (
+                data.map((item) => {
+                  const cells = columns.map((col) => (
+                    <td
+                      key={col.key}
+                      className="whitespace-nowrap px-3 py-2 text-xs sm:px-4 sm:py-3 sm:text-sm"
+                    >
+                      {col.render ? col.render(item) : String(item[col.key] ?? '-')}
+                    </td>
+                  ));
 
-                if (detailPath) {
+                  if (detailPath) {
+                    return (
+                      <tr
+                        key={String(item[keyField])}
+                        className="border-b transition-colors hover:bg-muted/50 cursor-pointer"
+                      >
+                        {columns.map((col) => (
+                          <td key={col.key} className="p-0">
+                            <Link
+                              href={detailPath(item)}
+                              className="block whitespace-nowrap px-3 py-2 text-xs sm:px-4 sm:py-3 sm:text-sm"
+                            >
+                              {col.render ? col.render(item) : String(item[col.key] ?? '-')}
+                            </Link>
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  }
+
                   return (
                     <tr
                       key={String(item[keyField])}
-                      className="border-b hover:bg-muted/50 transition-colors cursor-pointer"
+                      className="border-b transition-colors hover:bg-muted/50"
                     >
-                      {columns.map((col) => (
-                        <td key={col.key} className="p-0">
-                          <Link href={detailPath(item)} className="block px-4 py-3 text-sm">
-                            {col.render ? col.render(item) : String(item[col.key] ?? '-')}
-                          </Link>
-                        </td>
-                      ))}
+                      {cells}
                     </tr>
                   );
-                }
-
-                return (
-                  <tr
-                    key={String(item[keyField])}
-                    className="border-b hover:bg-muted/50 transition-colors"
-                  >
-                    {cells}
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {pagination && totalPages > 1 && (
