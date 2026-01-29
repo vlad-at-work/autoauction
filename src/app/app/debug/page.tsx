@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PageTransition } from '@/components/page-transition';
+import { Info } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -111,12 +112,17 @@ export default function DebugPage() {
       <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col gap-6 px-4 py-10">
         <Card>
           <CardHeader>
-            <CardTitle>Справка по режимам тестирования</CardTitle>
+            <CardTitle className="flex items-center justify-center gap-2">
+              <Info className="size-5" />
+              Справка по режимам тестирования
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="flow-1">
-                <AccordionTrigger>Что такое режим отладки?</AccordionTrigger>
+                <AccordionTrigger className="justify-center text-center">
+                  Что такое режим отладки?
+                </AccordionTrigger>
                 <AccordionContent>
                   <p className="text-muted-foreground text-sm">
                     Режим отладки позволяет тестировать приложение без необходимости открывать его
@@ -127,7 +133,9 @@ export default function DebugPage() {
               </AccordionItem>
 
               <AccordionItem value="flow-2">
-                <AccordionTrigger>Тестовые данные vs Реальная база данных</AccordionTrigger>
+                <AccordionTrigger className="justify-center text-center">
+                  Тестовые данные vs Реальная база данных
+                </AccordionTrigger>
                 <AccordionContent>
                   <div className="text-muted-foreground space-y-3 text-sm">
                     <div>
@@ -153,7 +161,9 @@ export default function DebugPage() {
               </AccordionItem>
 
               <AccordionItem value="flow-3">
-                <AccordionTrigger>Как пользователи открывают приложение обычно?</AccordionTrigger>
+                <AccordionTrigger className="justify-center text-center">
+                  Как пользователи открывают приложение обычно?
+                </AccordionTrigger>
                 <AccordionContent>
                   <p className="text-muted-foreground text-sm">
                     Реальные пользователи открывают приложение через супер-приложение Max. Max
@@ -175,7 +185,9 @@ export default function DebugPage() {
               </AccordionItem>
 
               <AccordionItem value="flow-4">
-                <AccordionTrigger>Как очистить тестовые данные?</AccordionTrigger>
+                <AccordionTrigger className="justify-center text-center">
+                  Как очистить тестовые данные?
+                </AccordionTrigger>
                 <AccordionContent>
                   <div className="text-muted-foreground space-y-2 text-sm">
                     <p>Есть три варианта:</p>
@@ -202,7 +214,10 @@ export default function DebugPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Режим отладки</CardTitle>
+            <CardTitle className="flex items-center justify-center gap-2">
+              <Info className="size-5" />
+              Режим отладки
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
             <div className="flex items-center gap-2">
@@ -238,7 +253,12 @@ export default function DebugPage() {
                   </SelectContent>
                 </Select>
 
-                <Button onClick={handleContinue} disabled={!selectedUser}>
+                <Button
+                  onClick={handleContinue}
+                  disabled={!selectedUser}
+                  size="lg"
+                  className="h-auto py-3"
+                >
                   Продолжить как{' '}
                   {selectedUser ? MOCK_USERS[selectedUser]?.name : 'Выбранный пользователь'}
                 </Button>
@@ -251,21 +271,24 @@ export default function DebugPage() {
                 <Button
                   onClick={handleCreateDebugBuyer}
                   variant="outline"
-                  className="h-auto whitespace-normal"
+                  size="lg"
+                  className="h-auto whitespace-normal py-3"
                 >
                   Создать тестового покупателя
                 </Button>
                 <Button
                   onClick={handleClearDebugData}
                   variant="destructive"
-                  className="h-auto whitespace-normal"
+                  size="lg"
+                  className="h-auto whitespace-normal py-3"
                 >
                   Очистить тестовые данные (debug_*)
                 </Button>
                 <Button
                   onClick={handleClearAllData}
                   variant="destructive"
-                  className="h-auto whitespace-normal bg-red-600 text-white hover:bg-red-700"
+                  size="lg"
+                  className="h-auto whitespace-normal py-3 bg-red-600 text-white hover:bg-red-700"
                 >
                   ⚠️ Очистить ВСЮ базу данных
                 </Button>
@@ -276,12 +299,17 @@ export default function DebugPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Справка по тестовым сценариям</CardTitle>
+            <CardTitle className="flex items-center justify-center gap-2">
+              <Info className="size-5" />
+              Справка по тестовым сценариям
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="item-1">
-                <AccordionTrigger>Олег Тестов (3 заявки)</AccordionTrigger>
+                <AccordionTrigger className="justify-center text-center">
+                  Олег Тестов (3 заявки)
+                </AccordionTrigger>
                 <AccordionContent>
                   <p className="text-muted-foreground text-sm">
                     Этот пользователь имеет 3 активные заявки с разным количеством предложений от
@@ -300,7 +328,9 @@ export default function DebugPage() {
               </AccordionItem>
 
               <AccordionItem value="item-2">
-                <AccordionTrigger>Дима Пустой (0 заявок)</AccordionTrigger>
+                <AccordionTrigger className="justify-center text-center">
+                  Дима Пустой (0 заявок)
+                </AccordionTrigger>
                 <AccordionContent>
                   <p className="text-muted-foreground text-sm">
                     У этого пользователя нет ни одной заявки. Вы увидите пустое состояние панели с
@@ -314,7 +344,9 @@ export default function DebugPage() {
               </AccordionItem>
 
               <AccordionItem value="item-3">
-                <AccordionTrigger>Сергей Просрочен (2 заявки)</AccordionTrigger>
+                <AccordionTrigger className="justify-center text-center">
+                  Сергей Просрочен (2 заявки)
+                </AccordionTrigger>
                 <AccordionContent>
                   <p className="text-muted-foreground text-sm">
                     Этот пользователь имеет 2 просроченные заявки (срок действия истек):
@@ -331,7 +363,9 @@ export default function DebugPage() {
               </AccordionItem>
 
               <AccordionItem value="item-4">
-                <AccordionTrigger>Анна Смешан (1 активная, 1 просроченная)</AccordionTrigger>
+                <AccordionTrigger className="justify-center text-center">
+                  Анна Смешан (1 активная, 1 просроченная)
+                </AccordionTrigger>
                 <AccordionContent>
                   <p className="text-muted-foreground text-sm">
                     У этого пользователя смешанное состояние:
