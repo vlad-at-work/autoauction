@@ -66,7 +66,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru" className={fontSans.variable}>
+    <html lang="ru" className={fontSans.variable} suppressHydrationWarning>
       <body className="antialiased">
         <DebugModeProvider>
           {children}

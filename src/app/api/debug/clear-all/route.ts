@@ -8,7 +8,10 @@ export async function POST() {
   }
 
   try {
-    // Delete all buyers (cascades to inquiries, offers, leads)
+    // Delete in correct order to avoid foreign key constraints
+    await prisma.lead.deleteMany({});
+    await prisma.offer.deleteMany({});
+    await prisma.inquiry.deleteMany({});
     const result = await prisma.buyer.deleteMany({});
 
     return NextResponse.json({

@@ -172,7 +172,7 @@ export default function DebugPage() {
               <Button
                 onClick={handleClearAllData}
                 variant="destructive"
-                className="h-auto whitespace-normal bg-red-600 hover:bg-red-700"
+                className="h-auto whitespace-normal bg-red-600 text-white hover:bg-red-700"
               >
                 ⚠️ Очистить ВСЮ базу данных
               </Button>
