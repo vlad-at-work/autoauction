@@ -12,16 +12,13 @@ import { PageTransition } from '@/components/page-transition';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TopBar } from '@/components/ui/top-bar';
-import { useDebugMode } from '@/contexts/DebugModeContext';
-import { getInquiryById } from '@/lib/api/inquiries';
-import type { MockInquiry, MockOffer } from '@/lib/debug/mock-data';
+import { getInquiryById, type Inquiry, type InquiryOffer } from '@/lib/api/inquiries';
 
 export default function OfferDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { debugMode } = useDebugMode();
-  const [inquiry, setInquiry] = useState<MockInquiry | null>(null);
-  const [offer, setOffer] = useState<MockOffer | null>(null);
+  const [inquiry, setInquiry] = useState<Inquiry | null>(null);
+  const [offer, setOffer] = useState<InquiryOffer | null>(null);
   const [loading, setLoading] = useState(true);
 
   const inquiryId = params.inquiryId as string;
@@ -31,22 +28,16 @@ export default function OfferDetailPage() {
     let cancelled = false;
 
     const loadOffer = async () => {
-      // Get user ID
-      let platformUserId: string | null = null;
+      // Get user ID from WebApp
+      const webApp = window.WebApp;
+      const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
 
-      if (debugMode.enabled && debugMode.mockUserId) {
-        platformUserId = debugMode.mockUserId;
-      } else {
-        const webApp = window.WebApp;
-        platformUserId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
-
-        if (!platformUserId) {
-          router.replace('/app');
-          return;
-        }
+      if (!platformUserId) {
+        router.replace('/app');
+        return;
       }
 
-      const inquiryData = await getInquiryById(inquiryId, platformUserId, debugMode);
+      const inquiryData = await getInquiryById(inquiryId, platformUserId);
 
       if (cancelled) return;
 
@@ -72,7 +63,7 @@ export default function OfferDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [inquiryId, offerId, debugMode, router]);
+  }, [inquiryId, offerId, router]);
 
   const handleAcceptOffer = () => {
     toast.info('Функция скоро будет доступна');

@@ -7,38 +7,28 @@ import { useEffect, useState } from 'react';
 import { InquiryCard } from '@/components/inquiry-card';
 import { PageTransition } from '@/components/page-transition';
 import { TopBar } from '@/components/ui/top-bar';
-import { useDebugMode } from '@/contexts/DebugModeContext';
-import { getMyInquiries } from '@/lib/api/inquiries';
-import type { MockInquiry } from '@/lib/debug/mock-data';
+import { getMyInquiries, type Inquiry } from '@/lib/api/inquiries';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { debugMode } = useDebugMode();
-  const [inquiries, setInquiries] = useState<MockInquiry[]>([]);
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
 
     const loadInquiries = async () => {
-      // Get user ID from debug mode or WebApp
-      let platformUserId: string | null = null;
+      // Get user ID from WebApp
+      const webApp = window.WebApp;
+      const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
 
-      if (debugMode.enabled && debugMode.mockUserId) {
-        platformUserId = debugMode.mockUserId;
-      } else {
-        // Wait for WebApp to load
-        const webApp = window.WebApp;
-        platformUserId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
-
-        if (!platformUserId) {
-          // If no user detected, redirect to entry point
-          router.replace('/app');
-          return;
-        }
+      if (!platformUserId) {
+        // If no user detected, redirect to entry point
+        router.replace('/app');
+        return;
       }
 
-      const data = await getMyInquiries(platformUserId, 'max', debugMode);
+      const data = await getMyInquiries(platformUserId, 'max');
 
       if (cancelled) return;
 
@@ -51,7 +41,7 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [debugMode, router]);
+  }, [router]);
 
   if (loading) {
     return (

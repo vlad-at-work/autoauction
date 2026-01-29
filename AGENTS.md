@@ -2,8 +2,10 @@
 
 ## Extremely important
 
+- Consider docs/max_integration.txt before making any changes
 - Start all coding sessions with `nvm use 22`
 - Before committing, `bun run build` needs to succeed.
+- Don't adjust tests if commit doesn't pass because of tests
 
 ## Project Overview
 

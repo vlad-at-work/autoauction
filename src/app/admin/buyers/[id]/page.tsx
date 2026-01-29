@@ -1,0 +1,117 @@
+import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import { prisma } from '@/lib/db';
+import { format } from 'date-fns';
+import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { DeleteDialog } from '@/components/admin/delete-dialog';
+import { deleteBuyer } from '@/lib/admin/actions';
+
+type Params = Promise<{ id: string }>;
+
+export default async function BuyerDetailPage({ params }: { params: Params }) {
+  const { id } = await params;
+
+  const buyer = await prisma.buyer.findUnique({
+    where: { id },
+    include: {
+      inquiries: {
+        orderBy: { createdAt: 'desc' },
+        include: {
+          _count: { select: { offers: true } },
+        },
+      },
+    },
+  });
+
+  if (!buyer) {
+    notFound();
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Button asChild variant="ghost" size="sm">
+          <Link href="/admin/buyers">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Link>
+        </Button>
+        <h1 className="text-2xl font-bold">Buyer Details</h1>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Buyer Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <span className="text-muted-foreground">ID:</span>
+              <span className="font-mono">{buyer.id}</span>
+
+              <span className="text-muted-foreground">Platform:</span>
+              <Badge variant={buyer.platform === 'MAX' ? 'default' : 'secondary'}>
+                {buyer.platform}
+              </Badge>
+
+              <span className="text-muted-foreground">Platform User ID:</span>
+              <span>{buyer.platformUserId}</span>
+
+              <span className="text-muted-foreground">Name:</span>
+              <span>{buyer.platformUserName || '-'}</span>
+
+              <span className="text-muted-foreground">Created:</span>
+              <span>{format(buyer.createdAt, 'dd.MM.yyyy HH:mm')}</span>
+
+              <span className="text-muted-foreground">Updated:</span>
+              <span>{format(buyer.updatedAt, 'dd.MM.yyyy HH:mm')}</span>
+            </div>
+
+            <div className="pt-4 border-t">
+              <DeleteDialog
+                entityName="Buyer"
+                entityId={buyer.id}
+                onDelete={deleteBuyer}
+                redirectTo="/admin/buyers"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Inquiries ({buyer.inquiries.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {buyer.inquiries.length === 0 ? (
+              <p className="text-muted-foreground text-sm">No inquiries</p>
+            ) : (
+              <div className="space-y-2">
+                {buyer.inquiries.map((inquiry) => (
+                  <Link
+                    key={inquiry.id}
+                    href={`/admin/inquiries/${inquiry.id}`}
+                    className="block rounded-md border p-3 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">
+                        {inquiry.model} {inquiry.submodel}
+                      </span>
+                      <Badge variant="outline">{inquiry._count.offers} offers</Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {format(inquiry.createdAt, 'dd.MM.yyyy HH:mm')}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

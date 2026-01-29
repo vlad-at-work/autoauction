@@ -1,15 +1,4 @@
-import { MOCK_USERS } from '@/lib/debug/mock-data';
-
-export async function checkBuyerExists(
-  platformUserId: string,
-  platform: string,
-  debugMode?: { enabled: boolean; useMockData: boolean; mockUserId: string | null }
-) {
-  if (debugMode?.enabled && debugMode.useMockData && debugMode.mockUserId) {
-    const exists = !!MOCK_USERS[debugMode.mockUserId];
-    return { exists, data: exists ? { id: debugMode.mockUserId } : null };
-  }
-
+export async function checkBuyerExists(platformUserId: string, platform: string) {
   try {
     const res = await fetch(`/api/buyers/me?platformUserId=${platformUserId}&platform=${platform}`);
 

@@ -1,15 +1,30 @@
-import type { MockInquiry } from '@/lib/debug/mock-data';
-import { MOCK_USERS } from '@/lib/debug/mock-data';
+export type InquiryOffer = {
+  id: string;
+  price: number;
+  comment: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
-export async function getMyInquiries(
-  platformUserId: string,
-  platform: string,
-  debugMode?: { enabled: boolean; useMockData: boolean; mockUserId: string | null }
-): Promise<MockInquiry[]> {
-  if (debugMode?.enabled && debugMode.useMockData && debugMode.mockUserId) {
-    return MOCK_USERS[debugMode.mockUserId]?.inquiries || [];
-  }
+export type Inquiry = {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string;
+  status: string | null;
+  statusDescription: string | null;
+  model: string;
+  submodel: string;
+  transmission: string;
+  color: string;
+  comment: string | null;
+  createdAt: Date;
+  expiresAt: Date;
+  offers: InquiryOffer[];
+  _count: { offers: number };
+};
 
+export async function getMyInquiries(platformUserId: string, platform: string): Promise<Inquiry[]> {
   try {
     const res = await fetch(
       `/api/buyers/me/inquiries?platformUserId=${platformUserId}&platform=${platform}`
@@ -19,7 +34,7 @@ export async function getMyInquiries(
       throw new Error('Failed to fetch inquiries');
     }
 
-    return (await res.json()) as MockInquiry[];
+    return (await res.json()) as Inquiry[];
   } catch (error) {
     console.error('Get inquiries error:', error);
     return [];
@@ -28,14 +43,8 @@ export async function getMyInquiries(
 
 export async function getInquiryById(
   inquiryId: string,
-  platformUserId: string,
-  debugMode?: { enabled: boolean; useMockData: boolean; mockUserId: string | null }
-): Promise<MockInquiry | null> {
-  if (debugMode?.enabled && debugMode.useMockData && debugMode.mockUserId) {
-    const user = MOCK_USERS[debugMode.mockUserId];
-    return user?.inquiries.find((inq) => inq.id === inquiryId) || null;
-  }
-
+  platformUserId: string
+): Promise<Inquiry | null> {
   try {
     const res = await fetch(`/api/inquiries/${inquiryId}?platformUserId=${platformUserId}`);
 
@@ -43,7 +52,7 @@ export async function getInquiryById(
       return null;
     }
 
-    return (await res.json()) as MockInquiry;
+    return (await res.json()) as Inquiry;
   } catch (error) {
     console.error('Get inquiry error:', error);
     return null;

@@ -1,43 +1,22 @@
 'use client';
 
 import { Loader2 } from 'lucide-react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import { Button } from '@/components/ui/button';
-import { useDebugMode } from '@/contexts/DebugModeContext';
 import { checkBuyerExists } from '@/lib/api/buyers';
 
 type LoadingState = 'loading' | 'checking' | 'redirect';
 
 export default function MiniAppHomePage() {
   const router = useRouter();
-  const { debugMode } = useDebugMode();
   const [loadingState, setLoadingState] = useState<LoadingState>('loading');
 
   useEffect(() => {
     let cancelled = false;
 
     const detectUserAndRedirect = async () => {
-      // If in debug mode, use debug user ID
-      if (debugMode.enabled && debugMode.mockUserId) {
-        setLoadingState('checking');
-        await new Promise((resolve) => setTimeout(resolve, 500)); // Brief delay for UX
-        const { exists } = await checkBuyerExists(debugMode.mockUserId, 'max', debugMode);
-
-        if (cancelled) return;
-
-        setLoadingState('redirect');
-        if (exists) {
-          router.replace('/app/dashboard');
-        } else {
-          router.replace('/app/form');
-        }
-        return;
-      }
-
-      // Production flow: poll for Max WebApp
+      // Poll for Max WebApp to load
       const tryLoadUser = async (attempt = 0) => {
         if (cancelled) return;
 
@@ -74,7 +53,7 @@ export default function MiniAppHomePage() {
         if (attempt < 40) {
           window.setTimeout(() => tryLoadUser(attempt + 1), 50);
         } else {
-          // Timeout - show error or debug option
+          // Timeout - Max WebApp not available
           setLoadingState('loading');
         }
       };
@@ -87,7 +66,7 @@ export default function MiniAppHomePage() {
     return () => {
       cancelled = true;
     };
-  }, [router, debugMode]);
+  }, [router]);
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center px-4">
@@ -98,15 +77,6 @@ export default function MiniAppHomePage() {
           {loadingState === 'checking' && 'Проверка аккаунта...'}
           {loadingState === 'redirect' && 'Перенаправление...'}
         </p>
-
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mt-8 flex flex-col items-center gap-2">
-            <p className="text-muted-foreground text-xs">Режим разработки</p>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/app/debug">Открыть Debug режим</Link>
-            </Button>
-          </div>
-        )}
       </div>
     </div>
   );
