@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, FileText, Store, Tag, UserCheck } from 'lucide-react';
 import { ClearDbButton } from '@/components/admin/clear-db-button';
 
+export const dynamic = 'force-dynamic';
+
 async function getStats() {
   const now = new Date();
 
