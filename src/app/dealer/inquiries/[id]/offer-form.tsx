@@ -10,12 +10,17 @@ import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/compo
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
-const offerSchema = z.object({
-  price: z.number().int().positive(),
+const offerFormSchema = z.object({
+  price: z.string().min(1, 'Укажите цену'),
   comment: z.string().max(1000).optional(),
 });
 
-type OfferValues = z.infer<typeof offerSchema>;
+const offerSchema = z.object({
+  price: z.coerce.number().int().positive(),
+  comment: z.string().max(1000).optional(),
+});
+
+type OfferFormValues = z.infer<typeof offerFormSchema>;
 
 export function OfferForm({
   inquiryId,
@@ -29,20 +34,29 @@ export function OfferForm({
   disabled?: boolean;
 }) {
   const router = useRouter();
-  const form = useForm<OfferValues>({
-    resolver: zodResolver(offerSchema),
+  const form = useForm<OfferFormValues>({
+    resolver: zodResolver(offerFormSchema),
     defaultValues: {
-      price: defaultPrice ?? undefined,
-      comment: defaultComment ?? undefined,
+      price: defaultPrice?.toString() || '',
+      comment: defaultComment || '',
     },
     mode: 'onTouched',
   });
 
-  async function onSubmit(values: OfferValues) {
+  async function onSubmit(values: OfferFormValues) {
+    const parsed = offerSchema.safeParse({
+      price: values.price,
+      comment: values.comment,
+    });
+
+    if (!parsed.success) {
+      form.setError('price', { message: 'Неверный формат цены' });
+      return;
+    }
     const res = await fetch('/api/offers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ inquiryId, ...values }),
+      body: JSON.stringify({ inquiryId, ...parsed.data }),
     });
 
     if (!res.ok) {
@@ -66,8 +80,9 @@ export function OfferForm({
           <FieldContent>
             <Input
               id="price"
-              type="number"
+              type="text"
               inputMode="numeric"
+              placeholder="1500000"
               disabled={disabled}
               {...form.register('price')}
             />
