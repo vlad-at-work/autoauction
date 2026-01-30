@@ -1,10 +1,26 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Copy, Send } from 'lucide-react';
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+type WebAppUser = { id?: string | number } | null;
+type WebAppChat = { id?: string | number } | null;
+
+type WebAppDebugInfo = {
+  platform: 'max' | 'telegram' | null;
+  user: WebAppUser;
+  chat: WebAppChat;
+  startParam: string | null;
+  raw: unknown;
+};
 
 export default function DebugInfoPage() {
-  const [info, setInfo] = useState<any>(null);
+  const [info, setInfo] = useState<WebAppDebugInfo | null>(null);
+  const [sendState, setSendState] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+  const [sendError, setSendError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadInfo = () => {
@@ -14,9 +30,9 @@ export default function DebugInfoPage() {
       if (webApp?.initDataUnsafe) {
         setInfo({
           platform,
-          user: webApp.initDataUnsafe.user,
-          chat: webApp.initDataUnsafe.chat,
-          startParam: webApp.initDataUnsafe.start_param,
+          user: (webApp.initDataUnsafe.user as WebAppUser) ?? null,
+          chat: (webApp.initDataUnsafe.chat as WebAppChat) ?? null,
+          startParam: (webApp.initDataUnsafe.start_param as string | undefined) ?? null,
           raw: webApp.initDataUnsafe,
         });
       }
@@ -41,52 +57,132 @@ export default function DebugInfoPage() {
     );
   }
 
+  const chatId = (info.chat?.id || info.user?.id || '')?.toString();
+
+  const copyChatId = async () => {
+    if (!chatId) return;
+    try {
+      await navigator.clipboard.writeText(chatId);
+    } catch {
+      // best-effort
+    }
+  };
+
+  const sendTestMessage = async () => {
+    if (!chatId || info.platform !== 'max') return;
+
+    setSendState('sending');
+    setSendError(null);
+
+    try {
+      const res = await fetch('/api/debug/max/send-test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatId, text: 'hello world' }),
+      });
+
+      const data = (await res.json().catch(() => ({}))) as { error?: string; success?: boolean };
+
+      if (!res.ok || !data.success) {
+        setSendState('error');
+        setSendError(data.error || `HTTP ${res.status}`);
+        return;
+      }
+
+      setSendState('success');
+    } catch (err) {
+      setSendState('error');
+      setSendError(err instanceof Error ? err.message : 'Unknown error');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-zinc-50 p-6">
       <div className="mx-auto max-w-2xl space-y-6">
         <h1 className="text-2xl font-bold">WebApp Debug Info</h1>
 
-        <div className="rounded-lg bg-white p-6 shadow">
-          <h2 className="mb-4 text-lg font-semibold">Platform</h2>
-          <p className="font-mono">{info.platform || 'Unknown'}</p>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Chat ID (use this for MAX notifications)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="bg-muted text-foreground rounded-md px-2 py-1 font-mono text-base">
+                {chatId || '(not found)'}
+              </div>
+              <Button type="button" variant="outline" size="sm" onClick={copyChatId} disabled={!chatId}>
+                <Copy className="mr-1 size-4" />
+                Copy
+              </Button>
+              <Button
+                type="button"
+                variant="default"
+                size="sm"
+                onClick={sendTestMessage}
+                disabled={!chatId || info.platform !== 'max'}
+              >
+                <Send className="mr-1 size-4" />
+                Send “hello world”
+              </Button>
+            </div>
+            <div className="text-muted-foreground text-xs">
+              Platform: <span className="font-mono">{info.platform || 'Unknown'}</span> · User ID:{' '}
+              <span className="font-mono">{info.user?.id || '(not found)'}</span>
+            </div>
+            {sendState === 'success' ? (
+              <div className="text-xs text-green-700">Sent ✅ (check your MAX bot chat)</div>
+            ) : null}
+            {sendState === 'error' ? (
+              <div className="text-xs text-red-700">Send failed: {sendError}</div>
+            ) : null}
+            {sendState === 'sending' ? <div className="text-xs text-zinc-600">Sending…</div> : null}
+          </CardContent>
+        </Card>
 
-        <div className="rounded-lg bg-white p-6 shadow">
-          <h2 className="mb-4 text-lg font-semibold">User Info</h2>
-          <pre className="overflow-auto text-sm">{JSON.stringify(info.user, null, 2)}</pre>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Platform</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="font-mono">{info.platform || 'Unknown'}</p>
+          </CardContent>
+        </Card>
 
-        <div className="rounded-lg bg-white p-6 shadow">
-          <h2 className="mb-4 text-lg font-semibold">Chat Info</h2>
-          <pre className="overflow-auto text-sm">{JSON.stringify(info.chat, null, 2)}</pre>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>User Info</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <pre className="overflow-auto text-sm">{JSON.stringify(info.user, null, 2)}</pre>
+          </CardContent>
+        </Card>
 
-        <div className="rounded-lg bg-white p-6 shadow">
-          <h2 className="mb-4 text-lg font-semibold">Start Param</h2>
-          <pre className="overflow-auto text-sm">{info.startParam || '(none)'}</pre>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Chat Info</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <pre className="overflow-auto text-sm">{JSON.stringify(info.chat, null, 2)}</pre>
+          </CardContent>
+        </Card>
 
-        <div className="rounded-lg bg-white p-6 shadow">
-          <h2 className="mb-4 text-lg font-semibold">Full InitDataUnsafe</h2>
-          <pre className="overflow-auto text-sm">{JSON.stringify(info.raw, null, 2)}</pre>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Start Param</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <pre className="overflow-auto text-sm">{info.startParam || '(none)'}</pre>
+          </CardContent>
+        </Card>
 
-        <div className="rounded-lg bg-green-100 p-6">
-          <h2 className="mb-2 text-lg font-semibold text-green-900">For Notifications:</h2>
-          <p className="mb-1 text-sm text-green-800">
-            Platform: <span className="font-mono font-bold">{info.platform}</span>
-          </p>
-          <p className="mb-1 text-sm text-green-800">
-            User ID:{' '}
-            <span className="font-mono font-bold">{info.user?.id || '(not found)'}</span>
-          </p>
-          <p className="text-sm text-green-800">
-            Chat ID:{' '}
-            <span className="font-mono font-bold">
-              {info.chat?.id || info.user?.id || '(not found)'}
-            </span>
-          </p>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Full InitDataUnsafe</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <pre className="overflow-auto text-sm">{JSON.stringify(info.raw, null, 2)}</pre>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

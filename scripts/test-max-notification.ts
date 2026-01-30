@@ -1,6 +1,6 @@
 /**
  * Test script to send a MAX notification
- * Usage: bun run scripts/test-max-notification.ts <chat_id>
+ * Usage: bun run scripts/test-max-notification.ts <chat_id> [text]
  */
 
 const MAX_BOT_TOKEN = process.env.MAX_BOT_TOKEN;
@@ -18,19 +18,21 @@ async function sendMaxMessage(chatId: string, text: string) {
   console.log('Text:', text);
 
   try {
-    const response = await fetch(`${MAX_API_BASE}/messages`, {
+    const url = new URL(`${MAX_API_BASE}/messages`);
+    url.searchParams.set('chat_id', chatId);
+
+    const response = await fetch(url.toString(), {
       method: 'POST',
       headers: {
         Authorization: MAX_BOT_TOKEN,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        chat_id: parseInt(chatId, 10),
         text,
       }),
     });
 
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
       console.error('❌ Failed to send message');
@@ -48,9 +50,10 @@ async function sendMaxMessage(chatId: string, text: string) {
 
 // Get chat_id from command line
 const chatId = process.argv[2];
+const text = process.argv[3] ?? 'hello world';
 
 if (!chatId) {
-  console.error('Usage: bun run scripts/test-max-notification.ts <chat_id>');
+  console.error('Usage: bun run scripts/test-max-notification.ts <chat_id> [text]');
   console.log('\nTo get your chat_id:');
   console.log('1. Open the MAX mini-app');
   console.log('2. Check the browser console for initDataUnsafe.chat.id');
@@ -58,4 +61,4 @@ if (!chatId) {
   process.exit(1);
 }
 
-sendMaxMessage(chatId, 'Тестовое уведомление из AutoAuction! 🚗');
+sendMaxMessage(chatId, text);
