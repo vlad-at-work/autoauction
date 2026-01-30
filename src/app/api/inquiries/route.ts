@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { inquiryCreateSchema } from '@/lib/schemas/inquiry';
 import { getActiveHardcodedDealers } from '@/lib/hardcoded-dealers';
-import { notifyDealerOfNewInquiry } from '@/lib/notifications';
+import { notifyDealerOfNewInquiry, notifyBuyer } from '@/lib/notifications';
 
 export async function POST(request: Request) {
   try {
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
         },
       });
 
-      return tx.inquiry.create({
+      const newInquiry = await tx.inquiry.create({
         data: {
           buyerId: buyer.id,
           name: input.name,
@@ -63,11 +63,26 @@ export async function POST(request: Request) {
         },
         select: { id: true },
       });
+
+      return { ...newInquiry, buyer };
+    });
+
+    // Notify user that inquiry was created
+    const userNotificationPromise = notifyBuyer(
+      {
+        platform: inquiry.buyer.platform,
+        platformChatId: inquiry.buyer.platformChatId,
+        platformUserId: inquiry.buyer.platformUserId,
+      },
+      `✅ Заявка создана!\n\n${input.model} ${input.submodel}\n${input.transmission} • ${input.color}\n\nДилеры начнут присылать вам предложения. Заявка активна 24 часа.`
+    ).catch((error) => {
+      console.error('Failed to notify buyer:', error);
+      return { success: false };
     });
 
     // Notify all active hardcoded dealers about the new inquiry
     const dealers = getActiveHardcodedDealers();
-    const notificationPromises = dealers.map((dealer) =>
+    const dealerNotificationPromises = dealers.map((dealer) =>
       notifyDealerOfNewInquiry(
         {
           platform: dealer.platform,
@@ -86,12 +101,12 @@ export async function POST(request: Request) {
       })
     );
 
-    // Send notifications in parallel without blocking the response
-    Promise.all(notificationPromises).catch((error) => {
-      console.error('Failed to send dealer notifications:', error);
+    // Send all notifications in parallel without blocking the response
+    Promise.all([userNotificationPromise, ...dealerNotificationPromises]).catch((error) => {
+      console.error('Failed to send notifications:', error);
     });
 
-    return NextResponse.json(inquiry);
+    return NextResponse.json({ id: inquiry.id, success: true });
   } catch (err) {
     console.error('Inquiry creation error:', err);
     return NextResponse.json(

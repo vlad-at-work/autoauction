@@ -19,24 +19,18 @@ export type HardcodedDealer = {
  * Add/remove dealers here as needed.
  */
 export const HARDCODED_DEALERS: HardcodedDealer[] = [
-  // Example dealers - update these with real dealer information
+  // Add your dealers here
+  // Example format (uncomment and fill in real values):
+  /*
   {
     username: 'autovaz_d7291',
     name: 'АвтоВАЗ Дилер',
-    platform: 'TELEGRAM',
-    platformUserId: 'TELEGRAM_USER_ID_1', // Replace with actual Telegram user ID
-    platformChatId: 'TELEGRAM_CHAT_ID_1', // Replace with actual chat ID
+    platform: 'MAX', // or 'TELEGRAM'
+    platformUserId: 'YOUR_DEALER_MAX_USER_ID_HERE', // e.g., '20325912'
+    platformChatId: 'YOUR_DEALER_MAX_CHAT_ID_HERE', // e.g., '142618871'
     active: true,
   },
-  {
-    username: 'vazauto_d4856',
-    name: 'ВАЗАвто',
-    platform: 'TELEGRAM',
-    platformUserId: 'TELEGRAM_USER_ID_2', // Replace with actual Telegram user ID
-    platformChatId: 'TELEGRAM_CHAT_ID_2', // Replace with actual chat ID
-    active: true,
-  },
-  // Add more dealers here as needed
+  */
 ];
 
 /**
