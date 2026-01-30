@@ -25,11 +25,15 @@ export default function InquiryDetailPage() {
     let cancelled = false;
 
     const loadInquiry = async () => {
-      // Get user ID from WebApp
-      const webApp = window.WebApp;
+      // Get user ID from WebApp (support both MAX and Telegram)
+      const maxApp = window.WebApp;
+      const tgApp = window.Telegram?.WebApp;
+      const webApp = maxApp || tgApp;
+
       const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
 
       if (!platformUserId) {
+        console.error('No platformUserId detected, redirecting to /app');
         router.replace('/app');
         return;
       }

@@ -23,6 +23,22 @@ export default function DashboardPage() {
   const [sendState, setSendState] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const [sendError, setSendError] = useState<string | null>(null);
   const [localTime, setLocalTime] = useState<string | null>(null);
+  const [clearingDb, setClearingDb] = useState(false);
+
+  const clearDatabase = async () => {
+    if (!confirm('⚠️ Удалить ВСЕ данные? Это действие необратимо!')) return;
+
+    setClearingDb(true);
+    try {
+      await fetch('/api/admin/clear-db', { method: 'POST' });
+      setInquiries([]);
+      alert('✅ База данных очищена');
+    } catch {
+      alert('❌ Ошибка очистки');
+    } finally {
+      setClearingDb(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -32,8 +48,7 @@ export default function DashboardPage() {
       const webApp = getWebApp();
       const detectedPlatform = detectPlatform();
       const detectedUserId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
-      const detectedChatId =
-        webApp?.initDataUnsafe?.chat?.id?.toString() || detectedUserId || null;
+      const detectedChatId = webApp?.initDataUnsafe?.chat?.id?.toString() || detectedUserId || null;
 
       setPlatform(detectedPlatform);
       setPlatformUserId(detectedUserId);
@@ -143,6 +158,15 @@ export default function DashboardPage() {
                   <Button type="button" variant="outline" size="sm" onClick={showLocalTime}>
                     <Clock className="mr-1 size-4" />
                     Show time
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={clearDatabase}
+                    disabled={clearingDb}
+                  >
+                    {clearingDb ? 'Clearing...' : 'Clear DB'}
                   </Button>
                 </div>
                 <div className="text-muted-foreground text-xs">
