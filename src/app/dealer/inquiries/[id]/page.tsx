@@ -7,8 +7,8 @@ import { prisma } from '@/lib/db';
 import { parseBasicAuthHeader } from '@/lib/auth/basic';
 import { OfferForm } from '@/app/dealer/inquiries/[id]/offer-form';
 
-export default async function DealerInquiryPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default async function DealerInquiryPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const headerList = await headers();
   const auth = parseBasicAuthHeader(headerList.get('authorization'));
 
@@ -23,23 +23,15 @@ export default async function DealerInquiryPage({ params }: { params: { id: stri
 
   const inquiry = await prisma.inquiry.findUnique({
     where: { id },
-    select: {
-      id: true,
-      model: true,
-      submodel: true,
-      transmission: true,
-      color: true,
-      status: true,
-      statusDescription: true,
-      comment: true,
-      createdAt: true,
-      expiresAt: true,
+    include: {
       offers: dealer
         ? {
             where: { dealerId: dealer.id },
-            select: { id: true, price: true, comment: true, leads: { select: { id: true } } },
+            include: {
+              leads: true,
+            },
           }
-        : false,
+        : undefined,
     },
   });
 
@@ -47,9 +39,24 @@ export default async function DealerInquiryPage({ params }: { params: { id: stri
 
   const now = new Date();
   const isExpired = inquiry.expiresAt <= now;
-  const offer = inquiry.offers[0] as unknown as
-    | { id: string; price: number; comment: string | null; leads: { id: string }[] }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const offers = (inquiry as any).offers || [];
+  const offer = offers[0] as unknown as
+    | {
+        id: string;
+        price: number;
+        comment: string | null;
+        leads: {
+          id: string;
+          buyerName: string;
+          buyerEmail: string | null;
+          buyerPhone: string;
+          acceptedAt: Date;
+        }[];
+      }
     | undefined;
+
+  const lead = offer?.leads[0];
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-10">
@@ -89,10 +96,36 @@ export default async function DealerInquiryPage({ params }: { params: { id: stri
             <div className="rounded-md border border-muted bg-muted/30 px-3 py-2 text-sm">
               Заявка истекла — предложения больше не принимаются.
             </div>
-          ) : offer && offer.leads.length > 0 ? (
-            <div className="rounded-md border border-muted bg-muted/30 px-3 py-2 text-sm">
-              Пользователь уже принял ваше предложение — редактирование отключено.
-            </div>
+          ) : lead ? (
+            <Card className="border-green-200 bg-green-50">
+              <CardHeader>
+                <CardTitle className="text-lg text-green-900">
+                  ✅ Лид получен! Покупатель принял ваше предложение
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <div>
+                  <span className="font-medium">Имя:</span> {lead.buyerName}
+                </div>
+                <div>
+                  <span className="font-medium">Телефон:</span>{' '}
+                  <a href={`tel:${lead.buyerPhone}`} className="text-blue-600 underline">
+                    {lead.buyerPhone}
+                  </a>
+                </div>
+                {lead.buyerEmail && (
+                  <div>
+                    <span className="font-medium">Email:</span>{' '}
+                    <a href={`mailto:${lead.buyerEmail}`} className="text-blue-600 underline">
+                      {lead.buyerEmail}
+                    </a>
+                  </div>
+                )}
+                <div className="text-muted-foreground text-xs">
+                  Принято: {new Date(lead.acceptedAt).toLocaleString('ru-RU')}
+                </div>
+              </CardContent>
+            </Card>
           ) : null}
 
           <div className="flex flex-col gap-3">

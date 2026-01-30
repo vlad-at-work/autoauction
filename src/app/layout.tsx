@@ -3,6 +3,7 @@ import { Figtree } from 'next/font/google';
 import { Toaster } from 'sonner';
 
 import './globals.css';
+import { GlobalLoading } from '@/components/global-loading';
 
 const fontSans = Figtree({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -67,6 +68,7 @@ export default function RootLayout({
   return (
     <html lang="ru" className={fontSans.variable} suppressHydrationWarning>
       <body className="antialiased">
+        <GlobalLoading />
         {children}
         <Toaster />
       </body>

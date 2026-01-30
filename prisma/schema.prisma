@@ -100,6 +100,10 @@ model Lead {
   buyerPhone String
 
   acceptedAt DateTime @default(now())
+  closedAt   DateTime?
+  status     String   @default("open") // open, contacted, closed, lost
+  notes      String?  // dealer notes
 
   @@index([offerId])
+  @@index([status])
 }

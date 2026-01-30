@@ -5,6 +5,7 @@ export type InquiryOffer = {
   createdAt: Date;
   updatedAt: Date;
   leadsCount?: number;
+  dealerName?: string;
 };
 
 export type Inquiry = {

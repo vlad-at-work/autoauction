@@ -73,6 +73,20 @@ export default function OfferDetailPage() {
   }, [inquiryId, offerId, router]);
 
   const handleAcceptOffer = async () => {
+    if (!inquiry) return;
+
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+      `Вы уверены, что хотите принять это предложение?\n\n` +
+        `Ваши контактные данные (имя, телефон${inquiry.email ? ', email' : ''}) будут переданы дилеру.\n\n` +
+        `Дилер свяжется с вами для завершения сделки.\n\n` +
+        `Вы можете принять несколько предложений от разных дилеров.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
     const webApp = window.WebApp;
     const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
     const platform = detectPlatform();

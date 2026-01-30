@@ -10,6 +10,7 @@ type OfferCardProps = {
     price: number;
     comment: string | null;
     createdAt: Date;
+    dealerName?: string;
   };
   inquiryId: string;
 };
@@ -19,7 +20,12 @@ export function OfferCard({ offer, inquiryId }: OfferCardProps) {
     <Link href={`/app/inquiry/${inquiryId}/offer/${offer.id}`}>
       <Card className="transition-colors hover:border-primary">
         <CardContent className="flex flex-col gap-2 p-4">
-          <div className="text-2xl font-bold">{offer.price.toLocaleString('ru-RU')} ₽</div>
+          <div className="flex items-center justify-between">
+            <div className="text-2xl font-bold">{offer.price.toLocaleString('ru-RU')} ₽</div>
+            {offer.dealerName && (
+              <div className="text-muted-foreground text-sm font-medium">{offer.dealerName}</div>
+            )}
+          </div>
           {offer.comment && (
             <p className="text-muted-foreground line-clamp-2 text-sm">{offer.comment}</p>
           )}

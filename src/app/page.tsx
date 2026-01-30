@@ -29,14 +29,16 @@ export default function Home() {
           >
             Открыть в Max
           </a>
-          <a
-            href={tgBotUrl}
-            className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-sky-500 px-6 text-lg font-semibold text-white transition-colors hover:bg-sky-600 active:bg-sky-700"
-          >
-            Открыть в Telegram
-          </a>
+          {tgBotUrl && (
+            <a
+              href={tgBotUrl}
+              className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-sky-500 px-6 text-lg font-semibold text-white transition-colors hover:bg-sky-600 active:bg-sky-700"
+            >
+              Открыть в Telegram
+            </a>
+          )}
           <p className="text-center text-sm text-zinc-500 dark:text-zinc-500">
-            Выберите удобный мессенджер
+            {tgBotUrl ? 'Выберите удобный мессенджер' : 'Начните с Max'}
           </p>
         </div>
 

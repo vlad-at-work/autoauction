@@ -25,6 +25,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             createdAt: 'desc',
           },
           include: {
+            dealer: {
+              select: {
+                username: true,
+                name: true,
+              },
+            },
             _count: {
               select: { leads: true },
             },
@@ -45,7 +51,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { buyer, ...inquiryData } = inquiry;
 
-    // Transform offers to include leadsCount
+    // Transform offers to include leadsCount and dealer info
     const transformedInquiry = {
       ...inquiryData,
       offers: inquiryData.offers.map((offer) => ({
@@ -55,6 +61,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         createdAt: offer.createdAt,
         updatedAt: offer.updatedAt,
         leadsCount: offer._count.leads,
+        dealerName: offer.dealer.name || offer.dealer.username,
       })),
     };
 
