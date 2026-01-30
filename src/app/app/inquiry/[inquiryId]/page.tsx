@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TopBar } from '@/components/ui/top-bar';
 import { getInquiryById, type Inquiry } from '@/lib/api/inquiries';
+import { getWebApp } from '@/app/app/webapp-ready';
 
 export default function InquiryDetailPage() {
   const params = useParams();
@@ -26,10 +27,7 @@ export default function InquiryDetailPage() {
 
     const loadInquiry = async () => {
       // Get user ID from WebApp (support both MAX and Telegram)
-      const maxApp = window.WebApp;
-      const tgApp = window.Telegram?.WebApp;
-      const webApp = maxApp || tgApp;
-
+      const webApp = getWebApp();
       const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
 
       if (!platformUserId) {

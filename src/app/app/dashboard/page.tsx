@@ -30,9 +30,15 @@ export default function DashboardPage() {
 
     setClearingDb(true);
     try {
-      await fetch('/api/admin/clear-db', { method: 'POST' });
+      const response = await fetch('/api/admin/clear-db', { method: 'POST' });
+      if (!response.ok) {
+        alert('❌ Ошибка очистки');
+        return;
+      }
       setInquiries([]);
       alert('✅ База данных очищена');
+      // Reload the page to ensure fresh data
+      window.location.reload();
     } catch {
       alert('❌ Ошибка очистки');
     } finally {
