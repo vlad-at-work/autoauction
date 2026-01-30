@@ -23,12 +23,6 @@ export default function Home() {
         </div>
 
         <div className="flex flex-col gap-4 w-full max-w-xs">
-          <a
-            href={maxBotUrl}
-            className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-blue-600 px-6 text-lg font-semibold text-white transition-colors hover:bg-blue-700 active:bg-blue-800"
-          >
-            Открыть в Max
-          </a>
           {tgBotUrl && (
             <a
               href={tgBotUrl}
@@ -37,9 +31,7 @@ export default function Home() {
               Открыть в Telegram
             </a>
           )}
-          <p className="text-center text-sm text-zinc-500 dark:text-zinc-500">
-            {tgBotUrl ? 'Выберите удобный мессенджер' : 'Начните с Max'}
-          </p>
+          <p className="text-center text-sm text-zinc-500 dark:text-zinc-500">Начните с Telegram</p>
         </div>
 
         <div className="mt-8 flex flex-col gap-6 text-center">
