@@ -93,9 +93,20 @@ export default async function DealerInquiryPage({ params }: { params: Promise<{ 
           </div>
 
           {isExpired ? (
-            <div className="rounded-md border border-muted bg-muted/30 px-3 py-2 text-sm">
-              Заявка истекла — предложения больше не принимаются.
-            </div>
+            <Card className="border-gray-300 bg-gray-50">
+              <CardHeader>
+                <CardTitle className="text-lg text-gray-700">⏰ Заявка истекла</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-gray-600">
+                Время истекло — предложения больше не принимаются.
+                {offer && (
+                  <div className="mt-2">
+                    Ваше предложение: <span className="font-medium">{offer.price} ₽</span>
+                    {offer.comment && ` (${offer.comment})`}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           ) : lead ? (
             <Card className="border-green-200 bg-green-50">
               <CardHeader>
@@ -123,6 +134,31 @@ export default async function DealerInquiryPage({ params }: { params: Promise<{ 
                 )}
                 <div className="text-muted-foreground text-xs">
                   Принято: {new Date(lead.acceptedAt).toLocaleString('ru-RU')}
+                </div>
+              </CardContent>
+            </Card>
+          ) : offer ? (
+            <Card className="border-blue-200 bg-blue-50">
+              <CardHeader>
+                <CardTitle className="text-lg text-blue-900">
+                  ⏳ Ожидание ответа покупателя
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <div>
+                  Ваше предложение: <span className="font-medium">{offer.price} ₽</span>
+                  {offer.comment && ` — ${offer.comment}`}
+                </div>
+                <div className="text-muted-foreground text-xs">
+                  Осталось времени:{' '}
+                  {Math.max(
+                    0,
+                    Math.ceil((inquiry.expiresAt.getTime() - now.getTime()) / (60 * 60 * 1000))
+                  )}{' '}
+                  часов
+                </div>
+                <div className="text-muted-foreground text-xs">
+                  Покупатель может принять несколько предложений от разных дилеров.
                 </div>
               </CardContent>
             </Card>

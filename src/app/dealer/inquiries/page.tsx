@@ -76,9 +76,19 @@ export default async function DealerInquiriesPage() {
                         {inquiry.transmission} • {inquiry.color}
                       </div>
                       {offer && (
-                        <div className="text-sm">
-                          Ваше предложение: <span className="font-medium">{offer.price}</span>
-                          {offer.leads.length > 0 ? ' (принято)' : ''}
+                        <div className="flex items-center gap-2 text-sm">
+                          <span>
+                            Ваше предложение: <span className="font-medium">{offer.price} ₽</span>
+                          </span>
+                          {offer.leads.length > 0 ? (
+                            <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                              ✓ Принято
+                            </span>
+                          ) : (
+                            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+                              ⏳ В ожидании
+                            </span>
+                          )}
                         </div>
                       )}
                     </Link>
