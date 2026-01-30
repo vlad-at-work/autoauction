@@ -2,7 +2,7 @@
 
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Check, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TopBar } from '@/components/ui/top-bar';
 import { getInquiryById, type Inquiry, type InquiryOffer } from '@/lib/api/inquiries';
+import { detectPlatform } from '@/app/app/webapp-ready';
 
 export default function OfferDetailPage() {
   const params = useParams();
@@ -20,6 +21,8 @@ export default function OfferDetailPage() {
   const [inquiry, setInquiry] = useState<Inquiry | null>(null);
   const [offer, setOffer] = useState<InquiryOffer | null>(null);
   const [loading, setLoading] = useState(true);
+  const [accepting, setAccepting] = useState(false);
+  const [accepted, setAccepted] = useState(false);
 
   const inquiryId = params.inquiryId as string;
   const offerId = params.offerId as string;
@@ -55,6 +58,10 @@ export default function OfferDetailPage() {
 
       setInquiry(inquiryData);
       setOffer(foundOffer);
+      // Check if already accepted (has leads)
+      if (foundOffer.leadsCount && foundOffer.leadsCount > 0) {
+        setAccepted(true);
+      }
       setLoading(false);
     };
 
@@ -65,8 +72,51 @@ export default function OfferDetailPage() {
     };
   }, [inquiryId, offerId, router]);
 
-  const handleAcceptOffer = () => {
-    toast.info('Функция скоро будет доступна');
+  const handleAcceptOffer = async () => {
+    const webApp = window.WebApp;
+    const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
+    const platform = detectPlatform();
+
+    if (!platformUserId || !platform) {
+      toast.error('Ошибка авторизации');
+      return;
+    }
+
+    setAccepting(true);
+
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          offerId,
+          platform,
+          platformUserId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 409) {
+          toast.info('Вы уже приняли это предложение');
+          setAccepted(true);
+        } else if (response.status === 410) {
+          toast.error('Заявка истекла');
+        } else {
+          toast.error(data.error || 'Ошибка при принятии предложения');
+        }
+        return;
+      }
+
+      setAccepted(true);
+      toast.success('Предложение принято! Дилер скоро свяжется с вами.');
+    } catch (error) {
+      console.error('Error accepting offer:', error);
+      toast.error('Ошибка при принятии предложения');
+    } finally {
+      setAccepting(false);
+    }
   };
 
   if (loading) {
@@ -128,9 +178,28 @@ export default function OfferDetailPage() {
                 </CardContent>
               </Card>
 
-              <Button onClick={handleAcceptOffer} size="lg" className="w-full">
-                Принять предложение
-              </Button>
+              {accepted ? (
+                <Button disabled size="lg" className="w-full" variant="secondary">
+                  <Check className="mr-2 size-4" />
+                  Предложение принято
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleAcceptOffer}
+                  disabled={accepting}
+                  size="lg"
+                  className="w-full"
+                >
+                  {accepting ? (
+                    <>
+                      <Loader2 className="mr-2 size-4 animate-spin" />
+                      Принимаем...
+                    </>
+                  ) : (
+                    'Принять предложение'
+                  )}
+                </Button>
+              )}
             </CardContent>
           </Card>
 

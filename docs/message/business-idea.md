@@ -1,0 +1,33 @@
+# AutoAuction — who is “selling” what (simple business view)
+
+- **AutoAuction (the operator of the bot + mini-app + dealer dashboard)** is trying to sell one idea:
+  - **“Bring buyer intent (inquiries) to dealers, and bring dealer offers back to buyers.”**
+    - **To the buyer (user in MAX/Telegram)**
+      - Problem: buying a car is slow and confusing
+        - Today: you message/call multiple dealers and repeat yourself
+          - Result: you waste time, miss discounts, and compare offers poorly
+      - Offer: “Submit one inquiry once”
+        - AutoAuction routes it to dealers and returns offers in chat
+          - Buyer value: fewer calls, faster quotes, better comparison
+    - **To the dealer (seller)**
+      - Problem: marketing spend is expensive and leads are messy
+        - Today: you pay for ads/aggregators and get low-quality contacts
+          - Result: sales managers waste time and conversion drops
+      - Offer: “Get warm leads with clear specs”
+        - AutoAuction delivers structured inquiries and a simple way to respond with an offer
+          - Dealer value: more qualified leads, less admin work, faster close
+    - **To the platform (MAX/Telegram ecosystem)**
+      - Problem: users abandon external sites; engagement stays inside messenger
+        - Today: a link-out breaks the flow and conversion falls
+          - Result: low retention and weak user experience
+      - Offer: “A native-feeling mini-app”
+        - Runs inside WebView and uses the bot as the notification channel
+          - Platform value: engagement stays in-app and looks “official”
+    - **To the operator (you / the business)**
+      - Problem: coordinating buyers + dealers is hard without a system
+        - Today: manual forwarding in chats doesn’t scale
+          - Result: missed follow-ups and no measurable funnel
+      - Offer: “A measurable pipeline”
+        - Every inquiry and offer is stored, searchable, and automatable
+          - Business value: you can charge dealers (per lead / per deal / subscription)
+

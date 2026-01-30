@@ -48,9 +48,9 @@ async function sendMaxMessage(chatId: string, text: string) {
   }
 }
 
-// Get chat_id from command line
-const chatId = process.argv[2];
-const text = process.argv[3] ?? 'hello world';
+// Get chat_id from command line (or env for convenience)
+const chatId = process.argv[2] ?? process.env.MAX_TEST_CHAT_ID;
+const text = process.argv[3] ?? 'hello 12345 - super check';
 
 if (!chatId) {
   console.error('Usage: bun run scripts/test-max-notification.ts <chat_id> [text]');
@@ -58,6 +58,7 @@ if (!chatId) {
   console.log('1. Open the MAX mini-app');
   console.log('2. Check the browser console for initDataUnsafe.chat.id');
   console.log('3. Or check the database for your Buyer record');
+  console.log('\nOr set MAX_TEST_CHAT_ID in your environment and re-run without args.');
   process.exit(1);
 }
 

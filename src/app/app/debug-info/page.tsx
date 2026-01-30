@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Copy, Send } from 'lucide-react';
+import { Clock, Copy, Send } from 'lucide-react';
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +21,7 @@ export default function DebugInfoPage() {
   const [info, setInfo] = useState<WebAppDebugInfo | null>(null);
   const [sendState, setSendState] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const [sendError, setSendError] = useState<string | null>(null);
+  const [localTime, setLocalTime] = useState<string | null>(null);
 
   useEffect(() => {
     const loadInfo = () => {
@@ -96,6 +97,10 @@ export default function DebugInfoPage() {
     }
   };
 
+  const showLocalTime = () => {
+    setLocalTime(new Date().toLocaleString());
+  };
+
   return (
     <div className="min-h-screen bg-zinc-50 p-6">
       <div className="mx-auto max-w-2xl space-y-6">
@@ -124,11 +129,20 @@ export default function DebugInfoPage() {
                 <Send className="mr-1 size-4" />
                 Send “hello world”
               </Button>
+              <Button type="button" variant="outline" size="sm" onClick={showLocalTime}>
+                <Clock className="mr-1 size-4" />
+                Show time
+              </Button>
             </div>
             <div className="text-muted-foreground text-xs">
               Platform: <span className="font-mono">{info.platform || 'Unknown'}</span> · User ID:{' '}
               <span className="font-mono">{info.user?.id || '(not found)'}</span>
             </div>
+            {localTime ? (
+              <div className="text-xs">
+                Local time: <span className="font-mono">{localTime}</span>
+              </div>
+            ) : null}
             {sendState === 'success' ? (
               <div className="text-xs text-green-700">Sent ✅ (check your MAX bot chat)</div>
             ) : null}

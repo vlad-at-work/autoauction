@@ -1,6 +1,6 @@
 'use client';
 
-import { Copy, ExternalLink, Loader2, Send } from 'lucide-react';
+import { Clock, Copy, ExternalLink, Loader2, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -22,6 +22,7 @@ export default function DashboardPage() {
   const [platform, setPlatform] = useState<'max' | 'telegram' | null>(null);
   const [sendState, setSendState] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const [sendError, setSendError] = useState<string | null>(null);
+  const [localTime, setLocalTime] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -96,6 +97,10 @@ export default function DashboardPage() {
     }
   };
 
+  const showLocalTime = () => {
+    setLocalTime(new Date().toLocaleString());
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center">
@@ -135,11 +140,20 @@ export default function DashboardPage() {
                       Send “hello world”
                     </Button>
                   ) : null}
+                  <Button type="button" variant="outline" size="sm" onClick={showLocalTime}>
+                    <Clock className="mr-1 size-4" />
+                    Show time
+                  </Button>
                 </div>
                 <div className="text-muted-foreground text-xs">
                   Platform: <span className="font-mono">{platform ?? '(unknown)'}</span> · User ID:{' '}
                   <span className="font-mono">{platformUserId ?? '(unknown)'}</span>
                 </div>
+                {localTime ? (
+                  <div className="text-xs">
+                    Local time: <span className="font-mono">{localTime}</span>
+                  </div>
+                ) : null}
                 {sendState === 'success' ? (
                   <div className="text-xs text-green-700">Sent ✅ (check your MAX bot chat)</div>
                 ) : null}

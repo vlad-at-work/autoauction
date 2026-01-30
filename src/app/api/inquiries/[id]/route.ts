@@ -24,6 +24,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
           orderBy: {
             createdAt: 'desc',
           },
+          include: {
+            _count: {
+              select: { leads: true },
+            },
+          },
         },
       },
     });
@@ -40,7 +45,20 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { buyer, ...inquiryData } = inquiry;
 
-    return NextResponse.json(inquiryData);
+    // Transform offers to include leadsCount
+    const transformedInquiry = {
+      ...inquiryData,
+      offers: inquiryData.offers.map((offer) => ({
+        id: offer.id,
+        price: offer.price,
+        comment: offer.comment,
+        createdAt: offer.createdAt,
+        updatedAt: offer.updatedAt,
+        leadsCount: offer._count.leads,
+      })),
+    };
+
+    return NextResponse.json(transformedInquiry);
   } catch (error) {
     console.error('Get inquiry error:', error);
     return NextResponse.json(

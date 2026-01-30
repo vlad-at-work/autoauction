@@ -4,6 +4,7 @@ export type InquiryOffer = {
   comment: string | null;
   createdAt: Date;
   updatedAt: Date;
+  leadsCount?: number;
 };
 
 export type Inquiry = {

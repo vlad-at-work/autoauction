@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
 import { inquiryCreateSchema } from '@/lib/schemas/inquiry';
+import { getActiveHardcodedDealers } from '@/lib/hardcoded-dealers';
+import { notifyDealerOfNewInquiry } from '@/lib/notifications';
 
 export async function POST(request: Request) {
   try {
@@ -61,6 +63,32 @@ export async function POST(request: Request) {
         },
         select: { id: true },
       });
+    });
+
+    // Notify all active hardcoded dealers about the new inquiry
+    const dealers = getActiveHardcodedDealers();
+    const notificationPromises = dealers.map((dealer) =>
+      notifyDealerOfNewInquiry(
+        {
+          platform: dealer.platform,
+          platformChatId: dealer.platformChatId,
+          platformUserId: dealer.platformUserId,
+        },
+        inquiry.id,
+        input.model,
+        input.submodel,
+        input.transmission,
+        input.color
+      ).catch((error) => {
+        // Log error but don't fail the request
+        console.error(`Failed to notify dealer ${dealer.username}:`, error);
+        return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+      })
+    );
+
+    // Send notifications in parallel without blocking the response
+    Promise.all(notificationPromises).catch((error) => {
+      console.error('Failed to send dealer notifications:', error);
     });
 
     return NextResponse.json(inquiry);

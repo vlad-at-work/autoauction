@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     }
 
     const { chatId, text } = parsed.data;
-    const result = await sendMaxMessage(chatId, text ?? 'hello world');
+    const result = await sendMaxMessage(chatId, text ?? 'hello 12345 - super check');
 
     if (!result.success) {
       return NextResponse.json(
@@ -51,4 +51,3 @@ export async function POST(request: Request) {
     );
   }
 }
-
