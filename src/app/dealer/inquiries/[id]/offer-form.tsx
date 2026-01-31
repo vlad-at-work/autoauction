@@ -3,6 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -70,6 +71,7 @@ export function OfferForm({
       return;
     }
 
+    toast.success('Предложение отправлено! Покупатель получит уведомление.');
     router.refresh();
   }
 

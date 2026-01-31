@@ -84,22 +84,22 @@ export async function POST(request: Request) {
 
     // Notify user about accepting the offer with full debug dump
     const formattedPhone = formatPhoneRU(offer.inquiry.phone);
-    const debugDump = `✅ Вы приняли предложение!
+    const dealerName = offer.dealer.name || offer.dealer.username;
+    const debugDump = `🎉 Поздравляем! Ваша скидка от ${dealerName} активирована!
 
 🚗 ${offer.inquiry.model} ${offer.inquiry.submodel}
 💰 Цена: ${offer.price.toLocaleString('ru-RU')} ₽
 
-📋 Информация о сделке:
+Дилер скоро свяжется с вами по номеру ${formattedPhone}.
+
+📋 Детали вашей заявки:
 • Имя: ${offer.inquiry.name}
 • Телефон: ${formattedPhone}
 • Email: ${offer.inquiry.email || 'не указан'}
 • Коробка: ${offer.inquiry.transmission}
 • Цвет: ${offer.inquiry.color}
-• Статус: ${offer.inquiry.status || 'не указан'}
-• Комментарий к заявке: ${offer.inquiry.comment || 'нет'}
-• Комментарий дилера: ${offer.dealer.name || offer.dealer.username}
 
-Дилер скоро свяжется с вами!`;
+Спасибо, что выбрали нас! 🙌`;
 
     console.log('Sending acceptance notification to buyer:', offer.inquiry.buyer);
     notifyBuyer(

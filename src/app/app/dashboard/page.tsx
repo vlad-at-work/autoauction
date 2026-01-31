@@ -67,38 +67,39 @@ export default function DashboardPage() {
     }
   };
 
+  const loadInquiries = async () => {
+    // Get user ID from WebApp
+    const webApp = getWebApp();
+    const detectedPlatform = detectPlatform();
+    const detectedUserId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
+    const detectedChatId = webApp?.initDataUnsafe?.chat?.id?.toString() || detectedUserId || null;
+
+    setPlatform(detectedPlatform);
+    setPlatformUserId(detectedUserId);
+    setPlatformChatId(detectedChatId);
+
+    if (!detectedUserId || !detectedPlatform) {
+      // If no user detected, redirect to entry point
+      router.replace('/app');
+      return;
+    }
+
+    const data = await getMyInquiries(detectedUserId, detectedPlatform);
+    setInquiries(data);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    let cancelled = false;
-
-    const loadInquiries = async () => {
-      // Get user ID from WebApp
-      const webApp = getWebApp();
-      const detectedPlatform = detectPlatform();
-      const detectedUserId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
-      const detectedChatId = webApp?.initDataUnsafe?.chat?.id?.toString() || detectedUserId || null;
-
-      setPlatform(detectedPlatform);
-      setPlatformUserId(detectedUserId);
-      setPlatformChatId(detectedChatId);
-
-      if (!detectedUserId || !detectedPlatform) {
-        // If no user detected, redirect to entry point
-        router.replace('/app');
-        return;
-      }
-
-      const data = await getMyInquiries(detectedUserId, detectedPlatform);
-
-      if (cancelled) return;
-
-      setInquiries(data);
-      setLoading(false);
-    };
-
     loadInquiries();
 
+    // Auto-refresh on window focus
+    const handleFocus = () => {
+      loadInquiries();
+    };
+    window.addEventListener('focus', handleFocus);
+
     return () => {
-      cancelled = true;
+      window.removeEventListener('focus', handleFocus);
     };
   }, [router]);
 
