@@ -31,7 +31,7 @@ export default function DashboardPage() {
 
     setMigratingCascades(true);
     try {
-      const response = await fetch('/api/admin/migrate-cascades', { method: 'POST' });
+      const response = await fetch('/api/debug/migrate-cascades', { method: 'POST' });
       const data = await response.json();
       if (!response.ok) {
         alert(`❌ Migration failed: ${data.error || 'Unknown error'}`);
@@ -50,7 +50,7 @@ export default function DashboardPage() {
 
     setClearingDb(true);
     try {
-      const response = await fetch('/api/admin/clear-db', { method: 'POST' });
+      const response = await fetch('/api/debug/clear-db', { method: 'POST' });
       const data = await response.json();
       if (!response.ok) {
         alert(`❌ Ошибка очистки: ${data.error || 'Unknown error'}`);
