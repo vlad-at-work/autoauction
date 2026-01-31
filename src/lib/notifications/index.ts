@@ -5,10 +5,8 @@
 
 import type { Platform } from '@prisma/client';
 
-import { sendMaxMessage, sendMaxMessageWithButton } from './max';
-import { sendTelegramMessage, sendTelegramMessageWithButton } from './telegram';
-
-const TG_BOT_NAME = process.env.TG_BOT_NAME || 'autoauction_bot';
+import { sendMaxMessage } from './max';
+import { sendTelegramMessage } from './telegram';
 
 type NotifyResult = {
   success: boolean;
@@ -20,30 +18,6 @@ type BuyerInfo = {
   platformChatId: string | null;
   platformUserId: string;
 };
-
-/**
- * Generate deep link URL for a specific offer
- */
-function getOfferDeepLink(
-  platform: Platform,
-  inquiryId: string,
-  offerId: string
-): { url: string; startParam: string } {
-  const startParam = `offer_${inquiryId}_${offerId}`;
-
-  if (platform === 'TELEGRAM') {
-    return {
-      url: `https://t.me/${TG_BOT_NAME}?startapp=${startParam}`,
-      startParam,
-    };
-  }
-
-  // MAX deep link - uses startapp parameter in the mini-app
-  return {
-    url: '', // MAX uses button with open_app type instead of URL
-    startParam,
-  };
-}
 
 /**
  * Send notification about a new offer to a buyer
@@ -59,16 +33,13 @@ export async function notifyBuyerOfNewOffer(
   const chatId = buyer.platformChatId || buyer.platformUserId;
 
   const formattedPrice = price.toLocaleString('ru-RU');
-  const text = `Новое предложение на ${carModel} ${carSubmodel}\nЦена: ${formattedPrice} руб.`;
-  const buttonText = 'Посмотреть';
-
-  const { url, startParam } = getOfferDeepLink(buyer.platform, inquiryId, offerId);
+  const text = `🔔 Новое предложение на ${carModel} ${carSubmodel}\nЦена: ${formattedPrice} руб.\n\nОткройте приложение, чтобы посмотреть предложение и принять его.`;
 
   if (buyer.platform === 'TELEGRAM') {
-    return sendTelegramMessageWithButton(chatId, text, buttonText, url);
+    return sendTelegramMessage(chatId, text);
   }
 
-  return sendMaxMessageWithButton(chatId, text, buttonText, startParam);
+  return sendMaxMessage(chatId, text);
 }
 
 /**
@@ -129,7 +100,7 @@ export async function notifyDealerOfLeadAccepted(
   const hardcodedDealer = getHardcodedDealerByUsername(dealer.username);
 
   if (!hardcodedDealer) {
-    console.log(`Dealer ${dealer.username} not in hardcoded list, skipping notification`);
+    console.warn(`Dealer ${dealer.username} not in hardcoded list, skipping notification`);
     return { success: false, error: 'Dealer not in hardcoded list' };
   }
 
