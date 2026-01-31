@@ -170,7 +170,7 @@ export default async function DealerInquiryPage({ params }: { params: Promise<{ 
               inquiryId={inquiry.id}
               defaultPrice={offer?.price}
               defaultComment={offer?.comment}
-              disabled={isExpired || (offer ? offer.leads.length > 0 : false)}
+              disabled={isExpired || !!offer}
             />
           </div>
 

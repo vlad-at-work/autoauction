@@ -70,17 +70,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Offer already accepted' }, { status: 409 });
     }
 
-    const isNewOffer = !existing;
+    if (existing) {
+      return NextResponse.json(
+        { error: 'Offer already submitted (waiting for buyer confirmation)' },
+        { status: 409 }
+      );
+    }
 
-    const offer = await prisma.offer.upsert({
-      where: { inquiryId_dealerId: { inquiryId, dealerId: dealer.id } },
-      update: { price, comment },
-      create: { inquiryId, dealerId: dealer.id, price, comment },
+    const offer = await prisma.offer.create({
+      data: { inquiryId, dealerId: dealer.id, price, comment },
       select: { id: true },
     });
 
     // Send notification to buyer
-    console.log('Sending notification to buyer:', inquiry.buyer, 'isNewOffer:', isNewOffer);
+    console.log('Sending notification to buyer:', inquiry.buyer);
     notifyBuyerOfNewOffer(
       inquiry.buyer,
       inquiryId,
@@ -98,6 +101,18 @@ export async function POST(request: Request) {
 
     return NextResponse.json(offer);
   } catch (err) {
+    if (
+      typeof err === 'object' &&
+      err &&
+      'code' in err &&
+      (err as { code?: string }).code === 'P2002'
+    ) {
+      return NextResponse.json(
+        { error: 'Offer already submitted (waiting for buyer confirmation)' },
+        { status: 409 }
+      );
+    }
+
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Internal error' },
       { status: 500 }
