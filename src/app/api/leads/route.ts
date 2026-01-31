@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { prisma } from '@/lib/db';
-import { notifyDealerOfLeadAccepted } from '@/lib/notifications';
+import { notifyDealerOfLeadAccepted, notifyBuyer } from '@/lib/notifications';
 
 const leadCreateSchema = z.object({
   offerId: z.string().min(1),
@@ -58,10 +58,7 @@ export async function POST(request: Request) {
 
     // Check if lead already exists for this offer
     if (offer.leads.length > 0) {
-      return NextResponse.json(
-        { error: 'You have already accepted this offer' },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: 'You have already accepted this offer' }, { status: 409 });
     }
 
     // Create lead
@@ -72,6 +69,18 @@ export async function POST(request: Request) {
         buyerEmail: offer.inquiry.email,
         buyerPhone: offer.inquiry.phone,
       },
+    });
+
+    // Notify user about accepting the offer
+    notifyBuyer(
+      {
+        platform: offer.inquiry.buyer.platform,
+        platformChatId: offer.inquiry.buyer.platformChatId,
+        platformUserId: offer.inquiry.buyer.platformUserId,
+      },
+      `✅ Вы приняли предложение!\n\n${offer.inquiry.model} ${offer.inquiry.submodel}\nЦена: ${offer.price.toLocaleString('ru-RU')} ₽\n\nДилер скоро свяжется с вами по телефону ${offer.inquiry.phone}.`
+    ).catch((error) => {
+      console.error('Failed to notify buyer of lead acceptance:', error);
     });
 
     // Notify dealer about the accepted offer (async, don't block response)
