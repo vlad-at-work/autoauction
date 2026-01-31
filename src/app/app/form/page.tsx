@@ -390,7 +390,11 @@ export default function MiniAppInquiryFormPage() {
                     className="size-6 mt-1 shrink-0"
                     checked={watchedConsent === true}
                     onCheckedChange={(checked) => {
-                      form.setValue('consent', checked === true);
+                      form.setValue('consent', checked === true, {
+                        shouldValidate: true,
+                        shouldDirty: true,
+                        shouldTouch: true,
+                      });
                     }}
                   />
                   <div className="flex flex-col gap-1">
