@@ -24,6 +24,26 @@ export default function DashboardPage() {
   const [sendError, setSendError] = useState<string | null>(null);
   const [localTime, setLocalTime] = useState<string | null>(null);
   const [clearingDb, setClearingDb] = useState(false);
+  const [migratingCascades, setMigratingCascades] = useState(false);
+
+  const migrateCascades = async () => {
+    if (!confirm('Run cascade delete migration?')) return;
+
+    setMigratingCascades(true);
+    try {
+      const response = await fetch('/api/admin/migrate-cascades', { method: 'POST' });
+      const data = await response.json();
+      if (!response.ok) {
+        alert(`❌ Migration failed: ${data.error || 'Unknown error'}`);
+        return;
+      }
+      alert('✅ Migration complete');
+    } catch (err) {
+      alert(`❌ Migration failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setMigratingCascades(false);
+    }
+  };
 
   const clearDatabase = async () => {
     if (!confirm('⚠️ Удалить ВСЕ данные? Это действие необратимо!')) return;
@@ -31,16 +51,17 @@ export default function DashboardPage() {
     setClearingDb(true);
     try {
       const response = await fetch('/api/admin/clear-db', { method: 'POST' });
+      const data = await response.json();
       if (!response.ok) {
-        alert('❌ Ошибка очистки');
+        alert(`❌ Ошибка очистки: ${data.error || 'Unknown error'}`);
         return;
       }
       setInquiries([]);
       alert('✅ База данных очищена');
       // Reload the page to ensure fresh data
       window.location.reload();
-    } catch {
-      alert('❌ Ошибка очистки');
+    } catch (err) {
+      alert(`❌ Ошибка очистки: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setClearingDb(false);
     }
@@ -164,6 +185,15 @@ export default function DashboardPage() {
                   <Button type="button" variant="outline" size="sm" onClick={showLocalTime}>
                     <Clock className="mr-1 size-4" />
                     Show time
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={migrateCascades}
+                    disabled={migratingCascades}
+                  >
+                    {migratingCascades ? 'Migrating...' : 'Migrate'}
                   </Button>
                   <Button
                     type="button"
