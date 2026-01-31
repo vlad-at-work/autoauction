@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TopBar } from '@/components/ui/top-bar';
 import { getInquiryById, type Inquiry, type InquiryOffer } from '@/lib/api/inquiries';
-import { detectPlatform } from '@/app/app/webapp-ready';
+import { detectPlatform, getWebApp } from '@/app/app/webapp-ready';
 
 export default function OfferDetailPage() {
   const params = useParams();
@@ -32,7 +32,7 @@ export default function OfferDetailPage() {
 
     const loadOffer = async () => {
       // Get user ID from WebApp
-      const webApp = window.WebApp;
+      const webApp = getWebApp();
       const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
 
       if (!platformUserId) {
@@ -87,7 +87,7 @@ export default function OfferDetailPage() {
       return;
     }
 
-    const webApp = window.WebApp;
+    const webApp = getWebApp();
     const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
     const platform = detectPlatform();
 
