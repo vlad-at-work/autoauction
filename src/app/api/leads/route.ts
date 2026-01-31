@@ -4,6 +4,17 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { notifyDealerOfLeadAccepted, notifyBuyer } from '@/lib/notifications';
 
+function formatPhoneRU(phone: string): string {
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length === 11 && (digits.startsWith('7') || digits.startsWith('8'))) {
+    return `+7 (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7, 9)}-${digits.slice(9, 11)}`;
+  }
+  if (digits.length === 10) {
+    return `+7 (${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 8)}-${digits.slice(8, 10)}`;
+  }
+  return phone;
+}
+
 const leadCreateSchema = z.object({
   offerId: z.string().min(1),
   platform: z.enum(['max', 'telegram']),
@@ -71,7 +82,25 @@ export async function POST(request: Request) {
       },
     });
 
-    // Notify user about accepting the offer
+    // Notify user about accepting the offer with full debug dump
+    const formattedPhone = formatPhoneRU(offer.inquiry.phone);
+    const debugDump = `✅ Вы приняли предложение!
+
+🚗 ${offer.inquiry.model} ${offer.inquiry.submodel}
+💰 Цена: ${offer.price.toLocaleString('ru-RU')} ₽
+
+📋 Информация о сделке:
+• Имя: ${offer.inquiry.name}
+• Телефон: ${formattedPhone}
+• Email: ${offer.inquiry.email || 'не указан'}
+• Коробка: ${offer.inquiry.transmission}
+• Цвет: ${offer.inquiry.color}
+• Статус: ${offer.inquiry.status || 'не указан'}
+• Комментарий к заявке: ${offer.inquiry.comment || 'нет'}
+• Комментарий дилера: ${offer.dealer.name || offer.dealer.username}
+
+Дилер скоро свяжется с вами!`;
+
     console.log('Sending acceptance notification to buyer:', offer.inquiry.buyer);
     notifyBuyer(
       {
@@ -79,7 +108,7 @@ export async function POST(request: Request) {
         platformChatId: offer.inquiry.buyer.platformChatId,
         platformUserId: offer.inquiry.buyer.platformUserId,
       },
-      `✅ Вы приняли предложение!\n\n${offer.inquiry.model} ${offer.inquiry.submodel}\nЦена: ${offer.price.toLocaleString('ru-RU')} ₽\n\nДилер скоро свяжется с вами по телефону ${offer.inquiry.phone}.`
+      debugDump
     )
       .then((result) => {
         console.log('Buyer acceptance notification sent, result:', result);
