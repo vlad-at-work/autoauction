@@ -7,7 +7,7 @@ export async function checkBuyerExists(platformUserId: string, platform: string)
     }
 
     if (!res.ok) {
-      throw new Error('Failed to check buyer');
+      throw new Error('Не удалось проверить покупателя');
     }
 
     const data = (await res.json()) as { id: string };

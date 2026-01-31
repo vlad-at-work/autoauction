@@ -53,7 +53,7 @@ export default function DebugInfoPage() {
   if (!info) {
     return (
       <div className="p-6">
-        <p>Loading WebApp data...</p>
+        <p>Загрузка данных WebApp...</p>
       </div>
     );
   }
@@ -93,7 +93,7 @@ export default function DebugInfoPage() {
       setSendState('success');
     } catch (err) {
       setSendState('error');
-      setSendError(err instanceof Error ? err.message : 'Unknown error');
+      setSendError(err instanceof Error ? err.message : 'Неизвестная ошибка');
     }
   };
 
@@ -104,20 +104,26 @@ export default function DebugInfoPage() {
   return (
     <div className="min-h-screen bg-zinc-50 p-6">
       <div className="mx-auto max-w-2xl space-y-6">
-        <h1 className="text-2xl font-bold">WebApp Debug Info</h1>
+        <h1 className="text-2xl font-bold">Отладка WebApp</h1>
 
         <Card>
           <CardHeader>
-            <CardTitle>Chat ID (use this for MAX notifications)</CardTitle>
+            <CardTitle>ID чата (для уведомлений в MAX)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
               <div className="bg-muted text-foreground rounded-md px-2 py-1 font-mono text-base">
-                {chatId || '(not found)'}
+                {chatId || '(не найден)'}
               </div>
-              <Button type="button" variant="outline" size="sm" onClick={copyChatId} disabled={!chatId}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={copyChatId}
+                disabled={!chatId}
+              >
                 <Copy className="mr-1 size-4" />
-                Copy
+                Копировать
               </Button>
               <Button
                 type="button"
@@ -127,44 +133,48 @@ export default function DebugInfoPage() {
                 disabled={!chatId || info.platform !== 'max'}
               >
                 <Send className="mr-1 size-4" />
-                Send “hello world”
+                Отправить «hello world»
               </Button>
               <Button type="button" variant="outline" size="sm" onClick={showLocalTime}>
                 <Clock className="mr-1 size-4" />
-                Show time
+                Показать время
               </Button>
             </div>
             <div className="text-muted-foreground text-xs">
-              Platform: <span className="font-mono">{info.platform || 'Unknown'}</span> · User ID:{' '}
-              <span className="font-mono">{info.user?.id || '(not found)'}</span>
+              Платформа: <span className="font-mono">{info.platform || 'Неизвестно'}</span> · ID
+              пользователя: <span className="font-mono">{info.user?.id || '(не найден)'}</span>
             </div>
             {localTime ? (
               <div className="text-xs">
-                Local time: <span className="font-mono">{localTime}</span>
+                Локальное время: <span className="font-mono">{localTime}</span>
               </div>
             ) : null}
             {sendState === 'success' ? (
-              <div className="text-xs text-green-700">Sent ✅ (check your MAX bot chat)</div>
+              <div className="text-xs text-green-700">
+                Отправлено ✅ (проверьте чат с ботом MAX)
+              </div>
             ) : null}
             {sendState === 'error' ? (
-              <div className="text-xs text-red-700">Send failed: {sendError}</div>
+              <div className="text-xs text-red-700">Ошибка отправки: {sendError}</div>
             ) : null}
-            {sendState === 'sending' ? <div className="text-xs text-zinc-600">Sending…</div> : null}
+            {sendState === 'sending' ? (
+              <div className="text-xs text-zinc-600">Отправка…</div>
+            ) : null}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Platform</CardTitle>
+            <CardTitle>Платформа</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="font-mono">{info.platform || 'Unknown'}</p>
+            <p className="font-mono">{info.platform || 'Неизвестно'}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>User Info</CardTitle>
+            <CardTitle>Данные пользователя</CardTitle>
           </CardHeader>
           <CardContent>
             <pre className="overflow-auto text-sm">{JSON.stringify(info.user, null, 2)}</pre>
@@ -173,7 +183,7 @@ export default function DebugInfoPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Chat Info</CardTitle>
+            <CardTitle>Данные чата</CardTitle>
           </CardHeader>
           <CardContent>
             <pre className="overflow-auto text-sm">{JSON.stringify(info.chat, null, 2)}</pre>
@@ -182,16 +192,16 @@ export default function DebugInfoPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Start Param</CardTitle>
+            <CardTitle>Параметр start</CardTitle>
           </CardHeader>
           <CardContent>
-            <pre className="overflow-auto text-sm">{info.startParam || '(none)'}</pre>
+            <pre className="overflow-auto text-sm">{info.startParam || '(нет)'}</pre>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Full InitDataUnsafe</CardTitle>
+            <CardTitle>Полный InitDataUnsafe</CardTitle>
           </CardHeader>
           <CardContent>
             <pre className="overflow-auto text-sm">{JSON.stringify(info.raw, null, 2)}</pre>

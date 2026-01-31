@@ -16,12 +16,12 @@ export async function POST(_request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Database cleared successfully',
+      message: 'База данных очищена',
     });
   } catch (err) {
     console.error('Clear DB error:', err);
     return NextResponse.json(
-      { success: false, error: err instanceof Error ? err.message : 'Internal error' },
+      { success: false, error: err instanceof Error ? err.message : 'Внутренняя ошибка' },
       { status: 500 }
     );
   }

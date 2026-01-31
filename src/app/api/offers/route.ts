@@ -14,7 +14,7 @@ const offerUpsertSchema = z.object({
 export async function POST(request: Request) {
   const auth = parseBasicAuthHeader(request.headers.get('authorization'));
   if (!auth) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Неавторизован' }, { status: 401 });
   }
 
   try {
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid request', details: parsed.error.flatten() },
+        { error: 'Некорректный запрос', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
@@ -47,11 +47,11 @@ export async function POST(request: Request) {
     });
 
     if (!inquiry) {
-      return NextResponse.json({ error: 'Inquiry not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Заявка не найдена' }, { status: 404 });
     }
 
     if (inquiry.expiresAt <= new Date()) {
-      return NextResponse.json({ error: 'Inquiry expired' }, { status: 410 });
+      return NextResponse.json({ error: 'Заявка истекла' }, { status: 410 });
     }
 
     const dealer = await prisma.dealer.upsert({
@@ -67,12 +67,12 @@ export async function POST(request: Request) {
     });
 
     if (existing && existing.leads.length > 0) {
-      return NextResponse.json({ error: 'Offer already accepted' }, { status: 409 });
+      return NextResponse.json({ error: 'Предложение уже принято покупателем' }, { status: 409 });
     }
 
     if (existing) {
       return NextResponse.json(
-        { error: 'Offer already submitted (waiting for buyer confirmation)' },
+        { error: 'Предложение уже отправлено (ожидайте решения покупателя)' },
         { status: 409 }
       );
     }
@@ -108,13 +108,13 @@ export async function POST(request: Request) {
       (err as { code?: string }).code === 'P2002'
     ) {
       return NextResponse.json(
-        { error: 'Offer already submitted (waiting for buyer confirmation)' },
+        { error: 'Предложение уже отправлено (ожидайте решения покупателя)' },
         { status: 409 }
       );
     }
 
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Internal error' },
+      { error: err instanceof Error ? err.message : 'Внутренняя ошибка' },
       { status: 500 }
     );
   }

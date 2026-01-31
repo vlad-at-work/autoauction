@@ -26,7 +26,7 @@ export function AdminMobileNav({ items }: { items: NavItem[] }) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon-sm" aria-label="Open menu">
+        <Button variant="ghost" size="icon-sm" aria-label="Открыть меню">
           <Menu className="h-4 w-4" />
         </Button>
       </SheetTrigger>

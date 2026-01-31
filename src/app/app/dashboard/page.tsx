@@ -27,19 +27,21 @@ export default function DashboardPage() {
   const [migratingCascades, setMigratingCascades] = useState(false);
 
   const migrateCascades = async () => {
-    if (!confirm('Run cascade delete migration?')) return;
+    if (!confirm('Запустить миграцию каскадного удаления?')) return;
 
     setMigratingCascades(true);
     try {
       const response = await fetch('/api/debug/migrate-cascades', { method: 'POST' });
       const data = await response.json();
       if (!response.ok) {
-        alert(`❌ Migration failed: ${data.error || 'Unknown error'}`);
+        alert(`❌ Миграция не выполнена: ${data.error || 'Неизвестная ошибка'}`);
         return;
       }
-      alert('✅ Migration complete');
+      alert('✅ Миграция выполнена');
     } catch (err) {
-      alert(`❌ Migration failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      alert(
+        `❌ Миграция не выполнена: ${err instanceof Error ? err.message : 'Неизвестная ошибка'}`
+      );
     } finally {
       setMigratingCascades(false);
     }
@@ -53,7 +55,7 @@ export default function DashboardPage() {
       const response = await fetch('/api/debug/clear-db', { method: 'POST' });
       const data = await response.json();
       if (!response.ok) {
-        alert(`❌ Ошибка очистки: ${data.error || 'Unknown error'}`);
+        alert(`❌ Ошибка очистки: ${data.error || 'Неизвестная ошибка'}`);
         return;
       }
       setInquiries([]);
@@ -61,7 +63,7 @@ export default function DashboardPage() {
       // Reload the page to ensure fresh data
       window.location.reload();
     } catch (err) {
-      alert(`❌ Ошибка очистки: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      alert(`❌ Ошибка очистки: ${err instanceof Error ? err.message : 'Неизвестная ошибка'}`);
     } finally {
       setClearingDb(false);
     }
@@ -136,7 +138,7 @@ export default function DashboardPage() {
       setSendState('success');
     } catch (err) {
       setSendState('error');
-      setSendError(err instanceof Error ? err.message : 'Unknown error');
+      setSendError(err instanceof Error ? err.message : 'Неизвестная ошибка');
     }
   };
 
@@ -160,11 +162,11 @@ export default function DashboardPage() {
           {platformChatId ? (
             <Card className="mb-4">
               <CardHeader className="flex items-center justify-between gap-3">
-                <CardTitle>Debug: Chat ID</CardTitle>
+                <CardTitle>Отладка: ID чата</CardTitle>
                 <Button asChild variant="ghost" size="sm">
                   <Link href="/app/debug-info">
                     <ExternalLink className="mr-1 size-4" />
-                    Debug info
+                    Отладка
                   </Link>
                 </Button>
               </CardHeader>
@@ -175,17 +177,17 @@ export default function DashboardPage() {
                   </div>
                   <Button type="button" variant="outline" size="sm" onClick={copyChatId}>
                     <Copy className="mr-1 size-4" />
-                    Copy
+                    Копировать
                   </Button>
                   {platform === 'max' ? (
                     <Button type="button" variant="default" size="sm" onClick={sendTestMessage}>
                       <Send className="mr-1 size-4" />
-                      Send “hello world”
+                      Отправить «hello world»
                     </Button>
                   ) : null}
                   <Button type="button" variant="outline" size="sm" onClick={showLocalTime}>
                     <Clock className="mr-1 size-4" />
-                    Show time
+                    Показать время
                   </Button>
                   <Button
                     type="button"
@@ -194,7 +196,7 @@ export default function DashboardPage() {
                     onClick={migrateCascades}
                     disabled={migratingCascades}
                   >
-                    {migratingCascades ? 'Migrating...' : 'Migrate'}
+                    {migratingCascades ? 'Миграция...' : 'Миграция'}
                   </Button>
                   <Button
                     type="button"
@@ -203,26 +205,29 @@ export default function DashboardPage() {
                     onClick={clearDatabase}
                     disabled={clearingDb}
                   >
-                    {clearingDb ? 'Clearing...' : 'Clear DB'}
+                    {clearingDb ? 'Очистка...' : 'Очистить БД'}
                   </Button>
                 </div>
                 <div className="text-muted-foreground text-xs">
-                  Platform: <span className="font-mono">{platform ?? '(unknown)'}</span> · User ID:{' '}
-                  <span className="font-mono">{platformUserId ?? '(unknown)'}</span>
+                  Платформа: <span className="font-mono">{platform ?? '(неизвестно)'}</span> · ID
+                  пользователя:{' '}
+                  <span className="font-mono">{platformUserId ?? '(неизвестно)'}</span>
                 </div>
                 {localTime ? (
                   <div className="text-xs">
-                    Local time: <span className="font-mono">{localTime}</span>
+                    Локальное время: <span className="font-mono">{localTime}</span>
                   </div>
                 ) : null}
                 {sendState === 'success' ? (
-                  <div className="text-xs text-green-700">Sent ✅ (check your MAX bot chat)</div>
+                  <div className="text-xs text-green-700">
+                    Отправлено ✅ (проверьте чат с ботом MAX)
+                  </div>
                 ) : null}
                 {sendState === 'error' ? (
-                  <div className="text-xs text-red-700">Send failed: {sendError}</div>
+                  <div className="text-xs text-red-700">Ошибка отправки: {sendError}</div>
                 ) : null}
                 {sendState === 'sending' ? (
-                  <div className="text-xs text-zinc-600">Sending…</div>
+                  <div className="text-xs text-zinc-600">Отправка…</div>
                 ) : null}
               </CardContent>
             </Card>

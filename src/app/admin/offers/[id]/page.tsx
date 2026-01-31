@@ -124,7 +124,7 @@ export default async function OfferDetailPage({ params }: { params: Params }) {
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-medium">{lead.buyerName}</span>
-                      <Badge variant="default">Accepted</Badge>
+                      <Badge variant="default">Принято</Badge>
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
                       {lead.buyerPhone} • {format(lead.acceptedAt, 'dd.MM.yyyy HH:mm')}

@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid request', details: parsed.error.flatten() },
+        { error: 'Некорректный запрос', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     });
 
     if (!offer) {
-      return NextResponse.json({ error: 'Offer not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Предложение не найдено' }, { status: 404 });
     }
 
     // Verify the user owns this inquiry
@@ -59,17 +59,17 @@ export async function POST(request: Request) {
       offer.inquiry.buyer.platform !== dbPlatform ||
       offer.inquiry.buyer.platformUserId !== platformUserId
     ) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ error: 'Нет доступа' }, { status: 403 });
     }
 
     // Check if inquiry has expired
     if (offer.inquiry.expiresAt <= new Date()) {
-      return NextResponse.json({ error: 'Inquiry has expired' }, { status: 410 });
+      return NextResponse.json({ error: 'Заявка истекла' }, { status: 410 });
     }
 
     // Check if lead already exists for this offer
     if (offer.leads.length > 0) {
-      return NextResponse.json({ error: 'You have already accepted this offer' }, { status: 409 });
+      return NextResponse.json({ error: 'Вы уже приняли это предложение' }, { status: 409 });
     }
 
     // Create lead
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
 📋 Детали вашей заявки:
 • Имя: ${offer.inquiry.name}
 • Телефон: ${formattedPhone}
-• Email: ${offer.inquiry.email || 'не указан'}
+• Эл. почта: ${offer.inquiry.email || 'не указана'}
 • Коробка: ${offer.inquiry.transmission}
 • Цвет: ${offer.inquiry.color}
 
@@ -133,7 +133,7 @@ export async function POST(request: Request) {
   } catch (err) {
     console.error('Lead creation error:', err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Internal error' },
+      { error: err instanceof Error ? err.message : 'Внутренняя ошибка' },
       { status: 500 }
     );
   }

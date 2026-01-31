@@ -46,7 +46,7 @@ export async function sendMaxMessage(chatId: string, text: string): Promise<Send
   } catch (err) {
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'Unknown error',
+      error: err instanceof Error ? err.message : 'Неизвестная ошибка',
     };
   }
 }
@@ -112,7 +112,7 @@ export async function sendMaxMessageWithButton(
   } catch (err) {
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'Unknown error',
+      error: err instanceof Error ? err.message : 'Неизвестная ошибка',
     };
   }
 }

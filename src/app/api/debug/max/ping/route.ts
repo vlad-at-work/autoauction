@@ -12,13 +12,18 @@ const querySchema = z.object({
 function isDebugSendEnabled(): boolean {
   if (process.env.DEBUG_MAX_TEST_MESSAGE_ENABLED === 'true') return true;
   const vercelEnv = process.env.VERCEL_ENV;
-  return vercelEnv === 'preview' || vercelEnv === 'development' || process.env.NODE_ENV !== 'production';
+  return (
+    vercelEnv === 'preview' || vercelEnv === 'development' || process.env.NODE_ENV !== 'production'
+  );
 }
 
 export async function GET(request: Request) {
   if (!isDebugSendEnabled()) {
     return NextResponse.json(
-      { success: false, error: 'Debug send disabled (enable DEBUG_MAX_TEST_MESSAGE_ENABLED=true)' },
+      {
+        success: false,
+        error: 'Отладочная отправка выключена (включите DEBUG_MAX_TEST_MESSAGE_ENABLED=true)',
+      },
       { status: 403 }
     );
   }
@@ -31,7 +36,7 @@ export async function GET(request: Request) {
 
   if (!parsed.success) {
     return NextResponse.json(
-      { success: false, error: 'Invalid request', details: parsed.error.flatten() },
+      { success: false, error: 'Некорректный запрос', details: parsed.error.flatten() },
       { status: 400 }
     );
   }
@@ -43,22 +48,24 @@ export async function GET(request: Request) {
       select: { platformChatId: true, platformUserId: true },
     });
 
-    const chatId = parsed.data.chatId ?? fallbackBuyer?.platformChatId ?? fallbackBuyer?.platformUserId;
+    const chatId =
+      parsed.data.chatId ?? fallbackBuyer?.platformChatId ?? fallbackBuyer?.platformUserId;
 
     if (!chatId) {
       return NextResponse.json(
-        { success: false, error: 'No MAX buyer chat_id found (pass ?chatId=...)' },
+        { success: false, error: 'Не найден chat_id MAX покупателя (передайте ?chatId=...)' },
         { status: 404 }
       );
     }
 
     const text =
-      parsed.data.text ?? `ping ${new Date().toISOString()} ${Math.random().toString(16).slice(2, 6)}`;
+      parsed.data.text ??
+      `ping ${new Date().toISOString()} ${Math.random().toString(16).slice(2, 6)}`;
 
     const result = await sendMaxMessage(chatId, text);
     if (!result.success) {
       return NextResponse.json(
-        { success: false, error: result.error ?? 'Failed to send message' },
+        { success: false, error: result.error ?? 'Не удалось отправить сообщение' },
         { status: 502 }
       );
     }
@@ -66,9 +73,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: true, chatId, text });
   } catch (err) {
     return NextResponse.json(
-      { success: false, error: err instanceof Error ? err.message : 'Internal error' },
+      { success: false, error: err instanceof Error ? err.message : 'Внутренняя ошибка' },
       { status: 500 }
     );
   }
 }
-

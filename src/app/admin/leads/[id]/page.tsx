@@ -57,7 +57,7 @@ export default async function LeadDetailPage({ params }: { params: Params }) {
               <span className="text-muted-foreground">Телефон:</span>
               <span>{lead.buyerPhone}</span>
 
-              <span className="text-muted-foreground">Email:</span>
+              <span className="text-muted-foreground">Эл. почта:</span>
               <span>{lead.buyerEmail || '-'}</span>
 
               <span className="text-muted-foreground">Принято:</span>

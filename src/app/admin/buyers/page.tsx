@@ -32,25 +32,25 @@ export default async function BuyersPage({ searchParams }: { searchParams: Searc
     },
     {
       key: 'platform',
-      label: 'Platform',
+      label: 'Платформа',
       render: (b: Buyer & { _count: { inquiries: number } }) => (
         <Badge variant={b.platform === 'MAX' ? 'default' : 'secondary'}>{b.platform}</Badge>
       ),
     },
-    { key: 'platformUserId', label: 'Platform User ID' },
+    { key: 'platformUserId', label: 'ID пользователя в платформе' },
     {
       key: 'platformUserName',
-      label: 'Name',
+      label: 'Имя',
       render: (b: Buyer & { _count: { inquiries: number } }) => b.platformUserName || '-',
     },
     {
       key: 'inquiries',
-      label: 'Inquiries',
+      label: 'Заявки',
       render: (b: Buyer & { _count: { inquiries: number } }) => b._count.inquiries,
     },
     {
       key: 'createdAt',
-      label: 'Created',
+      label: 'Создан',
       render: (b: Buyer & { _count: { inquiries: number } }) =>
         format(b.createdAt, 'dd.MM.yyyy HH:mm'),
     },

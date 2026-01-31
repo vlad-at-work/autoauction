@@ -39,7 +39,11 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
     { key: 'id', label: 'ID', render: (l: LeadWithRelations) => l.id.slice(0, 8) + '...' },
     { key: 'buyerName', label: 'Имя покупателя' },
     { key: 'buyerPhone', label: 'Телефон' },
-    { key: 'buyerEmail', label: 'Email', render: (l: LeadWithRelations) => l.buyerEmail || '-' },
+    {
+      key: 'buyerEmail',
+      label: 'Эл. почта',
+      render: (l: LeadWithRelations) => l.buyerEmail || '-',
+    },
     {
       key: 'inquiry',
       label: 'Заявка',

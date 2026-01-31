@@ -126,7 +126,7 @@ export default async function DealerInquiryPage({ params }: { params: Promise<{ 
                 </div>
                 {lead.buyerEmail && (
                   <div>
-                    <span className="font-medium">Email:</span>{' '}
+                    <span className="font-medium">Эл. почта:</span>{' '}
                     <a href={`mailto:${lead.buyerEmail}`} className="text-blue-600 underline">
                       {lead.buyerEmail}
                     </a>

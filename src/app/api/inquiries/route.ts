@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       return NextResponse.json(
         {
-          error: 'Invalid request',
+          error: 'Некорректный запрос',
           details: parsed.error.flatten(),
         },
         { status: 400 }
@@ -97,7 +97,10 @@ export async function POST(request: Request) {
       ).catch((error) => {
         // Log error but don't fail the request
         console.error(`Failed to notify dealer ${dealer.username}:`, error);
-        return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Неизвестная ошибка',
+        };
       })
     );
 
@@ -110,7 +113,7 @@ export async function POST(request: Request) {
   } catch (err) {
     console.error('Inquiry creation error:', err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Internal error' },
+      { error: err instanceof Error ? err.message : 'Внутренняя ошибка' },
       { status: 500 }
     );
   }

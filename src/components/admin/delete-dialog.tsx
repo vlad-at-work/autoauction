@@ -34,7 +34,7 @@ export function DeleteDialog({ entityName, entityId, onDelete, redirectTo }: Del
     try {
       const result = await onDelete(entityId);
       if (result.success) {
-        toast.success(`${entityName} deleted successfully`);
+        toast.success(`Удалено: ${entityName}`);
         setOpen(false);
         if (redirectTo) {
           router.push(redirectTo);
@@ -42,10 +42,10 @@ export function DeleteDialog({ entityName, entityId, onDelete, redirectTo }: Del
           router.refresh();
         }
       } else {
-        toast.error(result.error || `Failed to delete ${entityName}`);
+        toast.error(result.error || `Не удалось удалить: ${entityName}`);
       }
     } catch {
-      toast.error(`Failed to delete ${entityName}`);
+      toast.error(`Не удалось удалить: ${entityName}`);
     } finally {
       setLoading(false);
     }

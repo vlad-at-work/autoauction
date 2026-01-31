@@ -78,7 +78,7 @@ export default function OfferDetailPage() {
     // Show confirmation dialog
     const confirmed = window.confirm(
       `Вы уверены, что хотите принять это предложение?\n\n` +
-        `Ваши контактные данные (имя, телефон${inquiry.email ? ', email' : ''}) будут переданы дилеру.\n\n` +
+        `Ваши контактные данные (имя, телефон${inquiry.email ? ', эл. почта' : ''}) будут переданы дилеру.\n\n` +
         `Дилер свяжется с вами для завершения сделки.\n\n` +
         `Вы можете принять несколько предложений от разных дилеров.`
     );
@@ -185,7 +185,7 @@ export default function OfferDetailPage() {
                   <div className="text-sm">
                     <p className="font-medium">Внимание</p>
                     <p className="text-muted-foreground mt-1">
-                      Принимая предложение, ваши контактные данные (имя, телефон, email) будут
+                      Принимая предложение, ваши контактные данные (имя, телефон, эл. почта) будут
                       переданы дилеру.
                     </p>
                   </div>

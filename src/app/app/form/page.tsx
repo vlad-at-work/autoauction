@@ -213,7 +213,7 @@ export default function MiniAppInquiryFormPage() {
               </Field>
 
               <Field orientation="vertical" data-invalid={!!form.formState.errors.email}>
-                <FieldLabel htmlFor="email">Email (необязательно)</FieldLabel>
+                <FieldLabel htmlFor="email">Эл. почта (необязательно)</FieldLabel>
                 <FieldContent>
                   <Input id="email" {...form.register('email')} placeholder="you@example.com" />
                   <FieldError errors={[form.formState.errors.email]} />

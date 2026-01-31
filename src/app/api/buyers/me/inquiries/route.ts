@@ -9,7 +9,10 @@ export async function GET(request: Request) {
     const platform = searchParams.get('platform');
 
     if (!platformUserId || !platform) {
-      return NextResponse.json({ error: 'Missing platformUserId or platform' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Отсутствует platformUserId или platform' },
+        { status: 400 }
+      );
     }
 
     const platformEnum = platform === 'max' ? 'MAX' : 'TELEGRAM';
@@ -51,7 +54,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Get inquiries error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal error' },
+      { error: error instanceof Error ? error.message : 'Внутренняя ошибка' },
       { status: 500 }
     );
   }

@@ -25,7 +25,7 @@ export function Pagination({ page, limit, total, basePath }: PaginationProps) {
   return (
     <div className="flex items-center justify-between">
       <p className="text-sm text-muted-foreground">
-        Showing {(page - 1) * limit + 1} to {Math.min(page * limit, total)} of {total}
+        Показано {(page - 1) * limit + 1}–{Math.min(page * limit, total)} из {total}
       </p>
       <div className="flex items-center gap-2">
         <Button
@@ -37,7 +37,7 @@ export function Pagination({ page, limit, total, basePath }: PaginationProps) {
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <span className="text-sm">
-          Page {page} of {totalPages}
+          Страница {page} из {totalPages}
         </span>
         <Button
           variant="outline"

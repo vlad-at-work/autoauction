@@ -41,12 +41,12 @@ export async function POST(_request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Cascade deletes added successfully',
+      message: 'Каскадное удаление включено',
     });
   } catch (err) {
     console.error('Migration error:', err);
     return NextResponse.json(
-      { success: false, error: err instanceof Error ? err.message : 'Internal error' },
+      { success: false, error: err instanceof Error ? err.message : 'Внутренняя ошибка' },
       { status: 500 }
     );
   }

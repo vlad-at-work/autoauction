@@ -73,7 +73,7 @@ export default async function InquiryDetailPage({ params }: { params: Params }) 
               <span className="text-muted-foreground">Телефон:</span>
               <span>{inquiry.phone}</span>
 
-              <span className="text-muted-foreground">Email:</span>
+              <span className="text-muted-foreground">Эл. почта:</span>
               <span>{inquiry.email || '-'}</span>
 
               <span className="text-muted-foreground">Модель:</span>
@@ -136,10 +136,10 @@ export default async function InquiryDetailPage({ params }: { params: Params }) 
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-medium">{offer.price.toLocaleString('ru-RU')} ₽</span>
-                      <Badge variant="outline">{offer._count.leads} leads</Badge>
+                      <Badge variant="outline">{offer._count.leads} лид(ов)</Badge>
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
-                      From: {offer.dealer.name || offer.dealer.username} •{' '}
+                      От: {offer.dealer.name || offer.dealer.username} •{' '}
                       {format(offer.createdAt, 'dd.MM.yyyy HH:mm')}
                     </div>
                     {offer.comment && <div className="text-xs mt-1 truncate">{offer.comment}</div>}

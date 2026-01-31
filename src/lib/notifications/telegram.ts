@@ -46,7 +46,7 @@ export async function sendTelegramMessage(
   } catch (err) {
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'Unknown error',
+      error: err instanceof Error ? err.message : 'Неизвестная ошибка',
     };
   }
 }
@@ -98,7 +98,7 @@ export async function sendTelegramMessageWithButton(
   } catch (err) {
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'Unknown error',
+      error: err instanceof Error ? err.message : 'Неизвестная ошибка',
     };
   }
 }

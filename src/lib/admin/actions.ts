@@ -24,7 +24,7 @@ export async function deleteBuyer(id: string) {
     return { success: true };
   } catch (error) {
     console.error('Delete buyer error:', error);
-    return { success: false, error: 'Failed to delete buyer' };
+    return { success: false, error: 'Не удалось удалить покупателя' };
   }
 }
 
@@ -39,7 +39,7 @@ export async function updateBuyer(id: string, data: { platformUserName?: string 
     return { success: true };
   } catch (error) {
     console.error('Update buyer error:', error);
-    return { success: false, error: 'Failed to update buyer' };
+    return { success: false, error: 'Не удалось обновить покупателя' };
   }
 }
 
@@ -54,7 +54,7 @@ export async function createBuyer(data: {
     return { success: true, id: buyer.id };
   } catch (error) {
     console.error('Create buyer error:', error);
-    return { success: false, error: 'Failed to create buyer' };
+    return { success: false, error: 'Не удалось создать покупателя' };
   }
 }
 
@@ -74,7 +74,7 @@ export async function deleteInquiry(id: string) {
     return { success: true };
   } catch (error) {
     console.error('Delete inquiry error:', error);
-    return { success: false, error: 'Failed to delete inquiry' };
+    return { success: false, error: 'Не удалось удалить заявку' };
   }
 }
 
@@ -103,7 +103,7 @@ export async function updateInquiry(
     return { success: true };
   } catch (error) {
     console.error('Update inquiry error:', error);
-    return { success: false, error: 'Failed to update inquiry' };
+    return { success: false, error: 'Не удалось обновить заявку' };
   }
 }
 
@@ -127,7 +127,7 @@ export async function createInquiry(data: {
     return { success: true, id: inquiry.id };
   } catch (error) {
     console.error('Create inquiry error:', error);
-    return { success: false, error: 'Failed to create inquiry' };
+    return { success: false, error: 'Не удалось создать заявку' };
   }
 }
 
@@ -147,7 +147,7 @@ export async function deleteDealer(id: string) {
     return { success: true };
   } catch (error) {
     console.error('Delete dealer error:', error);
-    return { success: false, error: 'Failed to delete dealer' };
+    return { success: false, error: 'Не удалось удалить дилера' };
   }
 }
 
@@ -162,7 +162,7 @@ export async function updateDealer(id: string, data: { name?: string | null; act
     return { success: true };
   } catch (error) {
     console.error('Update dealer error:', error);
-    return { success: false, error: 'Failed to update dealer' };
+    return { success: false, error: 'Не удалось обновить дилера' };
   }
 }
 
@@ -177,7 +177,7 @@ export async function createDealer(data: {
     return { success: true, id: dealer.id };
   } catch (error) {
     console.error('Create dealer error:', error);
-    return { success: false, error: 'Failed to create dealer' };
+    return { success: false, error: 'Не удалось создать дилера' };
   }
 }
 
@@ -194,7 +194,7 @@ export async function deleteOffer(id: string) {
     return { success: true };
   } catch (error) {
     console.error('Delete offer error:', error);
-    return { success: false, error: 'Failed to delete offer' };
+    return { success: false, error: 'Не удалось удалить предложение' };
   }
 }
 
@@ -209,7 +209,7 @@ export async function updateOffer(id: string, data: { price?: number; comment?: 
     return { success: true };
   } catch (error) {
     console.error('Update offer error:', error);
-    return { success: false, error: 'Failed to update offer' };
+    return { success: false, error: 'Не удалось обновить предложение' };
   }
 }
 
@@ -225,7 +225,7 @@ export async function createOffer(data: {
     return { success: true, id: offer.id };
   } catch (error) {
     console.error('Create offer error:', error);
-    return { success: false, error: 'Failed to create offer' };
+    return { success: false, error: 'Не удалось создать предложение' };
   }
 }
 
@@ -239,6 +239,6 @@ export async function deleteLead(id: string) {
     return { success: true };
   } catch (error) {
     console.error('Delete lead error:', error);
-    return { success: false, error: 'Failed to delete lead' };
+    return { success: false, error: 'Не удалось удалить лид' };
   }
 }

@@ -33,7 +33,7 @@ export async function getMyInquiries(platformUserId: string, platform: string): 
     );
 
     if (!res.ok) {
-      throw new Error('Failed to fetch inquiries');
+      throw new Error('Не удалось загрузить заявки');
     }
 
     return (await res.json()) as Inquiry[];
