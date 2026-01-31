@@ -81,6 +81,7 @@ export async function POST(request: Request) {
 
     // Send notification to buyer only for new offers (not updates)
     if (isNewOffer) {
+      console.log('Sending notification to buyer:', inquiry.buyer);
       // Fire and forget - don't block response on notification delivery
       notifyBuyerOfNewOffer(
         inquiry.buyer,
@@ -89,10 +90,14 @@ export async function POST(request: Request) {
         inquiry.model,
         inquiry.submodel,
         price
-      ).catch((err) => {
-        // Log error but don't fail the request
-        console.error('Failed to send notification:', err);
-      });
+      )
+        .then((result) => {
+          console.log('Notification sent, result:', result);
+        })
+        .catch((err) => {
+          // Log error but don't fail the request
+          console.error('Failed to send notification:', err);
+        });
     }
 
     return NextResponse.json(offer);

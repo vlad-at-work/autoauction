@@ -72,6 +72,7 @@ export async function POST(request: Request) {
     });
 
     // Notify user about accepting the offer
+    console.log('Sending acceptance notification to buyer:', offer.inquiry.buyer);
     notifyBuyer(
       {
         platform: offer.inquiry.buyer.platform,
@@ -79,9 +80,13 @@ export async function POST(request: Request) {
         platformUserId: offer.inquiry.buyer.platformUserId,
       },
       `✅ Вы приняли предложение!\n\n${offer.inquiry.model} ${offer.inquiry.submodel}\nЦена: ${offer.price.toLocaleString('ru-RU')} ₽\n\nДилер скоро свяжется с вами по телефону ${offer.inquiry.phone}.`
-    ).catch((error) => {
-      console.error('Failed to notify buyer of lead acceptance:', error);
-    });
+    )
+      .then((result) => {
+        console.log('Buyer acceptance notification sent, result:', result);
+      })
+      .catch((error) => {
+        console.error('Failed to notify buyer of lead acceptance:', error);
+      });
 
     // Notify dealer about the accepted offer (async, don't block response)
     notifyDealerOfLeadAccepted(
