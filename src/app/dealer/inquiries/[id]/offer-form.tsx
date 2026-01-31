@@ -16,7 +16,7 @@ const offerFormSchema = z.object({
 });
 
 const offerSchema = z.object({
-  price: z.coerce.number().int().positive(),
+  price: z.coerce.number().int().positive().max(2000000000, 'Цена слишком большая'),
   comment: z.string().max(1000).optional(),
 });
 
@@ -50,7 +50,8 @@ export function OfferForm({
     });
 
     if (!parsed.success) {
-      form.setError('price', { message: 'Неверный формат цены' });
+      const priceError = parsed.error.issues.find((e) => e.path[0] === 'price');
+      form.setError('price', { message: priceError?.message || 'Неверный формат цены' });
       return;
     }
     const res = await fetch('/api/offers', {
