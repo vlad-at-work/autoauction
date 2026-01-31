@@ -32,7 +32,7 @@ model Buyer {
 
 model Inquiry {
   id      String @id @default(cuid())
-  buyer   Buyer  @relation(fields: [buyerId], references: [id])
+  buyer   Buyer  @relation(fields: [buyerId], references: [id], onDelete: Cascade)
   buyerId String
 
   name  String
@@ -71,10 +71,10 @@ model Dealer {
 
 model Offer {
   id        String  @id @default(cuid())
-  inquiry   Inquiry @relation(fields: [inquiryId], references: [id])
+  inquiry   Inquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
   inquiryId String
 
-  dealer   Dealer @relation(fields: [dealerId], references: [id])
+  dealer   Dealer @relation(fields: [dealerId], references: [id], onDelete: Cascade)
   dealerId String
 
   price   Int
@@ -92,7 +92,7 @@ model Offer {
 
 model Lead {
   id      String @id @default(cuid())
-  offer   Offer  @relation(fields: [offerId], references: [id])
+  offer   Offer  @relation(fields: [offerId], references: [id], onDelete: Cascade)
   offerId String
 
   buyerName  String
