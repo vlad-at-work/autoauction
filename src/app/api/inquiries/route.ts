@@ -67,47 +67,32 @@ export async function POST(request: Request) {
       return { ...newInquiry, buyer };
     });
 
-    // Notify user that inquiry was created
-    const userNotificationPromise = notifyBuyer(
-      {
-        platform: inquiry.buyer.platform,
-        platformChatId: inquiry.buyer.platformChatId,
-        platformUserId: inquiry.buyer.platformUserId,
-      },
-      `✅ Заявка создана!\n\n${input.model} ${input.submodel}\n${input.transmission} • ${input.color}\n\nДилеры начнут присылать вам предложения. Заявка активна 24 часа.`
-    ).catch((error) => {
-      console.error('Failed to notify buyer:', error);
-      return { success: false };
-    });
-
-    // Notify all active hardcoded dealers about the new inquiry
+    // IMPORTANT: await notifications to avoid serverless "fire-and-forget" drops.
     const dealers = getActiveHardcodedDealers();
-    const dealerNotificationPromises = dealers.map((dealer) =>
-      notifyDealerOfNewInquiry(
+    await Promise.allSettled([
+      notifyBuyer(
         {
-          platform: dealer.platform,
-          platformChatId: dealer.platformChatId,
-          platformUserId: dealer.platformUserId,
+          platform: inquiry.buyer.platform,
+          platformChatId: inquiry.buyer.platformChatId,
+          platformUserId: inquiry.buyer.platformUserId,
         },
-        inquiry.id,
-        input.model,
-        input.submodel,
-        input.transmission,
-        input.color
-      ).catch((error) => {
-        // Log error but don't fail the request
-        console.error(`Failed to notify dealer ${dealer.username}:`, error);
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Неизвестная ошибка',
-        };
-      })
-    );
-
-    // Send all notifications in parallel without blocking the response
-    Promise.all([userNotificationPromise, ...dealerNotificationPromises]).catch((error) => {
-      console.error('Failed to send notifications:', error);
-    });
+        `✅ Заявка создана!\n\n${input.model} ${input.submodel}\n${input.transmission} • ${input.color}\n\nДилеры начнут присылать вам предложения. Заявка активна 24 часа.`
+      ),
+      ...dealers.map((dealer) =>
+        notifyDealerOfNewInquiry(
+          {
+            platform: dealer.platform,
+            platformChatId: dealer.platformChatId,
+            platformUserId: dealer.platformUserId,
+          },
+          inquiry.id,
+          input.model,
+          input.submodel,
+          input.transmission,
+          input.color
+        )
+      ),
+    ]);
 
     return NextResponse.json({ id: inquiry.id, success: true });
   } catch (err) {

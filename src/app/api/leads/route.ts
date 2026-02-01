@@ -102,32 +102,25 @@ export async function POST(request: Request) {
 Спасибо, что выбрали нас! 🙌`;
 
     console.log('Sending acceptance notification to buyer:', offer.inquiry.buyer);
-    notifyBuyer(
-      {
-        platform: offer.inquiry.buyer.platform,
-        platformChatId: offer.inquiry.buyer.platformChatId,
-        platformUserId: offer.inquiry.buyer.platformUserId,
-      },
-      debugDump
-    )
-      .then((result) => {
-        console.log('Buyer acceptance notification sent, result:', result);
-      })
-      .catch((error) => {
-        console.error('Failed to notify buyer of lead acceptance:', error);
-      });
-
-    // Notify dealer about the accepted offer (async, don't block response)
-    notifyDealerOfLeadAccepted(
-      offer.dealer,
-      offer.inquiry.model,
-      offer.inquiry.submodel,
-      offer.price,
-      offer.inquiry.name,
-      offer.inquiry.phone
-    ).catch((error) => {
-      console.error('Failed to notify dealer of lead:', error);
-    });
+    // IMPORTANT: await notifications to avoid serverless "fire-and-forget" drops.
+    await Promise.allSettled([
+      notifyBuyer(
+        {
+          platform: offer.inquiry.buyer.platform,
+          platformChatId: offer.inquiry.buyer.platformChatId,
+          platformUserId: offer.inquiry.buyer.platformUserId,
+        },
+        debugDump
+      ),
+      notifyDealerOfLeadAccepted(
+        offer.dealer,
+        offer.inquiry.model,
+        offer.inquiry.submodel,
+        offer.price,
+        offer.inquiry.name,
+        offer.inquiry.phone
+      ),
+    ]);
 
     return NextResponse.json({ id: lead.id, success: true });
   } catch (err) {

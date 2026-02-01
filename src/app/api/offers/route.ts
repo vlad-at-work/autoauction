@@ -82,22 +82,22 @@ export async function POST(request: Request) {
       select: { id: true },
     });
 
-    // Send notification to buyer
-    console.log('Sending notification to buyer:', inquiry.buyer);
-    notifyBuyerOfNewOffer(
-      inquiry.buyer,
-      inquiryId,
-      offer.id,
-      inquiry.model,
-      inquiry.submodel,
-      price
-    )
-      .then((result) => {
-        console.log('Notification sent, result:', result);
-      })
-      .catch((err) => {
-        console.error('Failed to send notification:', err);
-      });
+    // Send notification to buyer (awaited to avoid serverless "fire-and-forget" drops)
+    try {
+      const result = await notifyBuyerOfNewOffer(
+        inquiry.buyer,
+        inquiryId,
+        offer.id,
+        inquiry.model,
+        inquiry.submodel,
+        price
+      );
+      if (!result.success) {
+        console.error('Failed to send buyer notification:', result.error);
+      }
+    } catch (err) {
+      console.error('Failed to send buyer notification:', err);
+    }
 
     return NextResponse.json(offer);
   } catch (err) {
