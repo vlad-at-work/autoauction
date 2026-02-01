@@ -1,0 +1,28 @@
+- Подключение приложения: https://dev.max.ru/docs-api
+- Получение информации о боте: https://dev.max.ru/docs-api/methods/GET/me
+- Получение списка всех групповых чатов: https://dev.max.ru/docs-api/methods/GET/chats
+- Получение информации о групповом чате: https://dev.max.ru/docs-api/methods/GET/chats/-chatId-
+- Изменение информации о групповом чате: https://dev.max.ru/docs-api/methods/PATCH/chats/-chatId-
+- Удаление группового чата: https://dev.max.ru/docs-api/methods/DELETE/chats/-chatId-
+- Получение участников группового чата: https://dev.max.ru/docs-api/methods/GET/chats/-chatId-/members
+- Добавление участников в групповой чат: https://dev.max.ru/docs-api/methods/POST/chats/-chatId-/members
+- Удаление участника из группового чата: https://dev.max.ru/docs-api/methods/DELETE/chats/-chatId-/members
+- Получение подписок: https://dev.max.ru/docs-api/methods/GET/subscriptions
+- Подписка на обновления: https://dev.max.ru/docs-api/methods/POST/subscriptions
+- Отписка от обновлений: https://dev.max.ru/docs-api/methods/DELETE/subscriptions
+- Получение обновлений: https://dev.max.ru/docs-api/methods/GET/updates
+- Загрузка файлов: https://dev.max.ru/docs-api/methods/POST/uploads
+- Получение сообщений: https://dev.max.ru/docs-api/methods/GET/messages
+- Отправить сообщение: https://dev.max.ru/docs-api/methods/POST/messages
+- Редактировать сообщение: https://dev.max.ru/docs-api/methods/PUT/messages
+- Удалить сообщение: https://dev.max.ru/docs-api/methods/DELETE/messages
+- Получить сообщение: https://dev.max.ru/docs-api/methods/GET/messages/-messageId-
+- Ответ на callback: https://dev.max.ru/docs-api/methods/POST/answers
+- Получить информацию о видео: https://dev.max.ru/docs-api/methods/GET/videos/-videoToken-
+- User: https://dev.max.ru/docs-api/objects/User
+- UserWithPhoto: https://dev.max.ru/docs-api/objects/UserWithPhoto
+- Chat: https://dev.max.ru/docs-api/objects/Chat
+- ChatMember: https://dev.max.ru/docs-api/objects/ChatMember
+- Message: https://dev.max.ru/docs-api/objects/Message
+- NewMessageBody: https://dev.max.ru/docs-api/objects/NewMessageBody
+- Update: https://dev.max.ru/docs-api/objects/Update
