@@ -54,7 +54,11 @@ export async function notifyBuyerOfNewOffer(
   }
 
   const maxPayload = formatMaxNotification(text, buttons);
-  return sendMaxMessage(chatId, maxPayload.text, maxPayload.attachments);
+  return sendMaxMessage(
+    chatId,
+    maxPayload.text,
+    maxPayload.attachments as Array<Record<string, unknown>>
+  );
 }
 
 /**
