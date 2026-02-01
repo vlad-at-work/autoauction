@@ -22,14 +22,29 @@ export default async function DealerInquiryPage({ params }: { params: Promise<{ 
   const headerList = await headers();
   const auth = parseBasicAuthHeader(headerList.get('authorization'));
 
-  const dealer = auth
-    ? await prisma.dealer.upsert({
-        where: { username: auth.username },
-        update: {},
-        create: { username: auth.username },
-        select: { id: true },
-      })
-    : null;
+  // Require authentication - reject without credentials
+  if (!auth) {
+    return (
+      <div className="flex min-h-screen w-full flex-col items-center justify-center px-4">
+        <div className="w-full max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-center">
+          <h1 className="mb-2 text-xl font-semibold text-red-900">Доступ запрещен</h1>
+          <p className="mb-4 text-sm text-red-800">
+            Требуется аутентификация. Пожалуйста, используйте правильные учетные данные.
+          </p>
+          <p className="text-xs text-red-700">
+            Это портал для дилеров. Используйте ваше имя пользователя и пароль.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const dealer = await prisma.dealer.upsert({
+    where: { username: auth.username },
+    update: {},
+    create: { username: auth.username },
+    select: { id: true },
+  });
 
   const inquiry = await prisma.inquiry.findUnique({
     where: { id },
