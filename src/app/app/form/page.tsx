@@ -1,12 +1,15 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
+
+import { getMyInquiries } from '@/lib/api/inquiries';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,10 +48,20 @@ type SubmitState =
   | { status: 'success'; inquiryId: string }
   | { status: 'error'; message: string };
 
-export default function MiniAppInquiryFormPage() {
+function MiniAppInquiryFormPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const forceNewInquiry = searchParams.get('new') === '1';
+
   const [submitState, setSubmitState] = useState<SubmitState>({ status: 'idle' });
   const [randomSuffix] = useState(() => Math.floor(Math.random() * 10000));
+  const [identity, setIdentity] = useState<{
+    platformUserId: string;
+    platform: 'max' | 'telegram';
+  } | null>(null);
+  const [redirectCheckState, setRedirectCheckState] = useState<'idle' | 'checking' | 'done'>(
+    'idle'
+  );
 
   const form = useForm<InquiryCreateInput>({
     resolver: zodResolver(inquiryCreateSchema),
@@ -112,6 +125,10 @@ export default function MiniAppInquiryFormPage() {
         }
       }
 
+      if (platform && platformUserId) {
+        setIdentity({ platform, platformUserId });
+      }
+
       if (webApp || attempt === 40) return;
       window.setTimeout(() => tryLoadUser(attempt + 1), 50);
     };
@@ -122,6 +139,49 @@ export default function MiniAppInquiryFormPage() {
       cancelled = true;
     };
   }, [form]);
+
+  // If the user re-opens the mini-app directly on /app/form (e.g. MAX "app button"),
+  // but they already have inquiries, redirect to dashboard unless explicitly creating a new one.
+  useEffect(() => {
+    let cancelled = false;
+
+    if (forceNewInquiry) {
+      queueMicrotask(() => {
+        if (!cancelled) setRedirectCheckState('done');
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    if (!identity || redirectCheckState !== 'idle') {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    queueMicrotask(() => {
+      if (!cancelled) setRedirectCheckState('checking');
+    });
+
+    (async () => {
+      const { inquiries } = await getMyInquiries(identity.platformUserId, identity.platform);
+      if (cancelled) return;
+
+      if (inquiries.length > 0) {
+        router.replace('/app/dashboard');
+        return;
+      }
+
+      queueMicrotask(() => {
+        if (!cancelled) setRedirectCheckState('done');
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [forceNewInquiry, identity, redirectCheckState, router]);
 
   const submodels = useMemo(() => {
     if (!watchedModel) return [];
@@ -170,6 +230,17 @@ export default function MiniAppInquiryFormPage() {
         message: err instanceof Error ? err.message : 'Не удалось отправить заявку',
       });
     }
+  }
+
+  if (!forceNewInquiry && redirectCheckState === 'checking') {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center">
+        <div className="flex items-center gap-3">
+          <Loader2 className="text-muted-foreground size-5 animate-spin" />
+          <p className="text-muted-foreground text-sm">Проверка заявок…</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -427,5 +498,19 @@ export default function MiniAppInquiryFormPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function MiniAppInquiryFormPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen w-full items-center justify-center">
+          <Loader2 className="text-muted-foreground size-8 animate-spin" />
+        </div>
+      }
+    >
+      <MiniAppInquiryFormPageInner />
+    </Suspense>
   );
 }
