@@ -1,12 +1,18 @@
 /**
  * Unified notification service
  * Sends notifications to users via their registered platform (Telegram or MAX)
+ * Includes deep links for direct navigation to relevant sections
  */
 
 import type { Platform } from '@prisma/client';
 
 import { sendMaxMessage } from './max';
 import { sendTelegramMessage } from './telegram';
+import {
+  createNotificationButtons,
+  formatMaxNotification,
+  formatTelegramNotification,
+} from '../deeplinks';
 
 type NotifyResult = {
   success: boolean;
@@ -21,6 +27,7 @@ type BuyerInfo = {
 
 /**
  * Send notification about a new offer to a buyer
+ * Includes deep link to view the specific offer
  * @param isFirstOffer - true if this is the first offer from this dealer on this inquiry
  */
 export async function notifyBuyerOfNewOffer(
@@ -38,11 +45,16 @@ export async function notifyBuyerOfNewOffer(
   const title = isFirstOffer ? 'Новое предложение' : 'Дилер обновил предложение';
   const text = `🔔 ${title} на ${carModel} ${carSubmodel}\nЦена: ${formattedPrice} ₽\n\nОткройте приложение, чтобы посмотреть предложение и принять его.`;
 
+  // Create buttons with deep link to this specific inquiry
+  const buttons = createNotificationButtons('inquiry', inquiryId, '📱 Посмотреть предложения');
+
   if (buyer.platform === 'TELEGRAM') {
-    return sendTelegramMessage(chatId, text);
+    const telegramPayload = formatTelegramNotification(text, buttons);
+    return sendTelegramMessage(chatId, telegramPayload.text, telegramPayload.reply_markup);
   }
 
-  return sendMaxMessage(chatId, text);
+  const maxPayload = formatMaxNotification(text, buttons);
+  return sendMaxMessage(chatId, maxPayload.text, maxPayload.attachments);
 }
 
 /**

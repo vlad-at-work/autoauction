@@ -12,11 +12,21 @@ type SendMessageResult = {
   error?: string;
 };
 
+interface MaxMessagePayload {
+  text: string;
+  attachments?: Array<Record<string, unknown>>;
+}
+
 /**
  * Send a text message to a MAX user
  * Note: MAX API requires chat_id/user_id as query parameters, not in the body
+ * @param attachments - Optional inline buttons/attachments
  */
-export async function sendMaxMessage(chatId: string, text: string): Promise<SendMessageResult> {
+export async function sendMaxMessage(
+  chatId: string,
+  text: string,
+  attachments?: Array<Record<string, unknown>>
+): Promise<SendMessageResult> {
   if (!MAX_BOT_TOKEN || MAX_BOT_TOKEN === '<from_vercel>') {
     return { success: false, error: 'MAX_BOT_TOKEN not configured' };
   }
@@ -25,20 +35,25 @@ export async function sendMaxMessage(chatId: string, text: string): Promise<Send
     const url = new URL(`${MAX_API_BASE}/messages`);
     url.searchParams.set('chat_id', chatId);
 
+    const payload: MaxMessagePayload = { text };
+    if (attachments && attachments.length > 0) {
+      payload.attachments = attachments;
+    }
+
     const response = await fetch(url.toString(), {
       method: 'POST',
       headers: {
         Authorization: MAX_BOT_TOKEN,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
       return {
         success: false,
-        error: data.message || `HTTP ${response.status}`,
+        error: (data as Record<string, string>).message || `HTTP ${response.status}`,
       };
     }
 
@@ -104,7 +119,7 @@ export async function sendMaxMessageWithButton(
       const data = await response.json().catch(() => ({}));
       return {
         success: false,
-        error: data.message || `HTTP ${response.status}`,
+        error: (data as Record<string, string>).message || `HTTP ${response.status}`,
       };
     }
 

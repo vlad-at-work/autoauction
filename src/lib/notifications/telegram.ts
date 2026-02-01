@@ -11,26 +11,41 @@ type SendMessageResult = {
   error?: string;
 };
 
+interface SendMessagePayload {
+  chat_id: string;
+  text: string;
+  parse_mode: string;
+  reply_markup?: Record<string, unknown>;
+}
+
 /**
  * Send a text message to a Telegram user
+ * @param replyMarkup - Optional inline keyboard markup for buttons
  */
 export async function sendTelegramMessage(
   chatId: string,
-  text: string
+  text: string,
+  replyMarkup?: Record<string, unknown>
 ): Promise<SendMessageResult> {
   if (!TG_BOT_TOKEN) {
     return { success: false, error: 'TG_BOT_TOKEN not configured' };
   }
 
   try {
+    const payload: SendMessagePayload = {
+      chat_id: chatId,
+      text,
+      parse_mode: 'HTML',
+    };
+
+    if (replyMarkup) {
+      payload.reply_markup = replyMarkup;
+    }
+
     const response = await fetch(`${TG_API_BASE}${TG_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text,
-        parse_mode: 'HTML',
-      }),
+      body: JSON.stringify(payload),
     });
 
     const data = await response.json();
