@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 
 import { checkBuyerExists } from '@/lib/api/buyers';
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
+import { parseStartParam } from '@/lib/deeplinks';
 
 type LoadingState = 'loading' | 'checking' | 'redirect';
 
@@ -24,7 +25,14 @@ export default function MiniAppHomePage() {
         const webApp = getWebApp();
         const platform = detectPlatform();
         const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString();
-        const startParam = webApp?.initDataUnsafe?.start_param;
+
+        // Get startapp parameter - differs between platforms
+        // Telegram: tgWebAppStartParam
+        // MAX: startapp
+        const initDataUnsafe = webApp?.initDataUnsafe as Record<string, unknown> | undefined;
+        const startParam =
+          (initDataUnsafe?.tgWebAppStartParam as string | undefined) ||
+          (initDataUnsafe?.startapp as string | undefined);
 
         if (webApp && platformUserId && platform) {
           setLoadingState('checking');
@@ -36,24 +44,38 @@ export default function MiniAppHomePage() {
 
           setLoadingState('redirect');
 
-          // Handle deep links
-          if (startParam === 'inquiry') {
-            router.replace('/app/form');
-            return;
-          }
+          // Handle deep links from notifications
+          if (startParam) {
+            const { context, resourceId } = parseStartParam(startParam);
 
-          // Deep link to specific offer: offer_[inquiryId]_[offerId]
-          if (startParam?.startsWith('offer_')) {
-            const parts = startParam.split('_');
-            if (parts.length >= 3) {
-              const inquiryId = parts[1];
-              const offerId = parts.slice(2).join('_'); // Handle IDs with underscores
-              router.replace(`/app/inquiry/${inquiryId}/offer/${offerId}`);
+            if (context === 'inquiry' && resourceId) {
+              // Navigate directly to inquiry
+              router.replace(`/app/inquiry/${resourceId}`);
+              return;
+            }
+
+            if (context === 'offer' && resourceId) {
+              // resourceId format: "inquiryId:offerId"
+              const [inquiryId, offerId] = resourceId.split(':');
+              if (inquiryId && offerId) {
+                router.replace(`/app/inquiry/${inquiryId}/offer/${offerId}`);
+                return;
+              }
+            }
+
+            if (context === 'transaction' && resourceId) {
+              // Navigate to dashboard with transaction ID
+              router.replace(`/app/dashboard?transaction=${resourceId}`);
+              return;
+            }
+
+            if (context === 'dashboard') {
+              router.replace('/app/dashboard');
               return;
             }
           }
 
-          // Redirect based on existence
+          // Default redirect based on existence
           if (exists) {
             router.replace('/app/dashboard');
           } else {
