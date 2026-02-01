@@ -1,6 +1,26 @@
-export async function checkBuyerExists(platformUserId: string, platform: string) {
+export async function checkBuyerExists(
+  platformUserId: string,
+  platform: string,
+  initData?: string
+) {
   try {
-    const res = await fetch(`/api/buyers/me?platformUserId=${platformUserId}&platform=${platform}`);
+    const params = new URLSearchParams({
+      platformUserId,
+      platform,
+    });
+
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+
+    // Add server-side validation of WebApp initData if provided
+    if (initData) {
+      headers.Authorization = `Bearer ${platform}:${initData}`;
+    }
+
+    const res = await fetch(`/api/buyers/me?${params.toString()}`, {
+      headers,
+    });
 
     if (res.status === 404) {
       return { exists: false, data: null };

@@ -25,6 +25,7 @@ export default function MiniAppHomePage() {
         const webApp = getWebApp();
         const platform = detectPlatform();
         const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString();
+        const initData = webApp?.initData;
 
         // Get startapp parameter - differs between platforms
         // Telegram: tgWebAppStartParam
@@ -34,11 +35,11 @@ export default function MiniAppHomePage() {
           (initDataUnsafe?.tgWebAppStartParam as string | undefined) ||
           (initDataUnsafe?.startapp as string | undefined);
 
-        if (webApp && platformUserId && platform) {
+        if (webApp && platformUserId && platform && initData) {
           setLoadingState('checking');
 
-          // Check if buyer exists
-          const { exists } = await checkBuyerExists(platformUserId, platform);
+          // Check if buyer exists with server-side validation of initData
+          const { exists } = await checkBuyerExists(platformUserId, platform, initData);
 
           if (cancelled) return;
 
