@@ -27,32 +27,27 @@ fi
 echo "🔄 Registering MAX webhook subscription..."
 echo "   URL: $WEBHOOK_URL"
 
-# Build JSON payload - subscribe to all relevant event types
+# Build JSON payload
 PAYLOAD=$(cat <<EOF
 {
-  "url": "$WEBHOOK_URL",
-  "update_types": [
-    "message_new",
-    "message_callback",
-    "message_event"
-  ]
+  "url": "$WEBHOOK_URL"
 }
 EOF
 )
 
 # Register subscription
 RESPONSE=$(curl -s -X POST \
-  "https://platform-api.max.ru/v1/subscriptions" \
+  "https://platform-api.max.ru/subscriptions" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $MAX_BOT_TOKEN" \
+  -H "Authorization: $MAX_BOT_TOKEN" \
   -d "$PAYLOAD")
 
 echo ""
 echo "Response:"
 echo "$RESPONSE" | jq '.'
 
-# Check if successful (MAX API returns subscription object on success)
-if echo "$RESPONSE" | jq -e '.url' > /dev/null 2>&1; then
+# Check if successful
+if echo "$RESPONSE" | jq -e '.success == true or .url' > /dev/null 2>&1; then
   echo ""
   echo "✅ MAX webhook subscription registered successfully!"
   echo ""
@@ -60,8 +55,5 @@ if echo "$RESPONSE" | jq -e '.url' > /dev/null 2>&1; then
 else
   echo ""
   echo "❌ Failed to register webhook subscription"
-  echo ""
-  echo "Note: You may need to delete existing subscription first:"
-  echo "  ./scripts/webhooks/delete-max.sh"
   exit 1
 fi

@@ -15,8 +15,8 @@ echo "🔄 Deleting MAX webhook subscription..."
 
 # MAX API DELETE /subscriptions removes the subscription
 RESPONSE=$(curl -s -X DELETE \
-  "https://platform-api.max.ru/v1/subscriptions" \
-  -H "Authorization: Bearer $MAX_BOT_TOKEN")
+  "https://platform-api.max.ru/subscriptions" \
+  -H "Authorization: $MAX_BOT_TOKEN")
 
 echo ""
 if [ -z "$RESPONSE" ] || [ "$RESPONSE" == "{}" ]; then

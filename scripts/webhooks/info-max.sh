@@ -16,16 +16,14 @@ echo ""
 
 # Get subscription info
 RESPONSE=$(curl -s -X GET \
-  "https://platform-api.max.ru/v1/subscriptions" \
-  -H "Authorization: Bearer $MAX_BOT_TOKEN")
+  "https://platform-api.max.ru/subscriptions" \
+  -H "Authorization: $MAX_BOT_TOKEN")
 
 echo "$RESPONSE" | jq '.'
 
 # Extract and display key info
-URL=$(echo "$RESPONSE" | jq -r '.url // "None"')
-TYPES=$(echo "$RESPONSE" | jq -r '.update_types // [] | join(", ")')
+URL=$(echo "$RESPONSE" | jq -r '.subscriptions[0].url // "None"')
 
 echo ""
 echo "Summary:"
 echo "  Webhook URL: $URL"
-echo "  Subscribed to: $TYPES"
