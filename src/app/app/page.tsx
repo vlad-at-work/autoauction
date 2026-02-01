@@ -30,10 +30,17 @@ export default function MiniAppHomePage() {
         // Get startapp parameter - differs between platforms
         // Telegram: tgWebAppStartParam
         // MAX: startapp
+        // Also check URL query params (for web_app buttons)
         const initDataUnsafe = webApp?.initDataUnsafe as Record<string, unknown> | undefined;
-        const startParam =
+        let startParam =
           (initDataUnsafe?.tgWebAppStartParam as string | undefined) ||
           (initDataUnsafe?.startapp as string | undefined);
+
+        // Fallback: read from URL query parameter
+        if (!startParam && typeof window !== 'undefined') {
+          const params = new URLSearchParams(window.location.search);
+          startParam = params.get('startapp') || undefined;
+        }
 
         if (webApp && platformUserId && platform && initData) {
           setLoadingState('checking');
