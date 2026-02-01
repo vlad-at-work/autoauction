@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { prisma } from '@/lib/db';
 import { parseBasicAuthHeader } from '@/lib/auth/basic';
 import { OfferForm } from '@/app/dealer/inquiries/[id]/offer-form';
+import { OfferCard } from '@/app/dealer/inquiries/[id]/offer-card';
 import {
   getShortId,
   getIdColorClass,
@@ -199,33 +200,15 @@ export default async function DealerInquiryPage({ params }: { params: Promise<{ 
               <div className="text-sm font-medium">Ваши предложения ({myOffers.length})</div>
               <div className="flex flex-col gap-2">
                 {myOffers.map((offer, index) => (
-                  <div
+                  <OfferCard
                     key={offer.id}
-                    className={`rounded-lg border p-3 ${
-                      offer.transaction
-                        ? 'border-green-200 bg-green-50'
-                        : 'border-gray-200 bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">{formatPrice(offer.price)}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground text-xs">
-                          {formatRelativeTime(offer.createdAt)}
-                        </span>
-                        {offer.transaction ? (
-                          <Badge className="bg-green-600">✓ Принято</Badge>
-                        ) : index === 0 ? (
-                          <Badge variant="outline" className="border-blue-200 text-blue-700">
-                            Актуальное
-                          </Badge>
-                        ) : null}
-                      </div>
-                    </div>
-                    {offer.comment && (
-                      <p className="text-muted-foreground mt-1 text-sm">{offer.comment}</p>
-                    )}
-                  </div>
+                    offer={offer}
+                    dealerName={null}
+                    isMyOffer={true}
+                    isFirstOffer={index === 0}
+                    formatPrice={formatPrice}
+                    formatRelativeTime={formatRelativeTime}
+                  />
                 ))}
               </div>
             </div>
@@ -242,31 +225,15 @@ export default async function DealerInquiryPage({ params }: { params: Promise<{ 
                   const dealerIndex = dealerIndexMap.get(offer.dealerId) ?? 0;
                   const anonName = anonymizeDealerName(dealerIndex);
                   return (
-                    <div
+                    <OfferCard
                       key={offer.id}
-                      className={`rounded-lg border p-3 ${
-                        offer.transaction
-                          ? 'border-orange-200 bg-orange-50'
-                          : 'border-gray-200 bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground text-sm">{anonName}</span>
-                          <span className="font-medium">{formatPrice(offer.price)}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground text-xs">
-                            {formatRelativeTime(offer.createdAt)}
-                          </span>
-                          {offer.transaction && (
-                            <Badge variant="outline" className="border-orange-300 text-orange-700">
-                              Принято
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                      offer={offer}
+                      dealerName={anonName}
+                      isMyOffer={false}
+                      isFirstOffer={false}
+                      formatPrice={formatPrice}
+                      formatRelativeTime={formatRelativeTime}
+                    />
                   );
                 })}
               </div>
