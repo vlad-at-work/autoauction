@@ -10,9 +10,6 @@ interface Offer {
   createdAt: Date;
   transaction: {
     id: string;
-    buyerName: string;
-    buyerEmail: string | null;
-    buyerPhone: string;
     acceptedAt: Date;
   } | null;
 }
@@ -62,7 +59,9 @@ export function OfferCard({
           <span className="font-medium">{formatPrice(offer.price)}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground text-xs">{formatRelativeTime(offer.createdAt)}</span>
+          <span className="text-muted-foreground text-xs">
+            {formatRelativeTime(offer.createdAt)}
+          </span>
           {offer.transaction ? (
             <Badge
               variant="outline"

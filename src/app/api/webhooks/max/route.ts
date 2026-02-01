@@ -7,11 +7,14 @@
 
 import { NextResponse } from 'next/server';
 
+import { sendMaxMessage as sendMessage } from '@/lib/notifications/max';
+
 const MAX_BOT_TOKEN = process.env.MAX_BOT_TOKEN;
+const MAX_API_BASE = 'https://platform-api.max.ru';
 
 export async function POST(request: Request) {
   try {
-    const update = await request.json() as any;
+    const update = (await request.json()) as any;
 
     // Validate MAX event structure
     if (!update.type || !update.object) {
@@ -60,6 +63,7 @@ async function handleMaxMessageNew(message: any) {
 
     // Handle /start command
     if (text === '/start') {
+      const maxBotName = process.env.MAX_BOT_NAME || 'AutoAuctionBot';
       await sendMaxMessage(
         chatId,
         `👋 Добро пожаловать, ${firstName}!
@@ -67,19 +71,22 @@ async function handleMaxMessageNew(message: any) {
 Это AutoAuction - платформа обратных аукционов для автомобилей.
 
 Нажмите кнопку ниже, чтобы открыть приложение:`,
-        {
-          inline_keyboard: [
-            [
-              {
-                text: 'Открыть приложение',
-                type: 'open_app',
-                app: {
-                  url: `${process.env.NEXT_PUBLIC_APP_URL}/app`,
-                },
-              },
-            ],
-          ],
-        }
+        [
+          {
+            type: 'inline_keyboard',
+            payload: {
+              buttons: [
+                [
+                  {
+                    type: 'link',
+                    text: '📱 Открыть приложение',
+                    url: `https://max.ru/${maxBotName}?startapp=dashboard`,
+                  },
+                ],
+              ],
+            },
+          },
+        ]
       );
     } else if (text.toLowerCase().includes('помощь')) {
       await sendMaxMessage(
@@ -126,24 +133,24 @@ async function handleMaxMessageEvent(event: any) {
 }
 
 /**
- * Helper to send message to MAX
+ * Helper to send message to MAX with optional attachments
+ * Uses correct API format: chat_id in URL params
  */
 async function sendMaxMessage(
-  chatId: number,
+  chatId: string | number,
   text: string,
-  replyMarkup?: any
+  attachments?: Array<Record<string, unknown>>
 ): Promise<boolean> {
   try {
-    const body: any = {
-      chat_id: chatId,
-      text,
-    };
+    const url = new URL(`${MAX_API_BASE}/messages`);
+    url.searchParams.set('chat_id', String(chatId));
 
-    if (replyMarkup) {
-      body.reply_markup = replyMarkup;
+    const body: Record<string, unknown> = { text };
+    if (attachments && attachments.length > 0) {
+      body.attachments = attachments;
     }
 
-    const response = await fetch('https://platform-api.max.ru/messages', {
+    const response = await fetch(url.toString(), {
       method: 'POST',
       headers: {
         Authorization: MAX_BOT_TOKEN!,

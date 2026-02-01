@@ -5,12 +5,14 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
+import { AnimatedList } from '@/components/animated-list';
 import { CountdownTimer } from '@/components/countdown-timer';
 import { PageTransition } from '@/components/page-transition';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TopBar } from '@/components/ui/top-bar';
+import { usePolling } from '@/hooks/use-polling';
 import { getWebApp } from '@/app/app/webapp-ready';
 import { formatPrice, formatRelativeTime } from '@/lib/inquiry-utils';
 
@@ -66,53 +68,48 @@ async function getInquiryDetail(
 export default function InquiryDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const [inquiry, setInquiry] = useState<InquiryDetail | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [platformUserId, setPlatformUserId] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
 
   const inquiryId = params.inquiryId as string;
 
-  const loadInquiry = useCallback(async () => {
+  // Initialize platform user
+  useEffect(() => {
     const webApp = getWebApp();
-    const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
+    const userId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
 
-    if (!platformUserId) {
+    if (!userId) {
       router.replace('/app');
       return;
     }
 
-    const data = await getInquiryDetail(inquiryId, platformUserId);
+    setPlatformUserId(userId);
+    setReady(true);
+  }, [router]);
 
+  // Fetch inquiry with polling
+  const fetcher = useCallback(async (): Promise<InquiryDetail | null> => {
+    if (!platformUserId) return null;
+    const data = await getInquiryDetail(inquiryId, platformUserId);
     if (!data) {
       router.replace('/app/dashboard');
-      return;
+      return null;
     }
+    return data;
+  }, [inquiryId, platformUserId, router]);
 
-    setInquiry(data);
-    setLoading(false);
-  }, [inquiryId, router]);
+  const { data: inquiry, loading } = usePolling<InquiryDetail | null>({
+    fetcher,
+    interval: 10000,
+    enabled: ready && !!platformUserId,
+  });
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
-  useEffect(() => {
-    loadInquiry();
-
-    // Auto-refresh on window focus
-    const handleFocus = () => {
-      loadInquiry();
-    };
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, [loadInquiry]);
-
-  if (loading) {
+  if (!ready || loading || !inquiry) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center">
         <Loader2 className="text-muted-foreground size-8 animate-spin" />
       </div>
     );
-  }
-
-  if (!inquiry) {
-    return null;
   }
 
   const isExpired = new Date(inquiry.expiresAt) < new Date();
@@ -188,79 +185,17 @@ export default function InquiryDetailPage() {
                 Пока нет предложений. Вы получите уведомление, когда дилеры ответят.
               </div>
             ) : (
-              <div className="flex flex-col gap-4">
-                {offersByDealer.map((dealerGroup) => (
-                  <Card
-                    key={dealerGroup.dealerId}
-                    className={dealerGroup.hasTransaction ? 'border-green-200 bg-green-50/50' : ''}
-                  >
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-base">{dealerGroup.dealerName}</CardTitle>
-                        {dealerGroup.hasTransaction && (
-                          <Badge className="bg-green-600">
-                            <Check className="mr-1 size-3" />
-                            Принято
-                          </Badge>
-                        )}
-                      </div>
-                    </CardHeader>
-                    <CardContent className="flex flex-col gap-2">
-                      {dealerGroup.offers.map((offer, index) => {
-                        const isLatest = index === 0;
-                        const canAccept = canAcceptMore && !dealerGroup.hasTransaction && isLatest;
-
-                        return (
-                          <div
-                            key={offer.id}
-                            className={`rounded-lg border p-3 ${
-                              offer.isAccepted
-                                ? 'border-green-300 bg-green-100'
-                                : isLatest
-                                  ? 'border-blue-200 bg-white'
-                                  : 'border-gray-200 bg-gray-50 opacity-70'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="text-lg font-bold">
-                                  {formatPrice(offer.price)}
-                                </span>
-                                {isLatest && !offer.isAccepted && (
-                                  <Badge variant="outline" className="text-xs">
-                                    Актуальное
-                                  </Badge>
-                                )}
-                                {offer.isAccepted && (
-                                  <Badge className="bg-green-600 text-xs">
-                                    <Check className="mr-1 size-3" />
-                                    Вы приняли
-                                  </Badge>
-                                )}
-                              </div>
-                              <span className="text-muted-foreground text-xs">
-                                {formatRelativeTime(new Date(offer.createdAt))}
-                              </span>
-                            </div>
-                            {offer.comment && (
-                              <p className="text-muted-foreground mt-1 text-sm">{offer.comment}</p>
-                            )}
-                            {canAccept && (
-                              <div className="mt-3">
-                                <Button asChild size="sm" className="w-full">
-                                  <Link href={`/app/inquiry/${inquiry.id}/offer/${offer.id}`}>
-                                    Принять предложение
-                                  </Link>
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <AnimatedList
+                items={offersByDealer}
+                keyExtractor={(group) => group.dealerId}
+                renderItem={(dealerGroup) => (
+                  <DealerOfferCard
+                    dealerGroup={dealerGroup}
+                    inquiryId={inquiry.id}
+                    canAcceptMore={canAcceptMore}
+                  />
+                )}
+              />
             )}
           </div>
 
@@ -275,5 +210,82 @@ export default function InquiryDetailPage() {
         </div>
       </div>
     </PageTransition>
+  );
+}
+
+function DealerOfferCard({
+  dealerGroup,
+  inquiryId,
+  canAcceptMore,
+}: {
+  dealerGroup: DealerOfferGroup;
+  inquiryId: string;
+  canAcceptMore: boolean;
+}) {
+  return (
+    <Card className={dealerGroup.hasTransaction ? 'border-green-200 bg-green-50/50' : ''}>
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base">{dealerGroup.dealerName}</CardTitle>
+          {dealerGroup.hasTransaction && (
+            <Badge className="bg-green-600">
+              <Check className="mr-1 size-3" />
+              Принято
+            </Badge>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-2">
+        {dealerGroup.offers.map((offer, index) => {
+          const isLatest = index === 0;
+          const canAccept = canAcceptMore && !dealerGroup.hasTransaction && isLatest;
+
+          return (
+            <div
+              key={offer.id}
+              className={`rounded-lg border p-3 ${
+                offer.isAccepted
+                  ? 'border-green-300 bg-green-100'
+                  : isLatest
+                    ? 'border-blue-200 bg-white'
+                    : 'border-gray-200 bg-gray-50 opacity-70'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-bold">{formatPrice(offer.price)}</span>
+                  {isLatest && !offer.isAccepted && (
+                    <Badge variant="outline" className="text-xs">
+                      Актуальное
+                    </Badge>
+                  )}
+                  {offer.isAccepted && (
+                    <Badge className="bg-green-600 text-xs">
+                      <Check className="mr-1 size-3" />
+                      Вы приняли
+                    </Badge>
+                  )}
+                </div>
+                <span className="text-muted-foreground text-xs">
+                  {formatRelativeTime(new Date(offer.createdAt))}
+                </span>
+              </div>
+              {offer.comment && (
+                <p className="text-muted-foreground mt-1 text-sm">{offer.comment}</p>
+              )}
+              {canAccept && (
+                <div className="mt-3">
+                  <Button asChild size="sm" className="w-full">
+                    <Link href={`/app/inquiry/${inquiryId}/offer/${offer.id}`}>
+                      Принять предложение
+                    </Link>
+                  </Button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </CardContent>
+    </Card>
   );
 }

@@ -6,7 +6,7 @@
 
 import type { Platform } from '@prisma/client';
 
-import { sendMaxMessage } from './max';
+import { sendMaxMessage, sendMaxMessageWithButton } from './max';
 import { sendTelegramMessage } from './telegram';
 import { createNotificationButtons, formatTelegramNotification } from '../deeplinks';
 
@@ -49,9 +49,13 @@ export async function notifyBuyerOfNewOffer(
     return sendTelegramMessage(chatId, telegramPayload.text, telegramPayload.reply_markup);
   }
 
-  // For MAX, send text with deep link inline (MAX button attachments need different format)
-  const deepLinkText = `${text}\n\n📱 Откройте приложение: https://max.ru/AutoAuctionBot?startapp=inquiry:${inquiryId}`;
-  return sendMaxMessage(chatId, deepLinkText);
+  // For MAX, use proper button like Telegram
+  return sendMaxMessageWithButton(
+    chatId,
+    text,
+    '📱 Посмотреть предложения',
+    `inquiry:${inquiryId}`
+  );
 }
 
 /**

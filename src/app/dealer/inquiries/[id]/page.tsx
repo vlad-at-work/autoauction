@@ -61,15 +61,15 @@ export default async function DealerInquiryPage({ params }: { params: Promise<{ 
           transaction: {
             select: {
               id: true,
-              buyerName: true,
-              buyerEmail: true,
-              buyerPhone: true,
               acceptedAt: true,
+              // NOTE: Buyer info NOT included here - competitors shouldn't see it
             },
           },
         },
       },
       transactions: {
+        // Only this dealer's transaction will be shown with buyer info
+        where: { dealerId: dealer.id },
         select: {
           id: true,
           dealerId: true,
@@ -78,6 +78,9 @@ export default async function DealerInquiryPage({ params }: { params: Promise<{ 
           buyerPhone: true,
           acceptedAt: true,
         },
+      },
+      _count: {
+        select: { transactions: true },
       },
     },
   });
@@ -129,7 +132,7 @@ export default async function DealerInquiryPage({ params }: { params: Promise<{ 
               <span>Осталось: ~{hoursLeft}ч</span>
             )}
             {' · '}
-            {inquiry.transactions.length} принято
+            {inquiry._count.transactions} принято
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
