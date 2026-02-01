@@ -15,6 +15,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "bun run scripts/seed.ts",
     "db:cleanup": "bun run scripts/cleanup.ts",
+    "db:clear": "bun run scripts/nuke-db.ts",
     "postinstall": "prisma generate",
     "prepare": "husky"
   },
