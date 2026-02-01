@@ -19,11 +19,11 @@ describe('Admin Panel CRUD Operations', () => {
   let dealerId: string = '';
   let inquiryId: string = '';
   let offerId: string = '';
-  let leadId: string = '';
+  let transactionId: string = '';
 
   beforeAll(async () => {
     // Clean up any existing test data
-    await prisma.lead.deleteMany({
+    await prisma.transaction.deleteMany({
       where: {
         offer: {
           inquiry: {
@@ -59,7 +59,7 @@ describe('Admin Panel CRUD Operations', () => {
 
   afterAll(async () => {
     // Clean up test data
-    await prisma.lead.deleteMany({
+    await prisma.transaction.deleteMany({
       where: {
         offer: {
           inquiry: {
@@ -245,6 +245,24 @@ describe('Admin Panel CRUD Operations', () => {
       expect(found?.price).toBe(1500000);
     });
 
+    it('should allow multiple offers from same dealer (multi-offer auction)', async () => {
+      // In the new reverse auction model, dealers can submit up to 5 offers per inquiry
+      const secondOffer = await prisma.offer.create({
+        data: {
+          inquiryId,
+          dealerId,
+          price: 1450000,
+          comment: 'Second offer - better price',
+        },
+      });
+
+      expect(secondOffer).toBeDefined();
+      expect(secondOffer.price).toBe(1450000);
+
+      // Clean up the second offer for subsequent tests
+      await prisma.offer.delete({ where: { id: secondOffer.id } });
+    });
+
     it('should update an offer', async () => {
       await prisma.offer.update({
         where: { id: offerId },
@@ -262,35 +280,37 @@ describe('Admin Panel CRUD Operations', () => {
         include: {
           inquiry: { include: { buyer: true } },
           dealer: true,
-          _count: { select: { leads: true } },
+          transaction: true,
         },
       });
 
       expect(offer).toBeDefined();
       expect(offer?.inquiry.buyerId).toBe(buyerId);
       expect(offer?.dealer.id).toBe(dealerId);
-      expect(offer?._count.leads).toBe(0);
+      expect(offer?.transaction).toBeNull(); // No transaction yet
     });
   });
 
-  describe('Lead Operations', () => {
-    it('should create a lead (simulating offer acceptance)', async () => {
-      const lead = await prisma.lead.create({
+  describe('Transaction Operations', () => {
+    it('should create a transaction (simulating offer acceptance)', async () => {
+      const transaction = await prisma.transaction.create({
         data: {
+          inquiryId,
           offerId,
+          dealerId,
           buyerName: 'Test Buyer Name',
           buyerPhone: '+79991234567',
           buyerEmail: 'test@example.com',
         },
       });
 
-      expect(lead).toBeDefined();
-      leadId = lead.id;
+      expect(transaction).toBeDefined();
+      transactionId = transaction.id;
     });
 
-    it('should retrieve lead with full context', async () => {
-      const lead = await prisma.lead.findUnique({
-        where: { id: leadId },
+    it('should retrieve transaction with full context', async () => {
+      const transaction = await prisma.transaction.findUnique({
+        where: { id: transactionId },
         include: {
           offer: {
             include: {
@@ -301,16 +321,46 @@ describe('Admin Panel CRUD Operations', () => {
         },
       });
 
-      expect(lead).toBeDefined();
-      expect(lead?.offer.inquiry.buyer.id).toBe(buyerId);
-      expect(lead?.offer.dealer.id).toBe(dealerId);
+      expect(transaction).toBeDefined();
+      expect(transaction?.offer.inquiry.buyer.id).toBe(buyerId);
+      expect(transaction?.offer.dealer.id).toBe(dealerId);
     });
 
-    it('should delete a lead', async () => {
-      await prisma.lead.delete({ where: { id: leadId } });
+    it('should not allow duplicate transaction for same dealer on same inquiry', async () => {
+      // Create another offer from the same dealer
+      const anotherOffer = await prisma.offer.create({
+        data: {
+          inquiryId,
+          dealerId,
+          price: 1400000,
+          comment: 'Another offer',
+        },
+      });
 
-      const lead = await prisma.lead.findUnique({ where: { id: leadId } });
-      expect(lead).toBeNull();
+      try {
+        await prisma.transaction.create({
+          data: {
+            inquiryId,
+            offerId: anotherOffer.id,
+            dealerId,
+            buyerName: 'Test Buyer Name',
+            buyerPhone: '+79991234567',
+          },
+        });
+        expect(true).toBe(false); // Should not reach here due to @@unique([inquiryId, dealerId])
+      } catch (error) {
+        expect(error).toBeDefined();
+      }
+
+      // Clean up
+      await prisma.offer.delete({ where: { id: anotherOffer.id } });
+    });
+
+    it('should delete a transaction', async () => {
+      await prisma.transaction.delete({ where: { id: transactionId } });
+
+      const transaction = await prisma.transaction.findUnique({ where: { id: transactionId } });
+      expect(transaction).toBeNull();
     });
   });
 
@@ -358,14 +408,14 @@ describe('Admin Panel CRUD Operations', () => {
         activeInquiriesCount,
         dealersCount,
         offersCount,
-        leadsCount,
+        transactionsCount,
       ] = await Promise.all([
         prisma.buyer.count(),
         prisma.inquiry.count(),
         prisma.inquiry.count({ where: { expiresAt: { gte: now } } }),
         prisma.dealer.count(),
         prisma.offer.count(),
-        prisma.lead.count(),
+        prisma.transaction.count(),
       ]);
 
       expect(typeof buyersCount).toBe('number');
@@ -373,7 +423,7 @@ describe('Admin Panel CRUD Operations', () => {
       expect(typeof activeInquiriesCount).toBe('number');
       expect(typeof dealersCount).toBe('number');
       expect(typeof offersCount).toBe('number');
-      expect(typeof leadsCount).toBe('number');
+      expect(typeof transactionsCount).toBe('number');
     });
   });
 });

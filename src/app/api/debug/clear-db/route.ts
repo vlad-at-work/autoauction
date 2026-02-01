@@ -8,7 +8,7 @@ import { prisma } from '@/lib/db';
 export async function POST(_request: Request) {
   try {
     // Delete in order of dependencies
-    await prisma.lead.deleteMany({});
+    await prisma.transaction.deleteMany({});
     await prisma.offer.deleteMany({});
     await prisma.inquiry.deleteMany({});
     await prisma.buyer.deleteMany({});

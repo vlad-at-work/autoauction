@@ -22,7 +22,13 @@ export default async function InquiryDetailPage({ params }: { params: Params }) 
         orderBy: { createdAt: 'desc' },
         include: {
           dealer: true,
-          _count: { select: { leads: true } },
+          transaction: true,
+        },
+      },
+      transactions: {
+        orderBy: { acceptedAt: 'desc' },
+        include: {
+          dealer: true,
         },
       },
     },
@@ -108,7 +114,7 @@ export default async function InquiryDetailPage({ params }: { params: Params }) 
               <span>{format(inquiry.expiresAt, 'dd.MM.yyyy HH:mm')}</span>
             </div>
 
-            <div className="pt-4 border-t">
+            <div className="border-t pt-4">
               <DeleteDialog
                 entityName="Заявка"
                 entityId={inquiry.id}
@@ -119,36 +125,77 @@ export default async function InquiryDetailPage({ params }: { params: Params }) 
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Предложения ({inquiry.offers.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {inquiry.offers.length === 0 ? (
-              <p className="text-muted-foreground text-sm">Пока нет предложений</p>
-            ) : (
-              <div className="space-y-2">
-                {inquiry.offers.map((offer) => (
-                  <Link
-                    key={offer.id}
-                    href={`/admin/offers/${offer.id}`}
-                    className="block rounded-md border p-3 hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">{offer.price.toLocaleString('ru-RU')} ₽</span>
-                      <Badge variant="outline">{offer._count.leads} лид(ов)</Badge>
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      От: {offer.dealer.name || offer.dealer.username} •{' '}
-                      {format(offer.createdAt, 'dd.MM.yyyy HH:mm')}
-                    </div>
-                    {offer.comment && <div className="text-xs mt-1 truncate">{offer.comment}</div>}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Транзакции ({inquiry.transactions.length}/3)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {inquiry.transactions.length === 0 ? (
+                <p className="text-muted-foreground text-sm">Нет принятых предложений</p>
+              ) : (
+                <div className="space-y-2">
+                  {inquiry.transactions.map((tx) => (
+                    <Link
+                      key={tx.id}
+                      href={`/admin/transactions/${tx.id}`}
+                      className="block rounded-md border border-green-200 bg-green-50 p-3 transition-colors hover:bg-green-100"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{tx.buyerName}</span>
+                        <Badge className="bg-green-600">Принято</Badge>
+                      </div>
+                      <div className="text-muted-foreground mt-1 text-xs">
+                        Дилер: {tx.dealer.name || tx.dealer.username} •{' '}
+                        {format(tx.acceptedAt, 'dd.MM.yyyy HH:mm')}
+                      </div>
+                      <div className="text-muted-foreground text-xs">{tx.buyerPhone}</div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Предложения ({inquiry.offers.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {inquiry.offers.length === 0 ? (
+                <p className="text-muted-foreground text-sm">Пока нет предложений</p>
+              ) : (
+                <div className="space-y-2">
+                  {inquiry.offers.map((offer) => (
+                    <Link
+                      key={offer.id}
+                      href={`/admin/offers/${offer.id}`}
+                      className={`block rounded-md border p-3 transition-colors hover:bg-muted/50 ${
+                        offer.transaction ? 'border-green-200 bg-green-50/50' : ''
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{offer.price.toLocaleString('ru-RU')} ₽</span>
+                        {offer.transaction ? (
+                          <Badge className="bg-green-600">Принято</Badge>
+                        ) : (
+                          <Badge variant="outline">Ожидание</Badge>
+                        )}
+                      </div>
+                      <div className="text-muted-foreground mt-1 text-xs">
+                        От: {offer.dealer.name || offer.dealer.username} •{' '}
+                        {format(offer.createdAt, 'dd.MM.yyyy HH:mm')}
+                      </div>
+                      {offer.comment && (
+                        <div className="mt-1 truncate text-xs">{offer.comment}</div>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

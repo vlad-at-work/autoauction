@@ -3,9 +3,11 @@
 ## Extremely important
 
 - Consider docs/max_integration.txt before making any changes
+- Review docs/MAX_WEBHOOK_RESEARCH.md for latest MAX API findings and webhook requirements
 - Start all coding sessions with `nvm use 22`
 - Before committing, `bun run build` needs to succeed.
 - Don't adjust tests if commit doesn't pass because of tests
+- MAX messaging currently returns "Unknown recipient" — likely requires webhook setup; see MAX_WEBHOOK_RESEARCH.md for fix strategy
 
 ## Project Overview
 

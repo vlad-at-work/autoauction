@@ -5,6 +5,55 @@ import { inquiryCreateSchema } from '@/lib/schemas/inquiry';
 import { getActiveHardcodedDealers } from '@/lib/hardcoded-dealers';
 import { notifyDealerOfNewInquiry, notifyBuyer } from '@/lib/notifications';
 
+const MAX_INQUIRIES_PER_MONTH = 2;
+const INQUIRY_LIMIT_RESET_DAYS = 15;
+
+/**
+ * Check if buyer's inquiry limit should be reset and update if needed
+ * Returns the updated buyer with current limit info
+ */
+async function checkAndResetInquiryLimit(
+  tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
+  buyerId: string
+) {
+  const buyer = await tx.buyer.findUnique({
+    where: { id: buyerId },
+    select: {
+      id: true,
+      inquiriesUsedThisMonth: true,
+      inquiryLimitResetAt: true,
+    },
+  });
+
+  if (!buyer) return null;
+
+  const now = new Date();
+  const resetAt = new Date(buyer.inquiryLimitResetAt);
+
+  // Check if we need to reset (15 days passed since last reset)
+  if (now >= resetAt) {
+    // Calculate next reset date (15 days from now)
+    const nextReset = new Date(now.getTime() + INQUIRY_LIMIT_RESET_DAYS * 24 * 60 * 60 * 1000);
+
+    const updated = await tx.buyer.update({
+      where: { id: buyerId },
+      data: {
+        inquiriesUsedThisMonth: 0,
+        inquiryLimitResetAt: nextReset,
+      },
+      select: {
+        id: true,
+        inquiriesUsedThisMonth: true,
+        inquiryLimitResetAt: true,
+      },
+    });
+
+    return updated;
+  }
+
+  return buyer;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -25,7 +74,8 @@ export async function POST(request: Request) {
 
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    const inquiry = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
+      // Upsert buyer first
       const buyer = await tx.buyer.upsert({
         where: {
           platform_platformUserId: {
@@ -43,9 +93,36 @@ export async function POST(request: Request) {
           platformUserId: input.platformUserId,
           platformChatId: input.platformChatId,
           platformUserName: input.platformUserName,
+          inquiriesUsedThisMonth: 0,
+          inquiryLimitResetAt: new Date(
+            Date.now() + INQUIRY_LIMIT_RESET_DAYS * 24 * 60 * 60 * 1000
+          ),
         },
       });
 
+      // Check and potentially reset inquiry limit
+      const buyerWithLimit = await checkAndResetInquiryLimit(tx, buyer.id);
+      if (!buyerWithLimit) {
+        throw new Error('Buyer not found after creation');
+      }
+
+      // Check if user has reached their monthly inquiry limit
+      if (buyerWithLimit.inquiriesUsedThisMonth >= MAX_INQUIRIES_PER_MONTH) {
+        const resetDate = new Date(buyerWithLimit.inquiryLimitResetAt);
+        const daysUntilReset = Math.ceil(
+          (resetDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000)
+        );
+
+        return {
+          success: false,
+          error: 'INQUIRY_LIMIT_REACHED',
+          message: `Вы исчерпали лимит заявок (${MAX_INQUIRIES_PER_MONTH} в месяц). Новая заявка будет доступна через ${daysUntilReset} дн.`,
+          remainingInquiries: 0,
+          nextInquiryAt: resetDate.toISOString(),
+        };
+      }
+
+      // Create the inquiry
       const newInquiry = await tx.inquiry.create({
         data: {
           buyerId: buyer.id,
@@ -64,19 +141,64 @@ export async function POST(request: Request) {
         select: { id: true },
       });
 
-      return { ...newInquiry, buyer };
+      // Increment the used inquiries count
+      const updatedBuyer = await tx.buyer.update({
+        where: { id: buyer.id },
+        data: {
+          inquiriesUsedThisMonth: { increment: 1 },
+        },
+        select: {
+          id: true,
+          platform: true,
+          platformUserId: true,
+          platformChatId: true,
+          inquiriesUsedThisMonth: true,
+          inquiryLimitResetAt: true,
+        },
+      });
+
+      return {
+        success: true,
+        inquiry: newInquiry,
+        buyer: updatedBuyer,
+        remainingInquiries: MAX_INQUIRIES_PER_MONTH - updatedBuyer.inquiriesUsedThisMonth,
+      };
     });
 
-    // IMPORTANT: await notifications to avoid serverless "fire-and-forget" drops.
+    // If limit was reached, return error response
+    if (!result.success) {
+      return NextResponse.json(
+        {
+          error: result.message,
+          code: result.error,
+          remainingInquiries: result.remainingInquiries,
+          nextInquiryAt: result.nextInquiryAt,
+        },
+        { status: 429 }
+      );
+    }
+
+    // TypeScript narrowing: after checking success, buyer and inquiry are guaranteed
+    const inquiry = result.inquiry!;
+    const buyer = result.buyer!;
+    const remainingInquiries = result.remainingInquiries!;
+    // Notify buyer and dealers
     const dealers = getActiveHardcodedDealers();
+
+    const remainingText =
+      remainingInquiries > 0
+        ? `\n\n📋 Осталось заявок: ${remainingInquiries} из ${MAX_INQUIRIES_PER_MONTH}`
+        : `\n\n⚠️ Это была ваша последняя заявка в этом периоде.`;
+
+    // IMPORTANT: await notifications to avoid serverless "fire-and-forget" drops.
     await Promise.allSettled([
       notifyBuyer(
         {
-          platform: inquiry.buyer.platform,
-          platformChatId: inquiry.buyer.platformChatId,
-          platformUserId: inquiry.buyer.platformUserId,
+          platform: buyer.platform,
+          platformChatId: buyer.platformChatId,
+          platformUserId: buyer.platformUserId,
         },
-        `✅ Заявка создана!\n\n${input.model} ${input.submodel}\n${input.transmission} • ${input.color}\n\nДилеры начнут присылать вам предложения. Заявка активна 24 часа.`
+        `✅ Заявка создана!\n\n${input.model} ${input.submodel}\n${input.transmission} • ${input.color}\n\nДилеры начнут присылать вам предложения. Заявка активна 24 часа.${remainingText}`
       ),
       ...dealers.map((dealer) =>
         notifyDealerOfNewInquiry(
@@ -94,7 +216,12 @@ export async function POST(request: Request) {
       ),
     ]);
 
-    return NextResponse.json({ id: inquiry.id, success: true });
+    return NextResponse.json({
+      id: inquiry.id,
+      success: true,
+      remainingInquiries,
+      nextInquiryAt: buyer.inquiryLimitResetAt,
+    });
   } catch (err) {
     console.error('Inquiry creation error:', err);
     return NextResponse.json(

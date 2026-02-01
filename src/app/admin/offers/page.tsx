@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db';
 import { DataTable } from '@/components/admin/data-table';
 import { format } from 'date-fns';
-import type { Offer, Inquiry, Dealer } from '@prisma/client';
+import type { Offer, Inquiry, Dealer, Transaction } from '@prisma/client';
 
 const LIMIT = 25;
 
@@ -10,7 +10,7 @@ type SearchParams = Promise<{ page?: string }>;
 type OfferWithRelations = Offer & {
   inquiry: Inquiry;
   dealer: Dealer;
-  _count: { leads: number };
+  transaction: Transaction | null;
 };
 
 export default async function OffersPage({ searchParams }: { searchParams: SearchParams }) {
@@ -25,7 +25,7 @@ export default async function OffersPage({ searchParams }: { searchParams: Searc
       include: {
         inquiry: true,
         dealer: true,
-        _count: { select: { leads: true } },
+        transaction: true,
       },
     }),
     prisma.offer.count(),
@@ -48,7 +48,11 @@ export default async function OffersPage({ searchParams }: { searchParams: Searc
       label: 'Цена',
       render: (o: OfferWithRelations) => `${o.price.toLocaleString('ru-RU')} ₽`,
     },
-    { key: 'leads', label: 'Лиды', render: (o: OfferWithRelations) => o._count.leads },
+    {
+      key: 'status',
+      label: 'Статус',
+      render: (o: OfferWithRelations) => (o.transaction ? 'Принято' : 'Ожидание'),
+    },
     {
       key: 'comment',
       label: 'Комментарий',

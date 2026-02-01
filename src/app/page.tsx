@@ -1,4 +1,5 @@
 import { Car } from 'lucide-react';
+import Image from 'next/image';
 
 import { getMaxBotUrl, getTelegramBotUrl } from '@/lib/bot-links';
 
@@ -23,15 +24,39 @@ export default function Home() {
         </div>
 
         <div className="flex flex-col gap-4 w-full max-w-xs">
+          {maxBotUrl && (
+            <a
+              href={maxBotUrl}
+              className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-blue-600 px-6 text-lg font-semibold text-white transition-colors hover:bg-blue-700 active:bg-blue-800"
+            >
+              <Image
+                src="/icons/max-logo.svg"
+                alt="Max"
+                width={24}
+                height={24}
+                className="h-6 w-6"
+              />
+              Открыть в Max
+            </a>
+          )}
           {tgBotUrl && (
             <a
               href={tgBotUrl}
               className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-sky-500 px-6 text-lg font-semibold text-white transition-colors hover:bg-sky-600 active:bg-sky-700"
             >
+              <Image
+                src="/icons/telegram-logo.svg"
+                alt="Telegram"
+                width={24}
+                height={24}
+                className="h-6 w-6"
+              />
               Открыть в Telegram
             </a>
           )}
-          <p className="text-center text-sm text-zinc-500 dark:text-zinc-500">Начните с Telegram</p>
+          <p className="text-center text-sm text-zinc-500 dark:text-zinc-500">
+            Выберите удобный мессенджер
+          </p>
         </div>
 
         <div className="mt-8 flex flex-col gap-6 text-center">

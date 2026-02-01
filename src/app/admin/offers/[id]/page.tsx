@@ -21,9 +21,7 @@ export default async function OfferDetailPage({ params }: { params: Params }) {
         include: { buyer: true },
       },
       dealer: true,
-      leads: {
-        orderBy: { acceptedAt: 'desc' },
-      },
+      transaction: true,
     },
   });
 
@@ -54,7 +52,7 @@ export default async function OfferDetailPage({ params }: { params: Params }) {
               <span className="font-mono">{offer.id}</span>
 
               <span className="text-muted-foreground">Цена:</span>
-              <span className="font-bold text-lg">{offer.price.toLocaleString('ru-RU')} ₽</span>
+              <span className="text-lg font-bold">{offer.price.toLocaleString('ru-RU')} ₽</span>
 
               <span className="text-muted-foreground">Дилер:</span>
               <Link
@@ -89,12 +87,9 @@ export default async function OfferDetailPage({ params }: { params: Params }) {
 
               <span className="text-muted-foreground">Создано:</span>
               <span>{format(offer.createdAt, 'dd.MM.yyyy HH:mm')}</span>
-
-              <span className="text-muted-foreground">Обновлено:</span>
-              <span>{format(offer.updatedAt, 'dd.MM.yyyy HH:mm')}</span>
             </div>
 
-            <div className="pt-4 border-t">
+            <div className="border-t pt-4">
               <DeleteDialog
                 entityName="Предложение"
                 entityId={offer.id}
@@ -107,30 +102,30 @@ export default async function OfferDetailPage({ params }: { params: Params }) {
 
         <Card>
           <CardHeader>
-            <CardTitle>Лиды ({offer.leads.length})</CardTitle>
+            <CardTitle>Статус транзакции</CardTitle>
           </CardHeader>
           <CardContent>
-            {offer.leads.length === 0 ? (
+            {!offer.transaction ? (
               <p className="text-muted-foreground text-sm">
-                Пока нет лидов (предложение не принято)
+                Предложение ещё не принято покупателем
               </p>
             ) : (
-              <div className="space-y-2">
-                {offer.leads.map((lead) => (
-                  <Link
-                    key={lead.id}
-                    href={`/admin/leads/${lead.id}`}
-                    className="block rounded-md border p-3 hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">{lead.buyerName}</span>
-                      <Badge variant="default">Принято</Badge>
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {lead.buyerPhone} • {format(lead.acceptedAt, 'dd.MM.yyyy HH:mm')}
-                    </div>
-                  </Link>
-                ))}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-green-600">Принято</Badge>
+                </div>
+                <Link
+                  href={`/admin/transactions/${offer.transaction.id}`}
+                  className="block rounded-md border p-3 transition-colors hover:bg-muted/50"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{offer.transaction.buyerName}</span>
+                  </div>
+                  <div className="text-muted-foreground mt-1 text-xs">
+                    {offer.transaction.buyerPhone} •{' '}
+                    {format(offer.transaction.acceptedAt, 'dd.MM.yyyy HH:mm')}
+                  </div>
+                </Link>
               </div>
             )}
           </CardContent>

@@ -38,8 +38,8 @@ async function cleanupPrefixedData() {
 }
 
 async function deleteByPrefix(prefix: string) {
-  // Delete leads linked to seed/test offers
-  const deletedLeads = await prisma.lead.deleteMany({
+  // Delete transactions linked to seed/test offers
+  const deletedTransactions = await prisma.transaction.deleteMany({
     where: {
       offer: {
         inquiry: {
@@ -50,7 +50,7 @@ async function deleteByPrefix(prefix: string) {
       },
     },
   });
-  console.log(`  - Deleted ${deletedLeads.count} leads`);
+  console.log(`  - Deleted ${deletedTransactions.count} transactions`);
 
   // Delete offers linked to seed/test inquiries or dealers
   const deletedOffers = await prisma.offer.deleteMany({
@@ -108,9 +108,9 @@ async function deleteAllData() {
     process.exit(1);
   }
 
-  console.log('Deleting all leads...');
-  const deletedLeads = await prisma.lead.deleteMany();
-  console.log(`  - Deleted ${deletedLeads.count} leads`);
+  console.log('Deleting all transactions...');
+  const deletedTransactions = await prisma.transaction.deleteMany();
+  console.log(`  - Deleted ${deletedTransactions.count} transactions`);
 
   console.log('Deleting all offers...');
   const deletedOffers = await prisma.offer.deleteMany();

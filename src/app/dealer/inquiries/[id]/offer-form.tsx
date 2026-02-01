@@ -28,11 +28,13 @@ export function OfferForm({
   defaultPrice,
   defaultComment,
   disabled,
+  offerNumber = 1,
 }: {
   inquiryId: string;
   defaultPrice?: number;
   defaultComment?: string | null;
   disabled?: boolean;
+  offerNumber?: number;
 }) {
   const router = useRouter();
   const form = useForm<OfferFormValues>({
@@ -61,19 +63,25 @@ export function OfferForm({
       body: JSON.stringify({ inquiryId, ...parsed.data }),
     });
 
+    const json = (await res.json()) as { error?: string; remainingOffers?: number };
+
     if (!res.ok) {
-      const json = (await res.json()) as unknown;
-      const message =
-        typeof json === 'object' && json && 'error' in json && typeof json.error === 'string'
-          ? json.error
-          : 'Не удалось сохранить предложение';
+      const message = json.error || 'Не удалось сохранить предложение';
       form.setError('price', { type: 'server', message });
       return;
     }
 
-    toast.success('Предложение отправлено! Покупатель получит уведомление.');
+    const remainingText =
+      json.remainingOffers !== undefined && json.remainingOffers > 0
+        ? ` Осталось попыток: ${json.remainingOffers}`
+        : '';
+
+    toast.success(`Предложение #${offerNumber} отправлено!${remainingText}`);
+    form.reset({ price: '', comment: '' });
     router.refresh();
   }
+
+  const isFirstOffer = offerNumber === 1;
 
   return (
     <form className="flex flex-col gap-4" onSubmit={form.handleSubmit(onSubmit)}>
@@ -96,14 +104,23 @@ export function OfferForm({
         <Field orientation="vertical" data-invalid={!!form.formState.errors.comment}>
           <FieldLabel htmlFor="comment">Комментарий (необязательно)</FieldLabel>
           <FieldContent>
-            <Textarea id="comment" disabled={disabled} {...form.register('comment')} />
+            <Textarea
+              id="comment"
+              disabled={disabled}
+              placeholder="Например: в наличии, готов к выдаче"
+              {...form.register('comment')}
+            />
             <FieldError errors={[form.formState.errors.comment]} />
           </FieldContent>
         </Field>
       </FieldGroup>
 
       <Button type="submit" disabled={disabled || form.formState.isSubmitting}>
-        {form.formState.isSubmitting ? 'Сохраняем…' : 'Сохранить'}
+        {form.formState.isSubmitting
+          ? 'Отправляем…'
+          : isFirstOffer
+            ? 'Отправить предложение'
+            : 'Отправить новое предложение'}
       </Button>
     </form>
   );

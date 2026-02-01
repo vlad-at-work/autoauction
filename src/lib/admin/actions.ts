@@ -7,8 +7,8 @@ import type { Platform } from '@prisma/client';
 // Buyer actions
 export async function deleteBuyer(id: string) {
   try {
-    // Delete related data in order (leads -> offers -> inquiries -> buyer)
-    await prisma.lead.deleteMany({
+    // Delete related data in order (transactions -> offers -> inquiries -> buyer)
+    await prisma.transaction.deleteMany({
       where: { offer: { inquiry: { buyerId: id } } },
     });
     await prisma.offer.deleteMany({
@@ -61,7 +61,7 @@ export async function createBuyer(data: {
 // Inquiry actions
 export async function deleteInquiry(id: string) {
   try {
-    await prisma.lead.deleteMany({
+    await prisma.transaction.deleteMany({
       where: { offer: { inquiryId: id } },
     });
     await prisma.offer.deleteMany({
@@ -134,7 +134,7 @@ export async function createInquiry(data: {
 // Dealer actions
 export async function deleteDealer(id: string) {
   try {
-    await prisma.lead.deleteMany({
+    await prisma.transaction.deleteMany({
       where: { offer: { dealerId: id } },
     });
     await prisma.offer.deleteMany({
@@ -184,7 +184,7 @@ export async function createDealer(data: {
 // Offer actions
 export async function deleteOffer(id: string) {
   try {
-    await prisma.lead.deleteMany({
+    await prisma.transaction.deleteMany({
       where: { offerId: id },
     });
     await prisma.offer.delete({
@@ -229,16 +229,16 @@ export async function createOffer(data: {
   }
 }
 
-// Lead actions (read-only, but including delete for completeness)
-export async function deleteLead(id: string) {
+// Transaction actions
+export async function deleteTransaction(id: string) {
   try {
-    await prisma.lead.delete({
+    await prisma.transaction.delete({
       where: { id },
     });
-    revalidatePath('/admin/leads');
+    revalidatePath('/admin/transactions');
     return { success: true };
   } catch (error) {
-    console.error('Delete lead error:', error);
-    return { success: false, error: 'Не удалось удалить лид' };
+    console.error('Delete transaction error:', error);
+    return { success: false, error: 'Не удалось удалить транзакцию' };
   }
 }

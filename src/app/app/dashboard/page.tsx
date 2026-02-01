@@ -3,19 +3,21 @@
 import { Clock, Copy, ExternalLink, Loader2, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { InquiryCard } from '@/components/inquiry-card';
 import { PageTransition } from '@/components/page-transition';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TopBar } from '@/components/ui/top-bar';
-import { getMyInquiries, type Inquiry } from '@/lib/api/inquiries';
+import { getMyInquiries, type Inquiry, type InquiryLimits } from '@/lib/api/inquiries';
 import { detectPlatform, getWebApp } from '@/app/app/webapp-ready';
 
 export default function DashboardPage() {
   const router = useRouter();
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [limits, setLimits] = useState<InquiryLimits | null>(null);
   const [loading, setLoading] = useState(true);
   const [platformChatId, setPlatformChatId] = useState<string | null>(null);
   const [platformUserId, setPlatformUserId] = useState<string | null>(null);
@@ -34,43 +36,39 @@ export default function DashboardPage() {
       const response = await fetch('/api/debug/migrate-cascades', { method: 'POST' });
       const data = await response.json();
       if (!response.ok) {
-        alert(`❌ Миграция не выполнена: ${data.error || 'Неизвестная ошибка'}`);
+        alert(`Миграция не выполнена: ${data.error || 'Неизвестная ошибка'}`);
         return;
       }
-      alert('✅ Миграция выполнена');
+      alert('Миграция выполнена');
     } catch (err) {
-      alert(
-        `❌ Миграция не выполнена: ${err instanceof Error ? err.message : 'Неизвестная ошибка'}`
-      );
+      alert(`Миграция не выполнена: ${err instanceof Error ? err.message : 'Неизвестная ошибка'}`);
     } finally {
       setMigratingCascades(false);
     }
   };
 
   const clearDatabase = async () => {
-    if (!confirm('⚠️ Удалить ВСЕ данные? Это действие необратимо!')) return;
+    if (!confirm('Удалить ВСЕ данные? Это действие необратимо!')) return;
 
     setClearingDb(true);
     try {
       const response = await fetch('/api/debug/clear-db', { method: 'POST' });
       const data = await response.json();
       if (!response.ok) {
-        alert(`❌ Ошибка очистки: ${data.error || 'Неизвестная ошибка'}`);
+        alert(`Ошибка очистки: ${data.error || 'Неизвестная ошибка'}`);
         return;
       }
       setInquiries([]);
-      alert('✅ База данных очищена');
-      // Reload the page to ensure fresh data
+      alert('База данных очищена');
       window.location.reload();
     } catch (err) {
-      alert(`❌ Ошибка очистки: ${err instanceof Error ? err.message : 'Неизвестная ошибка'}`);
+      alert(`Ошибка очистки: ${err instanceof Error ? err.message : 'Неизвестная ошибка'}`);
     } finally {
       setClearingDb(false);
     }
   };
 
-  const loadInquiries = async () => {
-    // Get user ID from WebApp
+  const loadInquiries = useCallback(async () => {
     const webApp = getWebApp();
     const detectedPlatform = detectPlatform();
     const detectedUserId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
@@ -81,20 +79,19 @@ export default function DashboardPage() {
     setPlatformChatId(detectedChatId);
 
     if (!detectedUserId || !detectedPlatform) {
-      // If no user detected, redirect to entry point
       router.replace('/app');
       return;
     }
 
     const data = await getMyInquiries(detectedUserId, detectedPlatform);
-    setInquiries(data);
+    setInquiries(data.inquiries);
+    setLimits(data.limits);
     setLoading(false);
-  };
+  }, [router]);
 
   useEffect(() => {
     loadInquiries();
 
-    // Auto-refresh on window focus
     const handleFocus = () => {
       loadInquiries();
     };
@@ -103,7 +100,7 @@ export default function DashboardPage() {
     return () => {
       window.removeEventListener('focus', handleFocus);
     };
-  }, [router]);
+  }, [loadInquiries]);
 
   const copyChatId = async () => {
     if (!platformChatId) return;
@@ -159,6 +156,27 @@ export default function DashboardPage() {
       <div className="min-h-screen w-full">
         <TopBar />
         <div className="mx-auto max-w-2xl px-4 py-6">
+          {/* Inquiry limits banner */}
+          {limits && (
+            <div className="mb-4 flex items-center justify-between rounded-lg border bg-zinc-50 px-4 py-3">
+              <div className="text-sm">
+                <span className="text-muted-foreground">Заявок осталось: </span>
+                <span className="font-medium">
+                  {limits.remaining} из {limits.max}
+                </span>
+              </div>
+              {limits.remaining === 0 && limits.resetsAt && (
+                <Badge variant="outline" className="text-xs">
+                  Новая через{' '}
+                  {Math.ceil(
+                    (new Date(limits.resetsAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000)
+                  )}{' '}
+                  дн.
+                </Badge>
+              )}
+            </div>
+          )}
+
           {platformChatId ? (
             <Card className="mb-4">
               <CardHeader className="flex items-center justify-between gap-3">
@@ -220,14 +238,14 @@ export default function DashboardPage() {
                 ) : null}
                 {sendState === 'success' ? (
                   <div className="text-xs text-green-700">
-                    Отправлено ✅ (проверьте чат с ботом MAX)
+                    Отправлено (проверьте чат с ботом MAX)
                   </div>
                 ) : null}
                 {sendState === 'error' ? (
                   <div className="text-xs text-red-700">Ошибка отправки: {sendError}</div>
                 ) : null}
                 {sendState === 'sending' ? (
-                  <div className="text-xs text-zinc-600">Отправка…</div>
+                  <div className="text-xs text-zinc-600">Отправка...</div>
                 ) : null}
               </CardContent>
             </Card>

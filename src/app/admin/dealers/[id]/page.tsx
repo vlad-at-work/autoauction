@@ -22,7 +22,7 @@ export default async function DealerDetailPage({ params }: { params: Params }) {
         take: 20,
         include: {
           inquiry: true,
-          _count: { select: { leads: true } },
+          transaction: true,
         },
       },
       _count: { select: { offers: true } },
@@ -102,7 +102,7 @@ export default async function DealerDetailPage({ params }: { params: Params }) {
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-medium">{offer.price.toLocaleString('ru-RU')} ₽</span>
-                      <Badge variant="outline">{offer._count.leads} leads</Badge>
+                      {offer.transaction && <Badge variant="default">Принято</Badge>}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
                       {offer.inquiry.model} {offer.inquiry.submodel} •{' '}

@@ -13,14 +13,16 @@ enum Platform {
   TELEGRAM
 }
 
-// NOTE for YDB migration: Buyer uses composite unique constraint which may need
-// to be handled differently in YDB. Consider using a compound key or separate index.
 model Buyer {
   id               String   @id @default(cuid())
   platform         Platform
   platformUserId   String
   platformChatId   String?  // Chat ID for sending bot notifications
   platformUserName String?
+
+  // Inquiry limits: 2 per month, resets every 15 days
+  inquiriesUsedThisMonth Int      @default(0)
+  inquiryLimitResetAt    DateTime @default(now())
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -51,7 +53,8 @@ model Inquiry {
   createdAt DateTime @default(now())
   expiresAt DateTime
 
-  offers Offer[]
+  offers       Offer[]
+  transactions Transaction[]
 
   @@index([expiresAt])
   @@index([buyerId])
@@ -66,7 +69,8 @@ model Dealer {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  offers Offer[]
+  offers       Offer[]
+  transactions Transaction[]
 }
 
 model Offer {
@@ -81,29 +85,40 @@ model Offer {
   comment String?
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
-  leads Lead[]
+  transaction Transaction?
 
-  @@unique([inquiryId, dealerId])
+  // Removed @@unique([inquiryId, dealerId]) to allow multiple offers per dealer
+  // Cap of 5 offers per dealer per inquiry enforced in API
   @@index([inquiryId])
   @@index([dealerId])
+  @@index([inquiryId, dealerId])
 }
 
-model Lead {
-  id      String @id @default(cuid())
-  offer   Offer  @relation(fields: [offerId], references: [id], onDelete: Cascade)
-  offerId String
+// Transaction: created when a user accepts an offer
+// Replaces the old Lead model with better constraints
+model Transaction {
+  id        String  @id @default(cuid())
+  inquiry   Inquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  inquiryId String
 
+  offer   Offer  @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  offerId String @unique // One transaction per offer
+
+  dealer   Dealer @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  dealerId String
+
+  // Buyer info revealed to dealer upon acceptance
   buyerName  String
   buyerEmail String?
   buyerPhone String
 
   acceptedAt DateTime @default(now())
-  closedAt   DateTime?
-  status     String   @default("open") // open, contacted, closed, lost
-  notes      String?  // dealer notes
+  closedAt   DateTime? // For future dealer confirmation
 
-  @@index([offerId])
-  @@index([status])
+  // Max 1 transaction per dealer per inquiry
+  // Max 3 transactions per inquiry enforced in API
+  @@unique([inquiryId, dealerId])
+  @@index([inquiryId])
+  @@index([dealerId])
 }

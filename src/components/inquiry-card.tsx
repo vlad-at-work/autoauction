@@ -1,8 +1,9 @@
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { MessageSquare } from 'lucide-react';
+import { Check, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { CountdownTimer } from '@/components/countdown-timer';
 import { cn } from '@/lib/utils';
@@ -14,39 +15,51 @@ type InquiryCardProps = {
     submodel: string;
     createdAt: Date;
     expiresAt: Date;
-    _count: { offers: number };
+    _count: {
+      offers: number;
+      transactions?: number;
+    };
   };
 };
 
 export function InquiryCard({ inquiry }: InquiryCardProps) {
   const isExpired = new Date(inquiry.expiresAt) < new Date();
   const offerCount = inquiry._count.offers;
+  const transactionCount = inquiry._count.transactions ?? 0;
 
   return (
     <Link href={`/app/inquiry/${inquiry.id}`}>
-      <Card className={cn('transition-colors hover:border-primary', isExpired && 'opacity-50')}>
+      <Card className={cn('transition-colors hover:border-primary', isExpired && 'opacity-60')}>
         <CardContent className="flex flex-col gap-3 p-4">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <h3 className="font-semibold text-base leading-tight">
+              <h3 className="text-base font-semibold leading-tight">
                 {inquiry.model} {inquiry.submodel !== inquiry.model && inquiry.submodel}
               </h3>
-              <p className="text-muted-foreground text-sm mt-1">
+              <p className="text-muted-foreground mt-1 text-sm">
                 {format(new Date(inquiry.createdAt), 'd MMM', { locale: ru })}
               </p>
             </div>
-            {isExpired && (
-              <span className="bg-muted text-muted-foreground rounded-full px-2 py-1 text-xs font-medium">
-                Истекло
-              </span>
-            )}
+            <div className="flex flex-col items-end gap-1">
+              {isExpired && (
+                <span className="bg-muted text-muted-foreground rounded-full px-2 py-1 text-xs font-medium">
+                  Истекло
+                </span>
+              )}
+              {transactionCount > 0 && (
+                <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700">
+                  <Check className="mr-1 size-3" />
+                  {transactionCount} принято
+                </Badge>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center justify-between text-sm">
             <CountdownTimer expiresAt={inquiry.expiresAt} isExpired={isExpired} />
             <div className="flex items-center gap-1">
               <MessageSquare className="size-4" />
-              <span>{offerCount === 0 ? 'Нет предложений' : `${offerCount}`}</span>
+              <span>{offerCount === 0 ? 'Нет предложений' : `${offerCount} предл.`}</span>
             </div>
           </div>
         </CardContent>

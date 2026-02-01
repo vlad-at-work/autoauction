@@ -5,9 +5,11 @@ import { prisma } from '@/lib/db';
 import { parseBasicAuthHeader } from '@/lib/auth/basic';
 import { notifyBuyerOfNewOffer } from '@/lib/notifications';
 
-const offerUpsertSchema = z.object({
+const MAX_OFFERS_PER_DEALER_PER_INQUIRY = 5;
+
+const offerCreateSchema = z.object({
   inquiryId: z.string().min(1),
-  price: z.number().int().positive(),
+  price: z.number().int().positive().max(2147483647), // INT4 max
   comment: z.string().max(1000).optional(),
 });
 
@@ -19,7 +21,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const parsed = offerUpsertSchema.safeParse(body);
+    const parsed = offerCreateSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
@@ -61,18 +63,28 @@ export async function POST(request: Request) {
       select: { id: true },
     });
 
-    const existing = await prisma.offer.findUnique({
+    // Check if this dealer already has a transaction on this inquiry (offer accepted)
+    const existingTransaction = await prisma.transaction.findUnique({
       where: { inquiryId_dealerId: { inquiryId, dealerId: dealer.id } },
-      select: { id: true, leads: { select: { id: true }, take: 1 } },
     });
 
-    if (existing && existing.leads.length > 0) {
-      return NextResponse.json({ error: 'Предложение уже принято покупателем' }, { status: 409 });
+    if (existingTransaction) {
+      return NextResponse.json(
+        { error: 'Ваше предложение уже принято покупателем. Новые предложения не принимаются.' },
+        { status: 409 }
+      );
     }
 
-    if (existing) {
+    // Check how many offers this dealer has already made on this inquiry
+    const existingOfferCount = await prisma.offer.count({
+      where: { inquiryId, dealerId: dealer.id },
+    });
+
+    if (existingOfferCount >= MAX_OFFERS_PER_DEALER_PER_INQUIRY) {
       return NextResponse.json(
-        { error: 'Предложение уже отправлено (ожидайте решения покупателя)' },
+        {
+          error: `Достигнут лимит предложений (${MAX_OFFERS_PER_DEALER_PER_INQUIRY}). Дождитесь решения покупателя.`,
+        },
         { status: 409 }
       );
     }
@@ -82,15 +94,18 @@ export async function POST(request: Request) {
       select: { id: true },
     });
 
-    // Send notification to buyer (awaited to avoid serverless "fire-and-forget" drops)
+    // Send notification to buyer
+    // Notify on every new offer (user sees "Дилер обновил предложение!")
     try {
+      const isFirstOffer = existingOfferCount === 0;
       const result = await notifyBuyerOfNewOffer(
         inquiry.buyer,
         inquiryId,
         offer.id,
         inquiry.model,
         inquiry.submodel,
-        price
+        price,
+        isFirstOffer
       );
       if (!result.success) {
         console.error('Failed to send buyer notification:', result.error);
@@ -99,20 +114,12 @@ export async function POST(request: Request) {
       console.error('Failed to send buyer notification:', err);
     }
 
-    return NextResponse.json(offer);
+    return NextResponse.json({
+      id: offer.id,
+      offerNumber: existingOfferCount + 1,
+      remainingOffers: MAX_OFFERS_PER_DEALER_PER_INQUIRY - existingOfferCount - 1,
+    });
   } catch (err) {
-    if (
-      typeof err === 'object' &&
-      err &&
-      'code' in err &&
-      (err as { code?: string }).code === 'P2002'
-    ) {
-      return NextResponse.json(
-        { error: 'Предложение уже отправлено (ожидайте решения покупателя)' },
-        { status: 409 }
-      );
-    }
-
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Внутренняя ошибка' },
       { status: 500 }

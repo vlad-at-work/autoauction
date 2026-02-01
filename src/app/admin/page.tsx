@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, FileText, Store, Tag, UserCheck } from 'lucide-react';
+import { Users, FileText, Store, Tag, CheckCircle } from 'lucide-react';
 import { ClearDbButton } from '@/components/admin/clear-db-button';
 
 export const dynamic = 'force-dynamic';
@@ -8,15 +8,21 @@ export const dynamic = 'force-dynamic';
 async function getStats() {
   const now = new Date();
 
-  const [buyersCount, inquiriesCount, activeInquiriesCount, dealersCount, offersCount, leadsCount] =
-    await Promise.all([
-      prisma.buyer.count(),
-      prisma.inquiry.count(),
-      prisma.inquiry.count({ where: { expiresAt: { gte: now } } }),
-      prisma.dealer.count(),
-      prisma.offer.count(),
-      prisma.lead.count(),
-    ]);
+  const [
+    buyersCount,
+    inquiriesCount,
+    activeInquiriesCount,
+    dealersCount,
+    offersCount,
+    transactionsCount,
+  ] = await Promise.all([
+    prisma.buyer.count(),
+    prisma.inquiry.count(),
+    prisma.inquiry.count({ where: { expiresAt: { gte: now } } }),
+    prisma.dealer.count(),
+    prisma.offer.count(),
+    prisma.transaction.count(),
+  ]);
 
   return {
     buyersCount,
@@ -24,7 +30,7 @@ async function getStats() {
     activeInquiriesCount,
     dealersCount,
     offersCount,
-    leadsCount,
+    transactionsCount,
   };
 }
 
@@ -37,7 +43,7 @@ export default async function AdminDashboardPage() {
     { label: 'Активных заявок', value: stats.activeInquiriesCount, icon: FileText },
     { label: 'Всего дилеров', value: stats.dealersCount, icon: Store },
     { label: 'Всего предложений', value: stats.offersCount, icon: Tag },
-    { label: 'Всего лидов', value: stats.leadsCount, icon: UserCheck },
+    { label: 'Всего транзакций', value: stats.transactionsCount, icon: CheckCircle },
   ];
 
   return (

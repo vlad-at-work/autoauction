@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { LayoutDashboard, Users, FileText, Store, Tag, UserCheck } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Store, Tag, CheckCircle } from 'lucide-react';
 
 import { AdminMobileNav } from '@/components/admin/admin-mobile-nav';
 
@@ -9,7 +9,7 @@ const navItems = [
   { href: '/admin/inquiries', label: 'Заявки', icon: FileText },
   { href: '/admin/dealers', label: 'Дилеры', icon: Store },
   { href: '/admin/offers', label: 'Предложения', icon: Tag },
-  { href: '/admin/leads', label: 'Лиды', icon: UserCheck },
+  { href: '/admin/transactions', label: 'Транзакции', icon: CheckCircle },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

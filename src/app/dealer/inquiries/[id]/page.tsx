@@ -2,10 +2,20 @@ import Link from 'next/link';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { prisma } from '@/lib/db';
 import { parseBasicAuthHeader } from '@/lib/auth/basic';
 import { OfferForm } from '@/app/dealer/inquiries/[id]/offer-form';
+import {
+  getShortId,
+  getIdColorClass,
+  formatPrice,
+  anonymizeDealerName,
+  formatRelativeTime,
+} from '@/lib/inquiry-utils';
+
+const MAX_OFFERS_PER_DEALER = 5;
 
 export default async function DealerInquiryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -24,14 +34,35 @@ export default async function DealerInquiryPage({ params }: { params: Promise<{ 
   const inquiry = await prisma.inquiry.findUnique({
     where: { id },
     include: {
-      offers: dealer
-        ? {
-            where: { dealerId: dealer.id },
-            include: {
-              leads: true,
+      offers: {
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          price: true,
+          comment: true,
+          dealerId: true,
+          createdAt: true,
+          transaction: {
+            select: {
+              id: true,
+              buyerName: true,
+              buyerEmail: true,
+              buyerPhone: true,
+              acceptedAt: true,
             },
-          }
-        : undefined,
+          },
+        },
+      },
+      transactions: {
+        select: {
+          id: true,
+          dealerId: true,
+          buyerName: true,
+          buyerEmail: true,
+          buyerPhone: true,
+          acceptedAt: true,
+        },
+      },
     },
   });
 
@@ -39,36 +70,50 @@ export default async function DealerInquiryPage({ params }: { params: Promise<{ 
 
   const now = new Date();
   const isExpired = inquiry.expiresAt <= now;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const offers = (inquiry as any).offers || [];
-  const offer = offers[0] as unknown as
-    | {
-        id: string;
-        price: number;
-        comment: string | null;
-        leads: {
-          id: string;
-          buyerName: string;
-          buyerEmail: string | null;
-          buyerPhone: string;
-          acceptedAt: Date;
-        }[];
-      }
-    | undefined;
+  const colorClass = getIdColorClass(inquiry.id);
+  const shortId = getShortId(inquiry.id);
 
-  const lead = offer?.leads[0];
+  // Separate my offers from others
+  const myOffers = dealer ? inquiry.offers.filter((o) => o.dealerId === dealer.id) : [];
+  const otherOffers = dealer
+    ? inquiry.offers.filter((o) => o.dealerId !== dealer.id)
+    : inquiry.offers;
+  const myTransaction = dealer ? inquiry.transactions.find((t) => t.dealerId === dealer.id) : null;
+
+  // Group other offers by dealer for anonymization
+  const otherDealerIds = [...new Set(otherOffers.map((o) => o.dealerId))];
+  const dealerIndexMap = new Map(otherDealerIds.map((dId, i) => [dId, i]));
+
+  const hoursLeft = Math.max(
+    0,
+    Math.ceil((inquiry.expiresAt.getTime() - now.getTime()) / (60 * 60 * 1000))
+  );
+
+  const canMakeOffer = !isExpired && !myTransaction && myOffers.length < MAX_OFFERS_PER_DEALER;
+  const remainingOffers = MAX_OFFERS_PER_DEALER - myOffers.length;
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-10">
       <Card>
         <CardHeader>
-          <CardTitle>
-            {inquiry.model} • {inquiry.submodel}
-          </CardTitle>
+          <div className="flex items-center gap-3">
+            <span
+              className={`rounded px-2 py-1 text-sm font-mono font-medium ${colorClass.bg} ${colorClass.text} border ${colorClass.border}`}
+            >
+              {shortId}
+            </span>
+            <CardTitle>
+              {inquiry.model} • {inquiry.submodel}
+            </CardTitle>
+          </div>
           <div className="text-muted-foreground text-sm">
-            ID: {inquiry.id}
+            {isExpired ? (
+              <span className="text-orange-600">Заявка истекла</span>
+            ) : (
+              <span>Осталось: ~{hoursLeft}ч</span>
+            )}
             {' · '}
-            До: {inquiry.expiresAt.toISOString()}
+            {inquiry.transactions.length} принято
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -92,87 +137,164 @@ export default async function DealerInquiryPage({ params }: { params: Promise<{ 
             )}
           </div>
 
-          {isExpired ? (
-            <Card className="border-gray-300 bg-gray-50">
-              <CardHeader>
-                <CardTitle className="text-lg text-gray-700">⏰ Заявка истекла</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-gray-600">
-                Время истекло — предложения больше не принимаются.
-                {offer && (
-                  <div className="mt-2">
-                    Ваше предложение: <span className="font-medium">{offer.price} ₽</span>
-                    {offer.comment && ` (${offer.comment})`}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ) : lead ? (
+          {/* My transaction status */}
+          {myTransaction && (
             <Card className="border-green-200 bg-green-50">
               <CardHeader>
                 <CardTitle className="text-lg text-green-900">
-                  ✅ Лид получен! Покупатель принял ваше предложение
+                  🎉 Ваше предложение принято!
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
-                <div>
-                  <span className="font-medium">Имя:</span> {lead.buyerName}
-                </div>
-                <div>
-                  <span className="font-medium">Телефон:</span>{' '}
-                  <a href={`tel:${lead.buyerPhone}`} className="text-blue-600 underline">
-                    {lead.buyerPhone}
-                  </a>
-                </div>
-                {lead.buyerEmail && (
+                <p className="text-green-800">
+                  У вас есть контактная информация покупателя. Свяжитесь с ним как можно скорее.
+                </p>
+                <div className="mt-3 rounded border border-green-200 bg-white p-3">
                   <div>
-                    <span className="font-medium">Эл. почта:</span>{' '}
-                    <a href={`mailto:${lead.buyerEmail}`} className="text-blue-600 underline">
-                      {lead.buyerEmail}
+                    <span className="font-medium">Имя:</span> {myTransaction.buyerName}
+                  </div>
+                  <div>
+                    <span className="font-medium">Телефон:</span>{' '}
+                    <a href={`tel:${myTransaction.buyerPhone}`} className="text-blue-600 underline">
+                      {myTransaction.buyerPhone}
                     </a>
                   </div>
-                )}
-                <div className="text-muted-foreground text-xs">
-                  Принято: {new Date(lead.acceptedAt).toLocaleString('ru-RU')}
+                  {myTransaction.buyerEmail && (
+                    <div>
+                      <span className="font-medium">Эл. почта:</span>{' '}
+                      <a
+                        href={`mailto:${myTransaction.buyerEmail}`}
+                        className="text-blue-600 underline"
+                      >
+                        {myTransaction.buyerEmail}
+                      </a>
+                    </div>
+                  )}
+                  <div className="text-muted-foreground mt-2 text-xs">
+                    Принято: {new Date(myTransaction.acceptedAt).toLocaleString('ru-RU')}
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          ) : offer ? (
-            <Card className="border-blue-200 bg-blue-50">
-              <CardHeader>
-                <CardTitle className="text-lg text-blue-900">
-                  ⏳ Ожидание ответа покупателя
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <div>
-                  Ваше предложение: <span className="font-medium">{offer.price} ₽</span>
-                  {offer.comment && ` — ${offer.comment}`}
-                </div>
-                <div className="text-muted-foreground text-xs">
-                  Осталось времени:{' '}
-                  {Math.max(
-                    0,
-                    Math.ceil((inquiry.expiresAt.getTime() - now.getTime()) / (60 * 60 * 1000))
-                  )}{' '}
-                  часов
-                </div>
-                <div className="text-muted-foreground text-xs">
-                  Покупатель может принять несколько предложений от разных дилеров.
-                </div>
-              </CardContent>
-            </Card>
-          ) : null}
+          )}
 
-          <div className="flex flex-col gap-3">
-            <div className="text-sm font-medium">Ваше предложение</div>
-            <OfferForm
-              inquiryId={inquiry.id}
-              defaultPrice={offer?.price}
-              defaultComment={offer?.comment}
-              disabled={isExpired || !!offer}
-            />
-          </div>
+          {/* My offers section */}
+          {myOffers.length > 0 && (
+            <div className="flex flex-col gap-3">
+              <div className="text-sm font-medium">Ваши предложения ({myOffers.length})</div>
+              <div className="flex flex-col gap-2">
+                {myOffers.map((offer, index) => (
+                  <div
+                    key={offer.id}
+                    className={`rounded-lg border p-3 ${
+                      offer.transaction
+                        ? 'border-green-200 bg-green-50'
+                        : 'border-gray-200 bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{formatPrice(offer.price)}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground text-xs">
+                          {formatRelativeTime(offer.createdAt)}
+                        </span>
+                        {offer.transaction ? (
+                          <Badge className="bg-green-600">✓ Принято</Badge>
+                        ) : index === 0 ? (
+                          <Badge variant="outline" className="border-blue-200 text-blue-700">
+                            Актуальное
+                          </Badge>
+                        ) : null}
+                      </div>
+                    </div>
+                    {offer.comment && (
+                      <p className="text-muted-foreground mt-1 text-sm">{offer.comment}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Competing offers section (anonymized) */}
+          {otherOffers.length > 0 && (
+            <div className="flex flex-col gap-3">
+              <div className="text-sm font-medium">
+                Предложения конкурентов ({otherOffers.length})
+              </div>
+              <div className="flex flex-col gap-2">
+                {otherOffers.map((offer) => {
+                  const dealerIndex = dealerIndexMap.get(offer.dealerId) ?? 0;
+                  const anonName = anonymizeDealerName(dealerIndex);
+                  return (
+                    <div
+                      key={offer.id}
+                      className={`rounded-lg border p-3 ${
+                        offer.transaction
+                          ? 'border-orange-200 bg-orange-50'
+                          : 'border-gray-200 bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground text-sm">{anonName}</span>
+                          <span className="font-medium">{formatPrice(offer.price)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground text-xs">
+                            {formatRelativeTime(offer.createdAt)}
+                          </span>
+                          {offer.transaction && (
+                            <Badge variant="outline" className="border-orange-300 text-orange-700">
+                              Принято
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* New offer form */}
+          {!myTransaction && (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-medium">
+                  {myOffers.length === 0 ? 'Сделать предложение' : 'Новое предложение'}
+                </div>
+                {!isExpired && myOffers.length > 0 && (
+                  <span className="text-muted-foreground text-xs">
+                    Осталось попыток: {remainingOffers}
+                  </span>
+                )}
+              </div>
+              {isExpired ? (
+                <Card className="border-gray-300 bg-gray-50">
+                  <CardContent className="py-4 text-sm text-gray-600">
+                    ⏰ Заявка истекла — предложения больше не принимаются.
+                  </CardContent>
+                </Card>
+              ) : !canMakeOffer ? (
+                <Card className="border-orange-200 bg-orange-50">
+                  <CardContent className="py-4 text-sm text-orange-700">
+                    Вы достигли лимита предложений ({MAX_OFFERS_PER_DEALER}). Дождитесь решения
+                    покупателя.
+                  </CardContent>
+                </Card>
+              ) : (
+                <OfferForm
+                  inquiryId={inquiry.id}
+                  defaultPrice={myOffers[0]?.price}
+                  defaultComment=""
+                  disabled={false}
+                  offerNumber={myOffers.length + 1}
+                />
+              )}
+            </div>
+          )}
 
           <Link
             href="/dealer/inquiries"

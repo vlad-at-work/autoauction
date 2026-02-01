@@ -42,7 +42,7 @@ describe('Buyer Happy Path Flow', () => {
 
   afterAll(async () => {
     // Clean up test data after all tests
-    await prisma.lead.deleteMany({
+    await prisma.transaction.deleteMany({
       where: {
         offer: {
           inquiry: {
@@ -243,20 +243,22 @@ describe('Buyer Happy Path Flow', () => {
       createdOfferId = offer.id;
     });
 
-    it('should not allow duplicate offers from same dealer to same inquiry', async () => {
-      try {
-        await prisma.offer.create({
-          data: {
-            inquiryId: createdInquiryId,
-            dealerId: createdDealerId,
-            price: 5600000,
-            comment: 'Another offer',
-          },
-        });
-        expect(true).toBe(false); // Should not reach here
-      } catch (error) {
-        expect(error).toBeDefined();
-      }
+    it('should allow multiple offers from same dealer (multi-offer auction)', async () => {
+      // In the new reverse auction model, dealers can submit multiple offers
+      const secondOffer = await prisma.offer.create({
+        data: {
+          inquiryId: createdInquiryId,
+          dealerId: createdDealerId,
+          price: 5400000,
+          comment: 'Улучшенное предложение',
+        },
+      });
+
+      expect(secondOffer).toBeDefined();
+      expect(secondOffer.price).toBe(5400000);
+
+      // Clean up second offer for subsequent tests
+      await prisma.offer.delete({ where: { id: secondOffer.id } });
     });
 
     it('should retrieve inquiry with offers', async () => {
@@ -281,25 +283,27 @@ describe('Buyer Happy Path Flow', () => {
     });
   });
 
-  describe('4. Lead Creation (Offer Acceptance)', () => {
-    it('should create a lead when buyer accepts offer', async () => {
-      const lead = await prisma.lead.create({
+  describe('4. Transaction Creation (Offer Acceptance)', () => {
+    it('should create a transaction when buyer accepts offer', async () => {
+      const transaction = await prisma.transaction.create({
         data: {
+          inquiryId: createdInquiryId,
           offerId: createdOfferId,
+          dealerId: createdDealerId,
           buyerName: 'Test User',
           buyerPhone: '+79991234567',
           buyerEmail: 'test@example.com',
         },
       });
 
-      expect(lead).toBeDefined();
-      expect(lead.id).toBeDefined();
-      expect(lead.offerId).toBe(createdOfferId);
-      expect(lead.buyerPhone).toBe('+79991234567');
+      expect(transaction).toBeDefined();
+      expect(transaction.id).toBeDefined();
+      expect(transaction.offerId).toBe(createdOfferId);
+      expect(transaction.buyerPhone).toBe('+79991234567');
     });
 
-    it('should retrieve lead with full context', async () => {
-      const leads = await prisma.lead.findMany({
+    it('should retrieve transaction with full context', async () => {
+      const transactions = await prisma.transaction.findMany({
         where: {
           offerId: createdOfferId,
         },
@@ -317,10 +321,10 @@ describe('Buyer Happy Path Flow', () => {
         },
       });
 
-      expect(leads).toHaveLength(1);
-      expect(leads[0].offer.inquiry.buyer.id).toBe(createdBuyerId);
-      expect(leads[0].offer.dealer.id).toBe(createdDealerId);
-      expect(leads[0].offer.inquiry.model).toBe('Land Cruiser 250');
+      expect(transactions).toHaveLength(1);
+      expect(transactions[0].offer.inquiry.buyer.id).toBe(createdBuyerId);
+      expect(transactions[0].offer.dealer.id).toBe(createdDealerId);
+      expect(transactions[0].offer.inquiry.model).toBe('Land Cruiser 250');
     });
   });
 
@@ -382,7 +386,7 @@ describe('Buyer Happy Path Flow', () => {
               offers: {
                 include: {
                   dealer: true,
-                  leads: true,
+                  transaction: true,
                 },
               },
             },
@@ -396,7 +400,7 @@ describe('Buyer Happy Path Flow', () => {
 
       const targetInquiry = buyer?.inquiries.find((inq) => inq.id === createdInquiryId);
       expect(targetInquiry?.offers).toHaveLength(1);
-      expect(targetInquiry?.offers[0].leads).toHaveLength(1);
+      expect(targetInquiry?.offers[0].transaction).toBeDefined();
     });
   });
 

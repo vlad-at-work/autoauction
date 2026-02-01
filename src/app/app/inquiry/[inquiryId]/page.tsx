@@ -1,60 +1,107 @@
 'use client';
 
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { CountdownTimer } from '@/components/countdown-timer';
-import { OfferCard } from '@/components/offer-card';
 import { PageTransition } from '@/components/page-transition';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TopBar } from '@/components/ui/top-bar';
-import { getInquiryById, type Inquiry } from '@/lib/api/inquiries';
 import { getWebApp } from '@/app/app/webapp-ready';
+import { formatPrice, formatRelativeTime } from '@/lib/inquiry-utils';
+
+type DealerOfferGroup = {
+  dealerId: string;
+  dealerName: string;
+  hasTransaction: boolean;
+  offers: {
+    id: string;
+    price: number;
+    comment: string | null;
+    createdAt: Date;
+    isAccepted: boolean;
+    transactionId: string | null;
+  }[];
+};
+
+type InquiryDetail = {
+  id: string;
+  model: string;
+  submodel: string;
+  transmission: string;
+  color: string;
+  status: string | null;
+  comment: string | null;
+  createdAt: Date;
+  expiresAt: Date;
+  offersByDealer: DealerOfferGroup[];
+  acceptanceLimits: {
+    used: number;
+    max: number;
+    remaining: number;
+  };
+  _count: {
+    offers: number;
+    transactions: number;
+  };
+};
+
+async function getInquiryDetail(
+  inquiryId: string,
+  platformUserId: string
+): Promise<InquiryDetail | null> {
+  try {
+    const res = await fetch(`/api/inquiries/${inquiryId}?platformUserId=${platformUserId}`);
+    if (!res.ok) return null;
+    return (await res.json()) as InquiryDetail;
+  } catch {
+    return null;
+  }
+}
 
 export default function InquiryDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const [inquiry, setInquiry] = useState<Inquiry | null>(null);
+  const [inquiry, setInquiry] = useState<InquiryDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
   const inquiryId = params.inquiryId as string;
 
+  const loadInquiry = useCallback(async () => {
+    const webApp = getWebApp();
+    const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
+
+    if (!platformUserId) {
+      router.replace('/app');
+      return;
+    }
+
+    const data = await getInquiryDetail(inquiryId, platformUserId);
+
+    if (!data) {
+      router.replace('/app/dashboard');
+      return;
+    }
+
+    setInquiry(data);
+    setLoading(false);
+  }, [inquiryId, router]);
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => {
-    let cancelled = false;
-
-    const loadInquiry = async () => {
-      // Get user ID from WebApp (support both MAX and Telegram)
-      const webApp = getWebApp();
-      const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
-
-      if (!platformUserId) {
-        console.error('No platformUserId detected, redirecting to /app');
-        router.replace('/app');
-        return;
-      }
-
-      const data = await getInquiryById(inquiryId, platformUserId);
-
-      if (cancelled) return;
-
-      if (!data) {
-        router.replace('/app/dashboard');
-        return;
-      }
-
-      setInquiry(data);
-      setLoading(false);
-    };
-
     loadInquiry();
 
-    return () => {
-      cancelled = true;
+    // Auto-refresh on window focus
+    const handleFocus = () => {
+      loadInquiry();
     };
-  }, [inquiryId, router]);
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [loadInquiry]);
 
   if (loading) {
     return (
@@ -69,10 +116,8 @@ export default function InquiryDetailPage() {
   }
 
   const isExpired = new Date(inquiry.expiresAt) < new Date();
-  const offers = inquiry.offers || [];
-  const sortedOffers = [...offers].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+  const { acceptanceLimits, offersByDealer } = inquiry;
+  const canAcceptMore = acceptanceLimits.remaining > 0 && !isExpired;
 
   return (
     <PageTransition>
@@ -114,16 +159,106 @@ export default function InquiryDetailPage() {
             </CardContent>
           </Card>
 
+          {/* Acceptance limits banner */}
+          <div className="mt-4 flex items-center justify-between rounded-lg border bg-zinc-50 px-4 py-3">
+            <div className="text-sm">
+              <span className="text-muted-foreground">Принятых предложений: </span>
+              <span className="font-medium">
+                {acceptanceLimits.used} из {acceptanceLimits.max}
+              </span>
+            </div>
+            {acceptanceLimits.remaining > 0 ? (
+              <Badge variant="outline" className="text-xs">
+                Осталось: {acceptanceLimits.remaining}
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="text-xs">
+                Лимит исчерпан
+              </Badge>
+            )}
+          </div>
+
           <div className="mt-6">
-            <h2 className="mb-4 text-lg font-semibold">Предложения дилеров ({offers.length})</h2>
-            {sortedOffers.length === 0 ? (
+            <h2 className="mb-4 text-lg font-semibold">
+              Предложения дилеров ({inquiry._count.offers})
+            </h2>
+
+            {offersByDealer.length === 0 ? (
               <div className="text-muted-foreground rounded-lg border bg-muted/30 p-6 text-center text-sm">
                 Пока нет предложений. Вы получите уведомление, когда дилеры ответят.
               </div>
             ) : (
-              <div className="grid gap-3">
-                {sortedOffers.map((offer) => (
-                  <OfferCard key={offer.id} offer={offer} inquiryId={inquiry.id} />
+              <div className="flex flex-col gap-4">
+                {offersByDealer.map((dealerGroup) => (
+                  <Card
+                    key={dealerGroup.dealerId}
+                    className={dealerGroup.hasTransaction ? 'border-green-200 bg-green-50/50' : ''}
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-base">{dealerGroup.dealerName}</CardTitle>
+                        {dealerGroup.hasTransaction && (
+                          <Badge className="bg-green-600">
+                            <Check className="mr-1 size-3" />
+                            Принято
+                          </Badge>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-2">
+                      {dealerGroup.offers.map((offer, index) => {
+                        const isLatest = index === 0;
+                        const canAccept = canAcceptMore && !dealerGroup.hasTransaction && isLatest;
+
+                        return (
+                          <div
+                            key={offer.id}
+                            className={`rounded-lg border p-3 ${
+                              offer.isAccepted
+                                ? 'border-green-300 bg-green-100'
+                                : isLatest
+                                  ? 'border-blue-200 bg-white'
+                                  : 'border-gray-200 bg-gray-50 opacity-70'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="text-lg font-bold">
+                                  {formatPrice(offer.price)}
+                                </span>
+                                {isLatest && !offer.isAccepted && (
+                                  <Badge variant="outline" className="text-xs">
+                                    Актуальное
+                                  </Badge>
+                                )}
+                                {offer.isAccepted && (
+                                  <Badge className="bg-green-600 text-xs">
+                                    <Check className="mr-1 size-3" />
+                                    Вы приняли
+                                  </Badge>
+                                )}
+                              </div>
+                              <span className="text-muted-foreground text-xs">
+                                {formatRelativeTime(new Date(offer.createdAt))}
+                              </span>
+                            </div>
+                            {offer.comment && (
+                              <p className="text-muted-foreground mt-1 text-sm">{offer.comment}</p>
+                            )}
+                            {canAccept && (
+                              <div className="mt-3">
+                                <Button asChild size="sm" className="w-full">
+                                  <Link href={`/app/inquiry/${inquiry.id}/offer/${offer.id}`}>
+                                    Принять предложение
+                                  </Link>
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             )}

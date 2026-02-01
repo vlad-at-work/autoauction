@@ -25,6 +25,8 @@ async function main() {
         platform: Platform.MAX,
         platformUserId: `${SEED_PREFIX}user_1`,
         platformUserName: 'Иван Петров',
+        inquiriesUsedThisMonth: 1,
+        inquiryLimitResetAt: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // 10 days from now
       },
     }),
     prisma.buyer.create({
@@ -32,6 +34,8 @@ async function main() {
         platform: Platform.MAX,
         platformUserId: `${SEED_PREFIX}user_2`,
         platformUserName: 'Мария Сидорова',
+        inquiriesUsedThisMonth: 0,
+        inquiryLimitResetAt: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days from now
       },
     }),
     prisma.buyer.create({
@@ -39,6 +43,8 @@ async function main() {
         platform: Platform.TELEGRAM,
         platformUserId: `${SEED_PREFIX}user_3`,
         platformUserName: 'Алексей Козлов',
+        inquiriesUsedThisMonth: 2, // Used all inquiries
+        inquiryLimitResetAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days from now
       },
     }),
   ]);
@@ -142,16 +148,25 @@ async function main() {
   ]);
   console.log(`  Created ${inquiries.length} inquiries`);
 
-  // Create offers
+  // Create offers - multiple offers per dealer to test new functionality
   console.log('Creating offers...');
   const offers = await Promise.all([
-    // Offers for first inquiry
+    // Offers for first inquiry - multiple from same dealer
+    prisma.offer.create({
+      data: {
+        inquiryId: inquiries[0].id,
+        dealerId: dealers[0].id,
+        price: 1480000,
+        comment: 'Первоначальное предложение',
+        createdAt: hoursAgo(5),
+      },
+    }),
     prisma.offer.create({
       data: {
         inquiryId: inquiries[0].id,
         dealerId: dealers[0].id,
         price: 1450000,
-        comment: 'Лучшая цена в Москве! Гарантия 5 лет.',
+        comment: 'Обновленная цена! Лучшее предложение в Москве.',
         createdAt: hoursAgo(4),
       },
     }),
@@ -173,25 +188,36 @@ async function main() {
         createdAt: hoursAgo(28),
       },
     }),
-    // Offer for fourth inquiry
+    // Multiple offers for fourth inquiry
+    prisma.offer.create({
+      data: {
+        inquiryId: inquiries[3].id,
+        dealerId: dealers[1].id,
+        price: 1180000,
+        comment: 'Первое предложение',
+        createdAt: hoursAgo(9),
+      },
+    }),
     prisma.offer.create({
       data: {
         inquiryId: inquiries[3].id,
         dealerId: dealers[1].id,
         price: 1150000,
-        comment: 'В наличии, можно забрать сегодня',
+        comment: 'В наличии, можно забрать сегодня! Снижена цена.',
         createdAt: hoursAgo(8),
       },
     }),
   ]);
   console.log(`  Created ${offers.length} offers`);
 
-  // Create a lead (accepted offer)
-  console.log('Creating leads...');
-  const leads = await Promise.all([
-    prisma.lead.create({
+  // Create transactions (accepted offers)
+  console.log('Creating transactions...');
+  const transactions = await Promise.all([
+    prisma.transaction.create({
       data: {
-        offerId: offers[2].id,
+        inquiryId: inquiries[2].id,
+        offerId: offers[3].id,
+        dealerId: dealers[0].id,
         buyerName: 'Мария Сидорова',
         buyerPhone: '+79169876543',
         buyerEmail: 'maria@example.com',
@@ -199,7 +225,7 @@ async function main() {
       },
     }),
   ]);
-  console.log(`  Created ${leads.length} leads`);
+  console.log(`  Created ${transactions.length} transactions`);
 
   console.log('\n✅ Seed completed!');
   console.log('\nSummary:');
@@ -207,12 +233,12 @@ async function main() {
   console.log(`  - Dealers: ${dealers.length}`);
   console.log(`  - Inquiries: ${inquiries.length}`);
   console.log(`  - Offers: ${offers.length}`);
-  console.log(`  - Leads: ${leads.length}`);
+  console.log(`  - Transactions: ${transactions.length}`);
 }
 
 async function cleanSeedData() {
   // Delete in reverse order of dependencies
-  await prisma.lead.deleteMany({
+  await prisma.transaction.deleteMany({
     where: {
       offer: {
         inquiry: {

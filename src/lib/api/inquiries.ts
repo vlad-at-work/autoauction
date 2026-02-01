@@ -3,9 +3,12 @@ export type InquiryOffer = {
   price: number;
   comment: string | null;
   createdAt: Date;
-  updatedAt: Date;
-  leadsCount?: number;
+  dealerId: string;
   dealerName?: string;
+  transaction?: {
+    id: string;
+    acceptedAt: Date;
+  } | null;
 };
 
 export type Inquiry = {
@@ -22,11 +25,33 @@ export type Inquiry = {
   comment: string | null;
   createdAt: Date;
   expiresAt: Date;
-  offers: InquiryOffer[];
-  _count: { offers: number };
+  offers?: InquiryOffer[];
+  transactions?: {
+    id: string;
+    dealerId: string;
+  }[];
+  _count: {
+    offers: number;
+    transactions?: number;
+  };
 };
 
-export async function getMyInquiries(platformUserId: string, platform: string): Promise<Inquiry[]> {
+export type InquiryLimits = {
+  used: number;
+  max: number;
+  remaining: number;
+  resetsAt: string | null;
+};
+
+export type InquiriesResponse = {
+  inquiries: Inquiry[];
+  limits: InquiryLimits;
+};
+
+export async function getMyInquiries(
+  platformUserId: string,
+  platform: string
+): Promise<{ inquiries: Inquiry[]; limits: InquiryLimits }> {
   try {
     const res = await fetch(
       `/api/buyers/me/inquiries?platformUserId=${platformUserId}&platform=${platform}`
@@ -36,10 +61,23 @@ export async function getMyInquiries(platformUserId: string, platform: string): 
       throw new Error('Не удалось загрузить заявки');
     }
 
-    return (await res.json()) as Inquiry[];
+    const data = (await res.json()) as InquiriesResponse;
+
+    // Handle legacy response format (array of inquiries)
+    if (Array.isArray(data)) {
+      return {
+        inquiries: data,
+        limits: { used: 0, max: 2, remaining: 2, resetsAt: null },
+      };
+    }
+
+    return data;
   } catch (error) {
     console.error('Get inquiries error:', error);
-    return [];
+    return {
+      inquiries: [],
+      limits: { used: 0, max: 2, remaining: 2, resetsAt: null },
+    };
   }
 }
 

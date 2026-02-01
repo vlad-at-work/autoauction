@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { prisma } from '@/lib/db';
-import { notifyDealerOfLeadAccepted, notifyBuyer } from '@/lib/notifications';
+import { notifyDealerOfTransactionAccepted, notifyBuyer } from '@/lib/notifications';
+
+const MAX_TRANSACTIONS_PER_INQUIRY = 3;
 
 function formatPhoneRU(phone: string): string {
   const digits = phone.replace(/\D/g, '');
@@ -15,7 +17,7 @@ function formatPhoneRU(phone: string): string {
   return phone;
 }
 
-const leadCreateSchema = z.object({
+const transactionCreateSchema = z.object({
   offerId: z.string().min(1),
   platform: z.enum(['max', 'telegram']),
   platformUserId: z.string().min(1),
@@ -24,7 +26,7 @@ const leadCreateSchema = z.object({
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const parsed = leadCreateSchema.safeParse(body);
+    const parsed = transactionCreateSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
@@ -43,10 +45,11 @@ export async function POST(request: Request) {
         inquiry: {
           include: {
             buyer: true,
+            transactions: true,
           },
         },
         dealer: true,
-        leads: true,
+        transaction: true,
       },
     });
 
@@ -67,41 +70,62 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Заявка истекла' }, { status: 410 });
     }
 
-    // Check if lead already exists for this offer
-    if (offer.leads.length > 0) {
+    // Check if this specific offer already has a transaction
+    if (offer.transaction) {
       return NextResponse.json({ error: 'Вы уже приняли это предложение' }, { status: 409 });
     }
 
-    // Create lead
-    const lead = await prisma.lead.create({
+    // Check if this dealer already has a transaction for this inquiry
+    const existingDealerTransaction = offer.inquiry.transactions.find(
+      (t) => t.dealerId === offer.dealerId
+    );
+    if (existingDealerTransaction) {
+      return NextResponse.json(
+        { error: 'Вы уже приняли предложение от этого дилера' },
+        { status: 409 }
+      );
+    }
+
+    // Check if inquiry has reached the transaction cap
+    const currentTransactionCount = offer.inquiry.transactions.length;
+    if (currentTransactionCount >= MAX_TRANSACTIONS_PER_INQUIRY) {
+      return NextResponse.json(
+        {
+          error: `Достигнут лимит принятых предложений (${MAX_TRANSACTIONS_PER_INQUIRY}). Свяжитесь с выбранными дилерами.`,
+        },
+        { status: 409 }
+      );
+    }
+
+    // Create transaction
+    const transaction = await prisma.transaction.create({
       data: {
+        inquiryId: offer.inquiryId,
         offerId,
+        dealerId: offer.dealerId,
         buyerName: offer.inquiry.name,
         buyerEmail: offer.inquiry.email,
         buyerPhone: offer.inquiry.phone,
       },
     });
 
-    // Notify user about accepting the offer with full debug dump
+    // Send notifications
     const formattedPhone = formatPhoneRU(offer.inquiry.phone);
     const dealerName = offer.dealer.name || offer.dealer.username;
-    const debugDump = `🎉 Поздравляем! Ваша скидка от ${dealerName} активирована!
+    const remainingAcceptances = MAX_TRANSACTIONS_PER_INQUIRY - currentTransactionCount - 1;
+
+    const buyerMessage = `🎉 Поздравляем! Вы приняли предложение от ${dealerName}!
 
 🚗 ${offer.inquiry.model} ${offer.inquiry.submodel}
 💰 Цена: ${offer.price.toLocaleString('ru-RU')} ₽
 
 Дилер скоро свяжется с вами по номеру ${formattedPhone}.
 
-📋 Детали вашей заявки:
-• Имя: ${offer.inquiry.name}
-• Телефон: ${formattedPhone}
-• Эл. почта: ${offer.inquiry.email || 'не указана'}
-• Коробка: ${offer.inquiry.transmission}
-• Цвет: ${offer.inquiry.color}
+${remainingAcceptances > 0 ? `📋 Вы можете принять ещё ${remainingAcceptances} предложение${remainingAcceptances === 1 ? '' : remainingAcceptances < 5 ? 'я' : 'ий'}.` : '✅ Вы использовали все доступные принятия для этой заявки.'}`;
 
-Спасибо, что выбрали нас! 🙌`;
-
+    // eslint-disable-next-line no-console
     console.log('Sending acceptance notification to buyer:', offer.inquiry.buyer);
+
     // IMPORTANT: await notifications to avoid serverless "fire-and-forget" drops.
     await Promise.allSettled([
       notifyBuyer(
@@ -110,9 +134,9 @@ export async function POST(request: Request) {
           platformChatId: offer.inquiry.buyer.platformChatId,
           platformUserId: offer.inquiry.buyer.platformUserId,
         },
-        debugDump
+        buyerMessage
       ),
-      notifyDealerOfLeadAccepted(
+      notifyDealerOfTransactionAccepted(
         offer.dealer,
         offer.inquiry.model,
         offer.inquiry.submodel,
@@ -122,9 +146,27 @@ export async function POST(request: Request) {
       ),
     ]);
 
-    return NextResponse.json({ id: lead.id, success: true });
+    return NextResponse.json({
+      id: transaction.id,
+      success: true,
+      transactionNumber: currentTransactionCount + 1,
+      remainingAcceptances,
+    });
   } catch (err) {
-    console.error('Lead creation error:', err);
+    // Handle unique constraint violation (dealer already has transaction for this inquiry)
+    if (
+      typeof err === 'object' &&
+      err &&
+      'code' in err &&
+      (err as { code?: string }).code === 'P2002'
+    ) {
+      return NextResponse.json(
+        { error: 'Вы уже приняли предложение от этого дилера' },
+        { status: 409 }
+      );
+    }
+
+    console.error('Transaction creation error:', err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Внутренняя ошибка' },
       { status: 500 }

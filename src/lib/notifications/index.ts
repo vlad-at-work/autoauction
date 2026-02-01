@@ -21,6 +21,7 @@ type BuyerInfo = {
 
 /**
  * Send notification about a new offer to a buyer
+ * @param isFirstOffer - true if this is the first offer from this dealer on this inquiry
  */
 export async function notifyBuyerOfNewOffer(
   buyer: BuyerInfo,
@@ -28,12 +29,14 @@ export async function notifyBuyerOfNewOffer(
   offerId: string,
   carModel: string,
   carSubmodel: string,
-  price: number
+  price: number,
+  isFirstOffer: boolean = true
 ): Promise<NotifyResult> {
   const chatId = buyer.platformChatId || buyer.platformUserId;
 
   const formattedPrice = price.toLocaleString('ru-RU');
-  const text = `🔔 Новое предложение на ${carModel} ${carSubmodel}\nЦена: ${formattedPrice} руб.\n\nОткройте приложение, чтобы посмотреть предложение и принять его.`;
+  const title = isFirstOffer ? 'Новое предложение' : 'Дилер обновил предложение';
+  const text = `🔔 ${title} на ${carModel} ${carSubmodel}\nЦена: ${formattedPrice} ₽\n\nОткройте приложение, чтобы посмотреть предложение и принять его.`;
 
   if (buyer.platform === 'TELEGRAM') {
     return sendTelegramMessage(chatId, text);
@@ -82,9 +85,9 @@ export async function notifyDealerOfNewInquiry(
 }
 
 /**
- * Send notification to dealer when a buyer accepts their offer (lead created)
+ * Send notification to dealer when a buyer accepts their offer (transaction created)
  */
-export async function notifyDealerOfLeadAccepted(
+export async function notifyDealerOfTransactionAccepted(
   dealer: {
     id: string;
     username: string;
@@ -111,7 +114,7 @@ export async function notifyDealerOfLeadAccepted(
   const chatId = hardcodedDealer.platformChatId || hardcodedDealer.platformUserId;
   const formattedPrice = price.toLocaleString('ru-RU');
 
-  const text = `Покупатель принял ваше предложение!\n\n${carModel} ${carSubmodel}\nЦена: ${formattedPrice} руб.\n\nПокупатель: ${buyerName}\nТелефон: ${buyerPhone}\n\nСвяжитесь с покупателем как можно скорее!`;
+  const text = `🎉 Покупатель принял ваше предложение!\n\n${carModel} ${carSubmodel}\nЦена: ${formattedPrice} ₽\n\nПокупатель: ${buyerName}\nТелефон: ${buyerPhone}\n\nСвяжитесь с покупателем как можно скорее!`;
 
   if (hardcodedDealer.platform === 'TELEGRAM') {
     return sendTelegramMessage(chatId, text);
@@ -119,5 +122,8 @@ export async function notifyDealerOfLeadAccepted(
 
   return sendMaxMessage(chatId, text);
 }
+
+// Keep old name as alias for backward compatibility during migration
+export const notifyDealerOfLeadAccepted = notifyDealerOfTransactionAccepted;
 
 export { sendTelegramMessage, sendMaxMessage };
