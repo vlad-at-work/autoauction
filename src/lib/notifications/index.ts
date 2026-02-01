@@ -57,7 +57,7 @@ export async function notifyBuyerOfNewOffer(
   return sendMaxMessage(
     chatId,
     maxPayload.text,
-    maxPayload.attachments as Array<Record<string, unknown>>
+    maxPayload.attachments as unknown as Array<Record<string, unknown>>
   );
 }
 
