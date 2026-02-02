@@ -1,6 +1,5 @@
 'use client';
 
-import * as Sentry from '@sentry/nextjs';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -122,13 +121,6 @@ export default function MiniAppHomePage() {
             return;
           } catch (error) {
             console.error('[/app] Error checking buyer:', error);
-            Sentry.captureException(error, {
-              tags: {
-                context: 'buyer_check',
-                platform,
-                platformUserId,
-              },
-            });
             setLoadingState('error');
             setErrorMessage(error instanceof Error ? error.message : 'Unknown error');
             // Fall back to form page on error
@@ -145,12 +137,6 @@ export default function MiniAppHomePage() {
         } else {
           // Timeout - WebApp not available
           console.error('[/app] Timeout waiting for WebApp to load');
-          Sentry.captureMessage('WebApp timeout - failed to load after 40 attempts', {
-            level: 'error',
-            tags: {
-              context: 'webapp_timeout',
-            },
-          });
           setLoadingState('error');
           setErrorMessage('WebApp не загружен. Попробуйте снова.');
         }

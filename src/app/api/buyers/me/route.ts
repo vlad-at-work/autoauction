@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/nextjs';
 import { NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
@@ -41,17 +40,6 @@ export async function GET(request: Request) {
 
       if (!validation.valid) {
         console.error('[API /api/buyers/me GET] Auth validation failed:', validation.error);
-        Sentry.captureMessage('WebApp auth validation failed', {
-          level: 'warning',
-          tags: {
-            context: 'auth_validation',
-            platform: platform || 'unknown',
-          },
-          extra: {
-            error: validation.error,
-            platformUserId,
-          },
-        });
         return NextResponse.json(
           { error: 'Неавторизованно: ' + validation.error },
           { status: 401 }
@@ -62,17 +50,6 @@ export async function GET(request: Request) {
         console.error('[API /api/buyers/me GET] User ID mismatch:', {
           expected: platformUserId,
           got: validation.userId,
-        });
-        Sentry.captureMessage('User ID mismatch in auth validation', {
-          level: 'error',
-          tags: {
-            context: 'auth_validation',
-            platform: platform || 'unknown',
-          },
-          extra: {
-            expected: platformUserId,
-            got: validation.userId,
-          },
         });
         return NextResponse.json({ error: 'User ID mismatch' }, { status: 403 });
       }
@@ -106,12 +83,6 @@ export async function GET(request: Request) {
     return NextResponse.json(buyer);
   } catch (error) {
     console.error('[API /api/buyers/me GET] Error:', error);
-    Sentry.captureException(error, {
-      tags: {
-        context: 'get_buyer',
-        endpoint: '/api/buyers/me',
-      },
-    });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Внутренняя ошибка' },
       { status: 500 }
