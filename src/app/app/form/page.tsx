@@ -3,13 +3,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
-
-import { getMyInquiries } from '@/lib/api/inquiries';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,18 +48,10 @@ type SubmitState =
 
 function MiniAppInquiryFormPageInner() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const forceNewInquiry = searchParams.get('new') === '1';
 
   const [submitState, setSubmitState] = useState<SubmitState>({ status: 'idle' });
   const [randomSuffix] = useState(() => Math.floor(Math.random() * 10000));
-  const [identity, setIdentity] = useState<{
-    platformUserId: string;
-    platform: 'max' | 'telegram';
-  } | null>(null);
-  const [redirectCheckState, setRedirectCheckState] = useState<'idle' | 'checking' | 'done'>(
-    'idle'
-  );
+  const [ready, setReady] = useState(false);
 
   const form = useForm<InquiryCreateInput>({
     resolver: zodResolver(inquiryCreateSchema),
@@ -91,6 +81,7 @@ function MiniAppInquiryFormPageInner() {
   const watchedStatus = watched.status;
   const watchedConsent = watched.consent;
 
+  // Load WebApp user data into form - simple, no redirect logic
   useEffect(() => {
     let cancelled = false;
 
@@ -100,10 +91,8 @@ function MiniAppInquiryFormPageInner() {
       const webApp = getWebApp();
       const platform = detectPlatform();
       const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString();
-      // Telegram uses first_name, MAX uses name
       const platformUserName =
         webApp?.initDataUnsafe?.user?.name || webApp?.initDataUnsafe?.user?.first_name;
-      // Chat ID for sending notifications - in private chat, chat.id equals user.id
       const platformChatId = webApp?.initDataUnsafe?.chat?.id?.toString() || platformUserId;
 
       if (platform) {
@@ -125,11 +114,12 @@ function MiniAppInquiryFormPageInner() {
         }
       }
 
-      if (platform && platformUserId) {
-        setIdentity({ platform, platformUserId });
+      // Mark as ready once we have user data or after timeout
+      if ((platform && platformUserId) || attempt >= 40) {
+        setReady(true);
+        return;
       }
 
-      if (webApp || attempt === 40) return;
       window.setTimeout(() => tryLoadUser(attempt + 1), 50);
     };
 
@@ -139,49 +129,6 @@ function MiniAppInquiryFormPageInner() {
       cancelled = true;
     };
   }, [form]);
-
-  // If the user re-opens the mini-app directly on /app/form (e.g. MAX "app button"),
-  // but they already have inquiries, redirect to dashboard unless explicitly creating a new one.
-  useEffect(() => {
-    let cancelled = false;
-
-    if (forceNewInquiry) {
-      queueMicrotask(() => {
-        if (!cancelled) setRedirectCheckState('done');
-      });
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    if (!identity || redirectCheckState !== 'idle') {
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    queueMicrotask(() => {
-      if (!cancelled) setRedirectCheckState('checking');
-    });
-
-    (async () => {
-      const { inquiries } = await getMyInquiries(identity.platformUserId, identity.platform);
-      if (cancelled) return;
-
-      if (inquiries.length > 0) {
-        router.replace('/app/dashboard');
-        return;
-      }
-
-      queueMicrotask(() => {
-        if (!cancelled) setRedirectCheckState('done');
-      });
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [forceNewInquiry, identity, redirectCheckState, router]);
 
   const submodels = useMemo(() => {
     if (!watchedModel) return [];
@@ -232,13 +179,10 @@ function MiniAppInquiryFormPageInner() {
     }
   }
 
-  if (!forceNewInquiry && redirectCheckState === 'checking') {
+  if (!ready) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center">
-        <div className="flex items-center gap-3">
-          <Loader2 className="text-muted-foreground size-5 animate-spin" />
-          <p className="text-muted-foreground text-sm">Проверка заявок…</p>
-        </div>
+        <Loader2 className="text-muted-foreground size-8 animate-spin" />
       </div>
     );
   }
