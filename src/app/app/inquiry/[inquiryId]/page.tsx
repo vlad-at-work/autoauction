@@ -131,12 +131,12 @@ export default function InquiryDetailPage() {
         <div className="mx-auto max-w-2xl px-4 py-6">
           <Card>
             <CardHeader>
-              <CardTitle>
+              <CardTitle className="text-xl">
                 {inquiry.model} {inquiry.submodel !== inquiry.model && inquiry.submodel}
               </CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
-              <div className="grid gap-2 text-sm">
+              <div className="grid gap-3 text-base">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Коробка:</span>
                   <span className="font-medium">{inquiry.transmission}</span>
@@ -165,31 +165,31 @@ export default function InquiryDetailPage() {
           </Card>
 
           {/* Acceptance limits banner */}
-          <div className="mt-4 flex items-center justify-between rounded-lg border bg-zinc-50 px-4 py-3">
-            <div className="text-sm">
+          <div className="mt-4 flex items-center justify-between rounded-lg border bg-zinc-50 px-5 py-4">
+            <div className="text-base">
               <span className="text-muted-foreground">Принятых предложений: </span>
               <span className="font-medium">
                 {acceptanceLimits.used} из {acceptanceLimits.max}
               </span>
             </div>
             {acceptanceLimits.remaining > 0 ? (
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-sm">
                 Осталось: {acceptanceLimits.remaining}
               </Badge>
             ) : (
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary" className="text-sm">
                 Лимит исчерпан
               </Badge>
             )}
           </div>
 
           <div className="mt-6">
-            <h2 className="mb-4 text-lg font-semibold">
+            <h2 className="mb-4 text-xl font-semibold">
               Предложения дилеров ({inquiry._count.offers})
             </h2>
 
             {offersByDealer.length === 0 ? (
-              <div className="text-muted-foreground rounded-lg border bg-muted/30 p-6 text-center text-sm">
+              <div className="text-muted-foreground rounded-lg border bg-muted/30 p-8 text-center text-base">
                 Пока нет предложений. Вы получите уведомление, когда дилеры ответят.
               </div>
             ) : (
@@ -232,18 +232,18 @@ function DealerOfferCard({
 }) {
   return (
     <Card className={dealerGroup.hasTransaction ? 'border-green-200 bg-green-50/50' : ''}>
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">{dealerGroup.dealerName}</CardTitle>
+          <CardTitle className="text-lg">{dealerGroup.dealerName}</CardTitle>
           {dealerGroup.hasTransaction && (
-            <Badge className="bg-green-600">
-              <Check className="mr-1 size-3" />
+            <Badge className="bg-green-600 text-sm">
+              <Check className="mr-1 size-4" />
               Принято
             </Badge>
           )}
         </div>
       </CardHeader>
-      <CardContent className="flex flex-col gap-2">
+      <CardContent className="flex flex-col gap-3">
         {dealerGroup.offers.map((offer, index) => {
           const isLatest = index === 0;
           const canAccept = canAcceptMore && !dealerGroup.hasTransaction && isLatest;
@@ -251,7 +251,7 @@ function DealerOfferCard({
           return (
             <div
               key={offer.id}
-              className={`rounded-lg border p-3 ${
+              className={`rounded-lg border p-4 ${
                 offer.isAccepted
                   ? 'border-green-300 bg-green-100'
                   : isLatest
@@ -261,29 +261,29 @@ function DealerOfferCard({
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold">{formatPrice(offer.price)}</span>
+                  <span className="text-xl font-bold">{formatPrice(offer.price)}</span>
                   {isLatest && !offer.isAccepted && (
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="text-sm">
                       Актуальное
                     </Badge>
                   )}
                   {offer.isAccepted && (
-                    <Badge className="bg-green-600 text-xs">
-                      <Check className="mr-1 size-3" />
+                    <Badge className="bg-green-600 text-sm">
+                      <Check className="mr-1 size-4" />
                       Вы приняли
                     </Badge>
                   )}
                 </div>
-                <span className="text-muted-foreground text-xs">
+                <span className="text-muted-foreground text-sm">
                   {formatRelativeTime(new Date(offer.createdAt))}
                 </span>
               </div>
               {offer.comment && (
-                <p className="text-muted-foreground mt-1 text-sm">{offer.comment}</p>
+                <p className="text-muted-foreground mt-2 text-base">{offer.comment}</p>
               )}
               {canAccept && (
-                <div className="mt-3">
-                  <Button asChild size="sm" className="w-full">
+                <div className="mt-4">
+                  <Button asChild size="lg" className="w-full text-base">
                     <Link href={`/app/inquiry/${inquiryId}/offer/${offer.id}`}>
                       Принять предложение
                     </Link>

@@ -246,16 +246,16 @@ function MiniAppInquiryFormPageInner() {
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col gap-6 px-4 py-10">
       <Card>
-        <CardHeader className="flex flex-col gap-1">
-          <CardTitle>Заявка на автомобиль</CardTitle>
-          <p className="text-muted-foreground text-sm">
+        <CardHeader className="flex flex-col gap-2">
+          <CardTitle className="text-xl">Заявка на автомобиль</CardTitle>
+          <p className="text-muted-foreground text-base">
             Заполните форму — дилеры увидят запрос в течение 24 часов.
           </p>
         </CardHeader>
 
         <CardContent className="flex flex-col gap-6">
           {submitState.status === 'error' && (
-            <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <div className="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-base text-destructive">
               {submitState.message}
             </div>
           )}
@@ -484,13 +484,14 @@ function MiniAppInquiryFormPageInner() {
             <div className="flex flex-col gap-3">
               <Button
                 type="submit"
-                className="h-12 text-base"
+                size="lg"
+                className="text-base"
                 disabled={submitState.status === 'submitting' || !form.formState.isValid}
               >
                 {submitState.status === 'submitting' ? 'Отправляем…' : 'Отправить'}
               </Button>
 
-              <Button asChild variant="outline" type="button">
+              <Button asChild variant="outline" size="lg" type="button" className="text-base">
                 <Link href="/app">Назад</Link>
               </Button>
             </div>

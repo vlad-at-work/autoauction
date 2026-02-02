@@ -107,15 +107,15 @@ export default function DashboardPage() {
         <div className="mx-auto max-w-2xl px-4 py-6">
           {/* Inquiry limits banner */}
           {limits && (
-            <div className="mb-4 flex items-center justify-between rounded-lg border bg-zinc-50 px-4 py-3">
-              <div className="text-sm">
+            <div className="mb-4 flex items-center justify-between rounded-lg border bg-zinc-50 px-5 py-4">
+              <div className="text-base">
                 <span className="text-muted-foreground">Заявок осталось: </span>
                 <span className="font-medium">
                   {limits.remaining} из {limits.max}
                 </span>
               </div>
               {limits.remaining === 0 && limits.resetsAt && daysUntilReset != null && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-sm">
                   Новая через {daysUntilReset} дн.
                 </Badge>
               )}
@@ -125,8 +125,8 @@ export default function DashboardPage() {
           {/* Inquiries list */}
           {inquiries.length === 0 ? (
             <div className="text-muted-foreground flex flex-col items-center justify-center py-12 text-center">
-              <p className="text-base">Нет заявок</p>
-              <p className="mt-2 text-sm">
+              <p className="text-lg">Нет заявок</p>
+              <p className="mt-2 text-base">
                 Используйте кнопку + в правом верхнем углу, чтобы создать первую заявку
               </p>
             </div>
