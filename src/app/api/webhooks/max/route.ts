@@ -58,13 +58,19 @@ export async function POST(request: Request) {
     // Route to appropriate handler
     switch (update.type) {
       case 'message_new':
-        await handleMaxMessageNew(update.object.message);
+        if (update.object.message) {
+          await handleMaxMessageNew(update.object.message);
+        }
         break;
       case 'message_callback':
-        await handleMaxMessageCallback(update.object.callback);
+        if (update.object.callback) {
+          await handleMaxMessageCallback(update.object.callback);
+        }
         break;
       case 'message_event':
-        await handleMaxMessageEvent(update.object.event);
+        if (update.object.event) {
+          await handleMaxMessageEvent(update.object.event);
+        }
         break;
       default:
         console.log(`[MAX] Unknown event type: ${update.type}`);
@@ -85,6 +91,11 @@ async function handleMaxMessageNew(message: MaxMessage) {
     const userId = message.from?.user_id;
     const text = message.text || '';
     const firstName = message.from?.first_name || 'User';
+
+    if (chatId == null) {
+      console.warn('[MAX] Message missing chat_id');
+      return;
+    }
 
     console.log(`[MAX] Message from ${userId} (chat: ${chatId}): "${text.substring(0, 50)}"`);
 
