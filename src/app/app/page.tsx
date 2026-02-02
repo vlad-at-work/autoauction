@@ -1,5 +1,6 @@
 'use client';
 
+import * as Sentry from '@sentry/nextjs';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -8,11 +9,12 @@ import { checkBuyerExists } from '@/lib/api/buyers';
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 import { parseStartParam } from '@/lib/deeplinks';
 
-type LoadingState = 'loading' | 'checking' | 'redirect';
+type LoadingState = 'loading' | 'checking' | 'redirect' | 'error';
 
 export default function MiniAppHomePage() {
   const router = useRouter();
   const [loadingState, setLoadingState] = useState<LoadingState>('loading');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
     let cancelled = false;
@@ -22,10 +24,19 @@ export default function MiniAppHomePage() {
       const tryLoadUser = async (attempt = 0) => {
         if (cancelled) return;
 
+        console.log('[/app] Attempt', attempt, 'to load WebApp');
+
         const webApp = getWebApp();
         const platform = detectPlatform();
         const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString();
         const initData = webApp?.initData;
+
+        console.log('[/app] WebApp detected:', {
+          platform,
+          platformUserId,
+          hasInitData: !!initData,
+          attempt,
+        });
 
         // Get startapp parameter - differs between platforms
         // Telegram: tgWebAppStartParam
@@ -42,54 +53,90 @@ export default function MiniAppHomePage() {
           startParam = params.get('startapp') || undefined;
         }
 
+        console.log('[/app] Start param:', startParam);
+
         if (webApp && platformUserId && platform && initData) {
           setLoadingState('checking');
+          console.log('[/app] Checking if buyer exists...');
 
-          // Check if buyer exists with server-side validation of initData
-          const { exists } = await checkBuyerExists(platformUserId, platform, initData);
+          try {
+            // Check if buyer exists with server-side validation of initData
+            // Add timeout to prevent infinite hang
+            const timeoutPromise = new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('Timeout checking buyer')), 10000)
+            );
 
-          if (cancelled) return;
+            const checkPromise = checkBuyerExists(platformUserId, platform, initData);
+            const { exists } = await Promise.race([checkPromise, timeoutPromise]);
 
-          setLoadingState('redirect');
+            console.log('[/app] Buyer exists:', exists);
 
-          // Handle deep links from notifications
-          if (startParam) {
-            const { context, resourceId } = parseStartParam(startParam);
+            if (cancelled) return;
 
-            if (context === 'inquiry' && resourceId) {
-              // Navigate directly to inquiry
-              router.replace(`/app/inquiry/${resourceId}`);
-              return;
-            }
+            setLoadingState('redirect');
 
-            if (context === 'offer' && resourceId) {
-              // resourceId format: "inquiryId:offerId"
-              const [inquiryId, offerId] = resourceId.split(':');
-              if (inquiryId && offerId) {
-                router.replace(`/app/inquiry/${inquiryId}/offer/${offerId}`);
+            // Handle deep links from notifications
+            if (startParam) {
+              const { context, resourceId } = parseStartParam(startParam);
+              console.log('[/app] Deep link parsed:', { context, resourceId });
+
+              if (context === 'inquiry' && resourceId) {
+                // Navigate directly to inquiry
+                console.log('[/app] Navigating to inquiry:', resourceId);
+                router.replace(`/app/inquiry/${resourceId}`);
+                return;
+              }
+
+              if (context === 'offer' && resourceId) {
+                // resourceId format: "inquiryId:offerId"
+                const [inquiryId, offerId] = resourceId.split(':');
+                if (inquiryId && offerId) {
+                  console.log('[/app] Navigating to offer:', { inquiryId, offerId });
+                  router.replace(`/app/inquiry/${inquiryId}/offer/${offerId}`);
+                  return;
+                }
+              }
+
+              if (context === 'transaction' && resourceId) {
+                // Navigate to dashboard with transaction ID
+                console.log('[/app] Navigating to dashboard with transaction:', resourceId);
+                router.replace(`/app/dashboard?transaction=${resourceId}`);
+                return;
+              }
+
+              if (context === 'dashboard') {
+                console.log('[/app] Navigating to dashboard');
+                router.replace('/app/dashboard');
                 return;
               }
             }
 
-            if (context === 'transaction' && resourceId) {
-              // Navigate to dashboard with transaction ID
-              router.replace(`/app/dashboard?transaction=${resourceId}`);
-              return;
-            }
-
-            if (context === 'dashboard') {
+            // Default redirect based on existence
+            if (exists) {
+              console.log('[/app] Buyer exists, navigating to dashboard');
               router.replace('/app/dashboard');
-              return;
+            } else {
+              console.log('[/app] Buyer does not exist, navigating to form');
+              router.replace('/app/form');
             }
+            return;
+          } catch (error) {
+            console.error('[/app] Error checking buyer:', error);
+            Sentry.captureException(error, {
+              tags: {
+                context: 'buyer_check',
+                platform,
+                platformUserId,
+              },
+            });
+            setLoadingState('error');
+            setErrorMessage(error instanceof Error ? error.message : 'Unknown error');
+            // Fall back to form page on error
+            setTimeout(() => {
+              router.replace('/app/form');
+            }, 3000);
+            return;
           }
-
-          // Default redirect based on existence
-          if (exists) {
-            router.replace('/app/dashboard');
-          } else {
-            router.replace('/app/form');
-          }
-          return;
         }
 
         // WebApp not loaded yet, keep polling
@@ -97,7 +144,15 @@ export default function MiniAppHomePage() {
           window.setTimeout(() => tryLoadUser(attempt + 1), 50);
         } else {
           // Timeout - WebApp not available
-          setLoadingState('loading');
+          console.error('[/app] Timeout waiting for WebApp to load');
+          Sentry.captureMessage('WebApp timeout - failed to load after 40 attempts', {
+            level: 'error',
+            tags: {
+              context: 'webapp_timeout',
+            },
+          });
+          setLoadingState('error');
+          setErrorMessage('WebApp не загружен. Попробуйте снова.');
         }
       };
 
@@ -113,13 +168,21 @@ export default function MiniAppHomePage() {
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center px-4">
-      <div className="flex flex-col items-center gap-4">
-        <Loader2 className="text-muted-foreground size-12 animate-spin" />
-        <p className="text-muted-foreground text-sm">
+      <div className="flex flex-col items-center gap-4 text-center">
+        {loadingState !== 'error' && (
+          <Loader2 className="text-muted-foreground size-12 animate-spin" />
+        )}
+        <p className="text-muted-foreground text-base">
           {loadingState === 'loading' && 'Загрузка...'}
           {loadingState === 'checking' && 'Проверка аккаунта...'}
           {loadingState === 'redirect' && 'Перенаправление...'}
+          {loadingState === 'error' && (
+            <span className="text-destructive">Ошибка: {errorMessage || 'Неизвестная ошибка'}</span>
+          )}
         </p>
+        {loadingState === 'error' && (
+          <p className="text-muted-foreground text-sm">Перенаправление через 3 секунды...</p>
+        )}
       </div>
     </div>
   );

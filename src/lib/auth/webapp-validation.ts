@@ -22,13 +22,19 @@ export type WebAppValidationResult = {
  * Format: user=%7B%22id%22...&hash=ABC123...
  */
 export function validateTelegramWebAppData(initData: string): WebAppValidationResult {
+  console.log('[validateTelegramWebAppData] Starting validation');
+
   if (!TG_BOT_TOKEN) {
+    console.error('[validateTelegramWebAppData] TG_BOT_TOKEN not configured');
     return { valid: false, error: 'TG_BOT_TOKEN not configured' };
   }
 
   if (!initData) {
+    console.error('[validateTelegramWebAppData] No initData provided');
     return { valid: false, error: 'No initData provided' };
   }
+
+  console.log('[validateTelegramWebAppData] initData length:', initData.length);
 
   try {
     // Parse URL-encoded initData
@@ -36,8 +42,11 @@ export function validateTelegramWebAppData(initData: string): WebAppValidationRe
     const hash = params.get('hash');
 
     if (!hash) {
+      console.error('[validateTelegramWebAppData] No hash in initData');
       return { valid: false, error: 'No hash in initData' };
     }
+
+    console.log('[validateTelegramWebAppData] Hash found, validating signature...');
 
     // Remove hash and sort remaining params
     params.delete('hash');
@@ -52,26 +61,40 @@ export function validateTelegramWebAppData(initData: string): WebAppValidationRe
     const expectedHash = createHmac('sha256', secret).update(dataCheckString).digest('hex');
 
     if (hash !== expectedHash) {
+      console.error('[validateTelegramWebAppData] Invalid signature');
       return { valid: false, error: 'Invalid signature' };
     }
+
+    console.log('[validateTelegramWebAppData] Signature valid, checking freshness...');
 
     // Check auth_date freshness (max 5 minutes old)
     const authDate = parseInt(params.get('auth_date') || '0', 10);
     const now = Math.floor(Date.now() / 1000);
     if (now - authDate > 300) {
+      console.error('[validateTelegramWebAppData] initData expired:', {
+        authDate,
+        now,
+        diff: now - authDate,
+      });
       return { valid: false, error: 'initData expired' };
     }
+
+    console.log('[validateTelegramWebAppData] Data fresh, extracting user ID...');
 
     // Extract user ID
     const userData = params.get('user');
     if (!userData) {
+      console.error('[validateTelegramWebAppData] No user data in params');
       return { valid: false, error: 'No user data' };
     }
 
     const user = JSON.parse(userData);
     if (!user?.id) {
+      console.error('[validateTelegramWebAppData] No user ID in parsed data');
       return { valid: false, error: 'No user ID in data' };
     }
+
+    console.log('[validateTelegramWebAppData] Validation successful, userId:', user.id);
 
     return {
       valid: true,
@@ -79,6 +102,7 @@ export function validateTelegramWebAppData(initData: string): WebAppValidationRe
       userId: user.id.toString(),
     };
   } catch (err) {
+    console.error('[validateTelegramWebAppData] Exception during validation:', err);
     return {
       valid: false,
       error: err instanceof Error ? err.message : 'Validation failed',
@@ -93,13 +117,19 @@ export function validateTelegramWebAppData(initData: string): WebAppValidationRe
  * Format similar to Telegram
  */
 export function validateMaxWebAppData(initData: string): WebAppValidationResult {
+  console.log('[validateMaxWebAppData] Starting validation');
+
   if (!MAX_BOT_TOKEN) {
+    console.error('[validateMaxWebAppData] MAX_BOT_TOKEN not configured');
     return { valid: false, error: 'MAX_BOT_TOKEN not configured' };
   }
 
   if (!initData) {
+    console.error('[validateMaxWebAppData] No initData provided');
     return { valid: false, error: 'No initData provided' };
   }
+
+  console.log('[validateMaxWebAppData] initData length:', initData.length);
 
   try {
     // Parse URL-encoded initData
@@ -107,8 +137,11 @@ export function validateMaxWebAppData(initData: string): WebAppValidationResult 
     const hash = params.get('hash');
 
     if (!hash) {
+      console.error('[validateMaxWebAppData] No hash in initData');
       return { valid: false, error: 'No hash in initData' };
     }
+
+    console.log('[validateMaxWebAppData] Hash found, validating signature...');
 
     // Remove hash and sort remaining params
     params.delete('hash');
@@ -123,26 +156,40 @@ export function validateMaxWebAppData(initData: string): WebAppValidationResult 
     const expectedHash = createHmac('sha256', secret).update(dataCheckString).digest('hex');
 
     if (hash !== expectedHash) {
+      console.error('[validateMaxWebAppData] Invalid signature');
       return { valid: false, error: 'Invalid signature' };
     }
+
+    console.log('[validateMaxWebAppData] Signature valid, checking freshness...');
 
     // Check auth_date freshness (max 5 minutes old)
     const authDate = parseInt(params.get('auth_date') || '0', 10);
     const now = Math.floor(Date.now() / 1000);
     if (now - authDate > 300) {
+      console.error('[validateMaxWebAppData] initData expired:', {
+        authDate,
+        now,
+        diff: now - authDate,
+      });
       return { valid: false, error: 'initData expired' };
     }
+
+    console.log('[validateMaxWebAppData] Data fresh, extracting user ID...');
 
     // Extract user ID
     const userData = params.get('user');
     if (!userData) {
+      console.error('[validateMaxWebAppData] No user data in params');
       return { valid: false, error: 'No user data' };
     }
 
     const user = JSON.parse(userData);
     if (!user?.id) {
+      console.error('[validateMaxWebAppData] No user ID in parsed data');
       return { valid: false, error: 'No user ID in data' };
     }
+
+    console.log('[validateMaxWebAppData] Validation successful, userId:', user.id);
 
     return {
       valid: true,
@@ -150,6 +197,7 @@ export function validateMaxWebAppData(initData: string): WebAppValidationResult 
       userId: user.id.toString(),
     };
   } catch (err) {
+    console.error('[validateMaxWebAppData] Exception during validation:', err);
     return {
       valid: false,
       error: err instanceof Error ? err.message : 'Validation failed',
@@ -162,12 +210,16 @@ export function validateMaxWebAppData(initData: string): WebAppValidationResult 
  * Checks Authorization header for signed WebApp data
  */
 export function validateWebAppRequest(authHeader?: string | null): WebAppValidationResult {
+  console.log('[validateWebAppRequest] Validating request, hasHeader:', !!authHeader);
+
   if (!authHeader) {
+    console.error('[validateWebAppRequest] No Authorization header');
     return { valid: false, error: 'No Authorization header' };
   }
 
   // Format: "Bearer <platform>:<initData>"
   if (!authHeader.startsWith('Bearer ')) {
+    console.error('[validateWebAppRequest] Invalid Authorization format');
     return { valid: false, error: 'Invalid Authorization format' };
   }
 
@@ -175,11 +227,14 @@ export function validateWebAppRequest(authHeader?: string | null): WebAppValidat
   const colonIndex = encoded.indexOf(':');
 
   if (colonIndex < 0) {
+    console.error('[validateWebAppRequest] No colon in authorization data');
     return { valid: false, error: 'Invalid authorization data' };
   }
 
   const platform = encoded.substring(0, colonIndex);
   const initData = encoded.substring(colonIndex + 1);
+
+  console.log('[validateWebAppRequest] Platform:', platform, 'initData length:', initData.length);
 
   if (platform === 'telegram') {
     return validateTelegramWebAppData(initData);
@@ -189,5 +244,6 @@ export function validateWebAppRequest(authHeader?: string | null): WebAppValidat
     return validateMaxWebAppData(initData);
   }
 
+  console.error('[validateWebAppRequest] Unknown platform:', platform);
   return { valid: false, error: 'Unknown platform' };
 }
