@@ -28,18 +28,45 @@ export default async function DealerInquiriesPage() {
     );
   }
 
-  const dealer = await prisma.dealer.upsert({
-    where: { username: auth.username },
-    update: {},
-    create: { username: auth.username },
-    select: { id: true },
+  const dealer = await prisma.dealer.findFirst({
+    where: { username: auth.username, deletedAt: null },
+    select: { id: true, active: true, name: true, subName: true },
   });
+
+  if (!dealer) {
+    return (
+      <div className="flex min-h-screen w-full flex-col items-center justify-center px-4">
+        <div className="w-full max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-center">
+          <h1 className="mb-2 text-xl font-semibold text-red-900">Дилер не зарегистрирован</h1>
+          <p className="mb-4 text-sm text-red-800">
+            Ваш логин не найден в базе. Попросите администратора создать дилера в /admin/dealers.
+          </p>
+          <p className="text-xs text-red-700">
+            Логин: <span className="font-mono">{auth.username}</span>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!dealer.active) {
+    return (
+      <div className="flex min-h-screen w-full flex-col items-center justify-center px-4">
+        <div className="w-full max-w-md rounded-lg border border-orange-200 bg-orange-50 p-6 text-center">
+          <h1 className="mb-2 text-xl font-semibold text-orange-900">Дилер неактивен</h1>
+          <p className="text-sm text-orange-800">
+            Доступ временно ограничен. Обратитесь к администратору.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const now = new Date();
 
   const [activeInquiries, previousInquiries] = await Promise.all([
     prisma.inquiry.findMany({
-      where: { expiresAt: { gt: now } },
+      where: { expiresAt: { gt: now }, deletedAt: null },
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
@@ -50,6 +77,7 @@ export default async function DealerInquiriesPage() {
         createdAt: true,
         expiresAt: true,
         offers: {
+          where: { deletedAt: null },
           select: {
             id: true,
             price: true,
@@ -65,7 +93,7 @@ export default async function DealerInquiriesPage() {
       },
     }),
     prisma.inquiry.findMany({
-      where: { expiresAt: { lte: now } },
+      where: { expiresAt: { lte: now }, deletedAt: null },
       take: 25,
       orderBy: { createdAt: 'desc' },
       select: {
@@ -77,6 +105,7 @@ export default async function DealerInquiriesPage() {
         createdAt: true,
         expiresAt: true,
         offers: {
+          where: { deletedAt: null },
           select: {
             id: true,
             price: true,

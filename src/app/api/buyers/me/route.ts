@@ -35,13 +35,8 @@ export async function GET(request: Request) {
 
     const platformEnum = platform === 'max' ? 'MAX' : 'TELEGRAM';
 
-    const buyer = await prisma.buyer.findUnique({
-      where: {
-        platform_platformUserId: {
-          platform: platformEnum,
-          platformUserId,
-        },
-      },
+    const buyer = await prisma.buyer.findFirst({
+      where: { platform: platformEnum, platformUserId, deletedAt: null },
       select: {
         id: true,
       },
@@ -89,11 +84,13 @@ export async function POST(request: Request) {
       },
       update: {
         platformUserName,
+        deletedAt: null,
       },
       create: {
         platform: platformEnum,
         platformUserId,
         platformUserName,
+        deletedAt: null,
       },
       select: {
         id: true,

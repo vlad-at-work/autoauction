@@ -30,11 +30,27 @@ async function main() {
   `);
 
   await prisma.$executeRawUnsafe(`
-    ALTER TABLE "Lead" DROP CONSTRAINT "Lead_offerId_fkey";
+    ALTER TABLE "Transaction" DROP CONSTRAINT IF EXISTS "Transaction_offerId_fkey";
   `);
   await prisma.$executeRawUnsafe(`
-    ALTER TABLE "Lead" ADD CONSTRAINT "Lead_offerId_fkey"
+    ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_offerId_fkey"
     FOREIGN KEY ("offerId") REFERENCES "Offer"("id") ON DELETE CASCADE;
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    ALTER TABLE "Transaction" DROP CONSTRAINT IF EXISTS "Transaction_inquiryId_fkey";
+  `);
+  await prisma.$executeRawUnsafe(`
+    ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_inquiryId_fkey"
+    FOREIGN KEY ("inquiryId") REFERENCES "Inquiry"("id") ON DELETE CASCADE;
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    ALTER TABLE "Transaction" DROP CONSTRAINT IF EXISTS "Transaction_dealerId_fkey";
+  `);
+  await prisma.$executeRawUnsafe(`
+    ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_dealerId_fkey"
+    FOREIGN KEY ("dealerId") REFERENCES "Dealer"("id") ON DELETE CASCADE;
   `);
 
   console.log('✅ Cascade deletes added successfully');

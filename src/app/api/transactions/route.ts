@@ -39,8 +39,13 @@ export async function POST(request: Request) {
     const dbPlatform = platform === 'max' ? 'MAX' : 'TELEGRAM';
 
     // Get offer with inquiry and buyer info
-    const offer = await prisma.offer.findUnique({
-      where: { id: offerId },
+    const offer = await prisma.offer.findFirst({
+      where: {
+        id: offerId,
+        deletedAt: null,
+        inquiry: { deletedAt: null },
+        dealer: { deletedAt: null },
+      },
       include: {
         inquiry: {
           include: {
@@ -106,6 +111,18 @@ export async function POST(request: Request) {
         buyerName: offer.inquiry.name,
         buyerEmail: offer.inquiry.email,
         buyerPhone: offer.inquiry.phone,
+        offerPrice: offer.price,
+        inquiryModel: offer.inquiry.model,
+        inquirySubmodel: offer.inquiry.submodel,
+        inquiryTransmission: offer.inquiry.transmission,
+        inquiryColor: offer.inquiry.color,
+        dealerUsername: offer.dealer.username,
+        dealerName: offer.dealer.name,
+        dealerSubName: offer.dealer.subName,
+        dealerPhone: offer.dealer.phone,
+        dealerEmail: offer.dealer.email,
+        dealerDescription: offer.dealer.description,
+        deletedAt: null,
       },
     });
 

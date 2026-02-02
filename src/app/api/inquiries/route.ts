@@ -85,6 +85,7 @@ export async function POST(request: Request) {
         },
         update: {
           platformUserName: input.platformUserName,
+          deletedAt: null,
           // Update chat_id if provided (may change between sessions)
           ...(input.platformChatId && { platformChatId: input.platformChatId }),
         },
@@ -97,6 +98,7 @@ export async function POST(request: Request) {
           inquiryLimitResetAt: new Date(
             Date.now() + INQUIRY_LIMIT_RESET_DAYS * 24 * 60 * 60 * 1000
           ),
+          deletedAt: null,
         },
       });
 
@@ -137,6 +139,7 @@ export async function POST(request: Request) {
           color: input.color,
           comment: input.comment,
           expiresAt,
+          deletedAt: null,
         },
         select: { id: true },
       });

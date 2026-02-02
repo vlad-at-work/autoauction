@@ -7,7 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DeleteDialog } from '@/components/admin/delete-dialog';
-import { deleteInquiry } from '@/lib/admin/actions';
+import { InquiryEditForm } from '@/components/admin/inquiry-edit-form';
+import { RestoreButton } from '@/components/admin/restore-button';
+import { deleteInquiry, restoreInquiry } from '@/lib/admin/actions';
 
 type Params = Promise<{ id: string }>;
 
@@ -39,6 +41,7 @@ export default async function InquiryDetailPage({ params }: { params: Params }) 
   }
 
   const isExpired = new Date(inquiry.expiresAt) < new Date();
+  const isDeleted = inquiry.deletedAt != null;
 
   return (
     <div className="space-y-6">
@@ -53,6 +56,7 @@ export default async function InquiryDetailPage({ params }: { params: Params }) 
         <Badge variant={isExpired ? 'secondary' : 'default'}>
           {isExpired ? 'Истекла' : 'Активна'}
         </Badge>
+        {isDeleted && <Badge variant="secondary">Удалена</Badge>}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -112,20 +116,57 @@ export default async function InquiryDetailPage({ params }: { params: Params }) 
 
               <span className="text-muted-foreground">Истекает:</span>
               <span>{format(inquiry.expiresAt, 'dd.MM.yyyy HH:mm')}</span>
+
+              <span className="text-muted-foreground">Удалена:</span>
+              <span>{inquiry.deletedAt ? format(inquiry.deletedAt, 'dd.MM.yyyy HH:mm') : '-'}</span>
             </div>
 
             <div className="border-t pt-4">
-              <DeleteDialog
-                entityName="Заявка"
-                entityId={inquiry.id}
-                onDelete={deleteInquiry}
-                redirectTo="/admin/inquiries"
-              />
+              <div className="flex flex-wrap items-center gap-2">
+                {isDeleted ? (
+                  <RestoreButton
+                    entityName="Заявка"
+                    entityId={inquiry.id}
+                    onRestore={restoreInquiry}
+                  />
+                ) : (
+                  <DeleteDialog
+                    entityName="Заявка"
+                    entityId={inquiry.id}
+                    onDelete={deleteInquiry}
+                    redirectTo="/admin/inquiries"
+                  />
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
 
         <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Редактирование</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <InquiryEditForm
+                inquiryId={inquiry.id}
+                buyerId={inquiry.buyerId}
+                name={inquiry.name}
+                email={inquiry.email}
+                phone={inquiry.phone}
+                model={inquiry.model}
+                submodel={inquiry.submodel}
+                transmission={inquiry.transmission}
+                color={inquiry.color}
+                status={inquiry.status}
+                statusDescription={inquiry.statusDescription}
+                comment={inquiry.comment}
+                expiresAt={inquiry.expiresAt}
+                isExpired={isExpired}
+              />
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Транзакции ({inquiry.transactions.length}/3)</CardTitle>

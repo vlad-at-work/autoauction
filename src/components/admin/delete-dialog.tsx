@@ -63,8 +63,8 @@ export function DeleteDialog({ entityName, entityId, onDelete, redirectTo }: Del
         <AlertDialogHeader>
           <AlertDialogTitle>Удалить {entityName.toLowerCase()}?</AlertDialogTitle>
           <AlertDialogDescription>
-            Это действие невозможно отменить. Это безвозвратно удалит {entityName.toLowerCase()} и
-            все связанные данные.
+            Это действие пометит {entityName.toLowerCase()} как удалённую (soft delete). При
+            необходимости запись можно восстановить.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

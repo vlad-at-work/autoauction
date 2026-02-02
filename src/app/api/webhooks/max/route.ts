@@ -7,14 +7,41 @@
 
 import { NextResponse } from 'next/server';
 
-import { sendMaxMessage as sendMessage } from '@/lib/notifications/max';
-
 const MAX_BOT_TOKEN = process.env.MAX_BOT_TOKEN;
 const MAX_API_BASE = 'https://platform-api.max.ru';
 
+type MaxChat = { chat_id?: string | number };
+type MaxUser = { user_id?: number; first_name?: string };
+
+type MaxMessage = {
+  chat?: MaxChat;
+  from?: MaxUser;
+  text?: string;
+};
+
+type MaxCallback = {
+  from?: MaxUser;
+  data?: string;
+  message?: { chat?: MaxChat };
+};
+
+type MaxEvent = {
+  from?: MaxUser;
+  type?: string;
+};
+
+type MaxWebhookUpdate = {
+  type?: string;
+  object?: {
+    message?: MaxMessage;
+    callback?: MaxCallback;
+    event?: MaxEvent;
+  };
+};
+
 export async function POST(request: Request) {
   try {
-    const update = (await request.json()) as any;
+    const update = (await request.json()) as MaxWebhookUpdate;
 
     // Validate MAX event structure
     if (!update.type || !update.object) {
@@ -52,7 +79,7 @@ export async function POST(request: Request) {
   }
 }
 
-async function handleMaxMessageNew(message: any) {
+async function handleMaxMessageNew(message: MaxMessage) {
   try {
     const chatId = message.chat?.chat_id;
     const userId = message.from?.user_id;
@@ -104,11 +131,10 @@ async function handleMaxMessageNew(message: any) {
   }
 }
 
-async function handleMaxMessageCallback(callback: any) {
+async function handleMaxMessageCallback(callback: MaxCallback) {
   try {
     const userId = callback.from?.user_id;
     const data = callback.data;
-    const chatId = callback.message?.chat?.chat_id;
 
     console.log(`[MAX] Callback from ${userId}: ${data}`);
 
@@ -119,7 +145,7 @@ async function handleMaxMessageCallback(callback: any) {
   }
 }
 
-async function handleMaxMessageEvent(event: any) {
+async function handleMaxMessageEvent(event: MaxEvent) {
   try {
     const userId = event.from?.user_id;
     const type = event.type;

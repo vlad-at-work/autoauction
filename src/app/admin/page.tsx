@@ -16,12 +16,12 @@ async function getStats() {
     offersCount,
     transactionsCount,
   ] = await Promise.all([
-    prisma.buyer.count(),
-    prisma.inquiry.count(),
-    prisma.inquiry.count({ where: { expiresAt: { gte: now } } }),
-    prisma.dealer.count(),
-    prisma.offer.count(),
-    prisma.transaction.count(),
+    prisma.buyer.count({ where: { deletedAt: null } }),
+    prisma.inquiry.count({ where: { deletedAt: null } }),
+    prisma.inquiry.count({ where: { expiresAt: { gte: now }, deletedAt: null } }),
+    prisma.dealer.count({ where: { deletedAt: null } }),
+    prisma.offer.count({ where: { deletedAt: null } }),
+    prisma.transaction.count({ where: { deletedAt: null } }),
   ]);
 
   return {

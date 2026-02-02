@@ -14,8 +14,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: 'Отсутствует platformUserId' }, { status: 400 });
     }
 
-    const inquiry = await prisma.inquiry.findUnique({
-      where: { id },
+    const inquiry = await prisma.inquiry.findFirst({
+      where: { id, deletedAt: null },
       include: {
         buyer: {
           select: {
@@ -23,6 +23,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
           },
         },
         offers: {
+          where: {
+            deletedAt: null,
+            dealer: { deletedAt: null },
+          },
           orderBy: {
             createdAt: 'desc',
           },
@@ -32,6 +36,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
                 id: true,
                 username: true,
                 name: true,
+                subName: true,
               },
             },
             transaction: {
@@ -51,7 +56,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         },
         _count: {
           select: {
-            offers: true,
             transactions: true,
           },
         },
@@ -138,7 +142,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       offers: flatOffers,
       offersByDealer,
       transactions: inquiry.transactions,
-      _count: inquiry._count,
+      _count: {
+        offers: flatOffers.length,
+        transactions: inquiry._count.transactions,
+      },
       acceptanceLimits: {
         used: transactionCount,
         max: MAX_TRANSACTIONS_PER_INQUIRY,

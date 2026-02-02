@@ -26,10 +26,12 @@ model Buyer {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
 
   inquiries Inquiry[]
 
   @@unique([platform, platformUserId])
+  @@index([deletedAt])
 }
 
 model Inquiry {
@@ -52,25 +54,35 @@ model Inquiry {
 
   createdAt DateTime @default(now())
   expiresAt DateTime
+  deletedAt DateTime?
 
   offers       Offer[]
   transactions Transaction[]
 
   @@index([expiresAt])
   @@index([buyerId])
+  @@index([deletedAt])
 }
 
 model Dealer {
   id       String @id @default(cuid())
   username String @unique
   name     String?
+  subName  String?
+  phone    String?
+  email    String?
+  description String?
   active   Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
 
   offers       Offer[]
   transactions Transaction[]
+
+  @@index([deletedAt])
+  @@index([active])
 }
 
 model Offer {
@@ -85,6 +97,7 @@ model Offer {
   comment String?
 
   createdAt DateTime @default(now())
+  deletedAt DateTime?
 
   transaction Transaction?
 
@@ -93,6 +106,7 @@ model Offer {
   @@index([inquiryId])
   @@index([dealerId])
   @@index([inquiryId, dealerId])
+  @@index([deletedAt])
 }
 
 // Transaction: created when a user accepts an offer
@@ -113,12 +127,37 @@ model Transaction {
   buyerEmail String?
   buyerPhone String
 
+  // Immutable snapshots for billing/invoices (not all fields may exist for legacy rows)
+  offerPrice          Int?
+  inquiryModel        String?
+  inquirySubmodel     String?
+  inquiryTransmission String?
+  inquiryColor        String?
+  dealerUsername      String?
+  dealerName          String?
+  dealerSubName       String?
+  dealerPhone         String?
+  dealerEmail         String?
+  dealerDescription   String?
+
+  // Manual bookkeeping (optional)
+  amount     Int?
+  invoicedAt DateTime?
+  billedAt   DateTime?
+  paidAt     DateTime?
+  voidedAt   DateTime?
+
   acceptedAt DateTime @default(now())
   closedAt   DateTime? // For future dealer confirmation
+  deletedAt  DateTime?
 
   // Max 1 transaction per dealer per inquiry
   // Max 3 transactions per inquiry enforced in API
   @@unique([inquiryId, dealerId])
   @@index([inquiryId])
   @@index([dealerId])
+  @@index([deletedAt])
+  @@index([voidedAt])
+  @@index([billedAt])
+  @@index([paidAt])
 }

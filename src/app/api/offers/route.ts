@@ -32,8 +32,8 @@ export async function POST(request: Request) {
 
     const { inquiryId, price, comment } = parsed.data;
 
-    const inquiry = await prisma.inquiry.findUnique({
-      where: { id: inquiryId },
+    const inquiry = await prisma.inquiry.findFirst({
+      where: { id: inquiryId, deletedAt: null },
       select: {
         expiresAt: true,
         model: true,
@@ -56,12 +56,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Заявка истекла' }, { status: 410 });
     }
 
-    const dealer = await prisma.dealer.upsert({
-      where: { username: auth.username },
-      update: {},
-      create: { username: auth.username },
-      select: { id: true },
+    const dealer = await prisma.dealer.findFirst({
+      where: { username: auth.username, deletedAt: null },
+      select: { id: true, active: true },
     });
+
+    if (!dealer) {
+      return NextResponse.json(
+        { error: 'Дилер не зарегистрирован. Обратитесь к администратору.' },
+        { status: 403 }
+      );
+    }
+
+    if (!dealer.active) {
+      return NextResponse.json({ error: 'Дилер неактивен' }, { status: 403 });
+    }
 
     // Check if this dealer already has a transaction on this inquiry (offer accepted)
     const existingTransaction = await prisma.transaction.findUnique({
@@ -77,7 +86,7 @@ export async function POST(request: Request) {
 
     // Check how many offers this dealer has already made on this inquiry
     const existingOfferCount = await prisma.offer.count({
-      where: { inquiryId, dealerId: dealer.id },
+      where: { inquiryId, dealerId: dealer.id, deletedAt: null },
     });
 
     if (existingOfferCount >= MAX_OFFERS_PER_DEALER_PER_INQUIRY) {
@@ -90,7 +99,7 @@ export async function POST(request: Request) {
     }
 
     const offer = await prisma.offer.create({
-      data: { inquiryId, dealerId: dealer.id, price, comment },
+      data: { inquiryId, dealerId: dealer.id, price, comment, deletedAt: null },
       select: { id: true },
     });
 

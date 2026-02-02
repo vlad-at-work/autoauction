@@ -20,7 +20,6 @@ describe('Dealer Transaction Visibility', () => {
   let dealer1Id: string;
   let dealer2Id: string;
   let offer1Id: string;
-  let offer2Id: string;
   let transactionId: string;
 
   beforeAll(async () => {
@@ -89,7 +88,7 @@ describe('Dealer Transaction Visibility', () => {
     });
     offer1Id = offer1.id;
 
-    const offer2 = await prisma.offer.create({
+    await prisma.offer.create({
       data: {
         inquiryId,
         dealerId: dealer2Id,
@@ -97,7 +96,6 @@ describe('Dealer Transaction Visibility', () => {
         comment: 'Offer from dealer 2',
       },
     });
-    offer2Id = offer2.id;
 
     // Buyer accepts dealer1's offer
     const transaction = await prisma.transaction.create({

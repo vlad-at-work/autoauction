@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { prisma } from '@/lib/db';
 import { parseBasicAuthHeader } from '@/lib/auth/basic';
@@ -40,18 +39,46 @@ export default async function DealerInquiryPage({ params }: { params: Promise<{ 
     );
   }
 
-  const dealer = await prisma.dealer.upsert({
-    where: { username: auth.username },
-    update: {},
-    create: { username: auth.username },
-    select: { id: true },
+  const dealer = await prisma.dealer.findFirst({
+    where: { username: auth.username, deletedAt: null },
+    select: { id: true, active: true },
   });
 
-  const inquiry = await prisma.inquiry.findUnique({
-    where: { id },
+  if (!dealer) {
+    return (
+      <div className="flex min-h-screen w-full flex-col items-center justify-center px-4">
+        <div className="w-full max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-center">
+          <h1 className="mb-2 text-xl font-semibold text-red-900">Дилер не зарегистрирован</h1>
+          <p className="mb-4 text-sm text-red-800">
+            Ваш логин не найден в базе. Попросите администратора создать дилера в /admin/dealers.
+          </p>
+          <p className="text-xs text-red-700">
+            Логин: <span className="font-mono">{auth.username}</span>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!dealer.active) {
+    return (
+      <div className="flex min-h-screen w-full flex-col items-center justify-center px-4">
+        <div className="w-full max-w-md rounded-lg border border-orange-200 bg-orange-50 p-6 text-center">
+          <h1 className="mb-2 text-xl font-semibold text-orange-900">Дилер неактивен</h1>
+          <p className="text-sm text-orange-800">
+            Доступ временно ограничен. Обратитесь к администратору.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const inquiry = await prisma.inquiry.findFirst({
+    where: { id, deletedAt: null },
     include: {
       offers: {
         orderBy: { createdAt: 'desc' },
+        where: { deletedAt: null },
         select: {
           id: true,
           price: true,

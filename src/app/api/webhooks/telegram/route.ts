@@ -10,6 +10,17 @@ import { NextResponse } from 'next/server';
 const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN;
 const TG_WEBHOOK_SECRET = process.env.TG_WEBHOOK_SECRET;
 
+type TelegramChat = { id: number };
+type TelegramUser = { id: number; first_name?: string };
+type TelegramMessage = { chat: TelegramChat; from: TelegramUser; text?: string };
+type TelegramCallbackQuery = { id: string; data?: string; message?: { chat: TelegramChat } };
+type TelegramUpdate = {
+  update_id?: number;
+  message?: TelegramMessage;
+  callback_query?: TelegramCallbackQuery;
+  web_app_data?: unknown;
+};
+
 export async function POST(request: Request) {
   try {
     // Verify webhook secret
@@ -19,12 +30,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid secret' }, { status: 403 });
     }
 
-    const update = await request.json() as any;
+    const update = (await request.json()) as TelegramUpdate;
 
     // Log incoming update
     console.log('[Telegram] Received update:', {
       update_id: update.update_id,
-      type: Object.keys(update).find((k) => ['message', 'callback_query', 'web_app_data'].includes(k)),
+      type: Object.keys(update).find((k) =>
+        ['message', 'callback_query', 'web_app_data'].includes(k)
+      ),
     });
 
     // Route to appropriate handler
@@ -49,7 +62,7 @@ export async function POST(request: Request) {
   }
 }
 
-async function handleTelegramStart(message: any) {
+async function handleTelegramStart(message: TelegramMessage) {
   const chatId = message.chat.id;
   const userId = message.from.id;
   const firstName = message.from.first_name || 'User';
@@ -89,7 +102,7 @@ async function handleTelegramStart(message: any) {
   }
 }
 
-async function handleTelegramMessage(message: any) {
+async function handleTelegramMessage(message: TelegramMessage) {
   const chatId = message.chat.id;
   const userId = message.from.id;
   const text = message.text || '';
@@ -116,9 +129,8 @@ async function handleTelegramMessage(message: any) {
   }
 }
 
-async function handleTelegramCallback(callbackQuery: any) {
+async function handleTelegramCallback(callbackQuery: TelegramCallbackQuery) {
   const callbackId = callbackQuery.id;
-  const chatId = callbackQuery.message?.chat.id;
   const data = callbackQuery.data;
 
   console.log(`[Telegram] Callback: ${data}`);
@@ -138,6 +150,6 @@ async function handleTelegramCallback(callbackQuery: any) {
   }
 }
 
-async function handleTelegramWebAppData(webAppData: any) {
+async function handleTelegramWebAppData(webAppData: unknown) {
   console.log('[Telegram] WebApp data received:', webAppData);
 }

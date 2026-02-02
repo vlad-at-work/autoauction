@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 import { AnimatedList } from '@/components/animated-list';
-import { DebugPanel } from '@/components/debug-panel';
 import { InquiryCard } from '@/components/inquiry-card';
 import { PageTransition } from '@/components/page-transition';
 import { Badge } from '@/components/ui/badge';
@@ -21,27 +20,34 @@ type DashboardData = {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [platformChatId, setPlatformChatId] = useState<string | null>(null);
   const [platformUserId, setPlatformUserId] = useState<string | null>(null);
   const [platform, setPlatform] = useState<'max' | 'telegram' | null>(null);
   const [ready, setReady] = useState(false);
+  const [daysUntilReset, setDaysUntilReset] = useState<number | null>(null);
 
   // Initialize platform info
   useEffect(() => {
+    let cancelled = false;
+
     const webApp = getWebApp();
     const detectedPlatform = detectPlatform();
     const detectedUserId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
-    const detectedChatId = webApp?.initDataUnsafe?.chat?.id?.toString() || detectedUserId || null;
 
     if (!detectedUserId || !detectedPlatform) {
       router.replace('/app');
       return;
     }
 
-    setPlatform(detectedPlatform);
-    setPlatformUserId(detectedUserId);
-    setPlatformChatId(detectedChatId);
-    setReady(true);
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setPlatform(detectedPlatform);
+      setPlatformUserId(detectedUserId);
+      setReady(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   // Fetch inquiries with polling
@@ -60,6 +66,31 @@ export default function DashboardPage() {
 
   const inquiries = data?.inquiries ?? [];
   const limits = data?.limits ?? null;
+
+  // Avoid using Date.now() during render (react-hooks/purity)
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!limits?.resetsAt) {
+      queueMicrotask(() => {
+        if (!cancelled) setDaysUntilReset(null);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const resetAtMs = new Date(limits.resetsAt).getTime();
+    const days = Math.max(0, Math.ceil((resetAtMs - Date.now()) / (24 * 60 * 60 * 1000)));
+
+    queueMicrotask(() => {
+      if (!cancelled) setDaysUntilReset(days);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [limits?.resetsAt]);
 
   if (!ready || loading) {
     return (
@@ -83,25 +114,12 @@ export default function DashboardPage() {
                   {limits.remaining} из {limits.max}
                 </span>
               </div>
-              {limits.remaining === 0 && limits.resetsAt && (
+              {limits.remaining === 0 && limits.resetsAt && daysUntilReset != null && (
                 <Badge variant="outline" className="text-xs">
-                  Новая через{' '}
-                  {Math.ceil(
-                    (new Date(limits.resetsAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000)
-                  )}{' '}
-                  дн.
+                  Новая через {daysUntilReset} дн.
                 </Badge>
               )}
             </div>
-          )}
-
-          {/* Debug panel */}
-          {platformChatId && (
-            <DebugPanel
-              platformChatId={platformChatId}
-              platformUserId={platformUserId}
-              platform={platform}
-            />
           )}
 
           {/* Inquiries list */}

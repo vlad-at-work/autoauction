@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DeleteDialog } from '@/components/admin/delete-dialog';
-import { deleteOffer } from '@/lib/admin/actions';
+import { RestoreButton } from '@/components/admin/restore-button';
+import { deleteOffer, restoreOffer } from '@/lib/admin/actions';
 
 type Params = Promise<{ id: string }>;
 
@@ -29,6 +30,8 @@ export default async function OfferDetailPage({ params }: { params: Params }) {
     notFound();
   }
 
+  const isDeleted = offer.deletedAt != null;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -39,6 +42,7 @@ export default async function OfferDetailPage({ params }: { params: Params }) {
           </Link>
         </Button>
         <h1 className="text-2xl font-bold">Информация о предложении</h1>
+        {isDeleted && <Badge variant="secondary">Удалено</Badge>}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -59,7 +63,8 @@ export default async function OfferDetailPage({ params }: { params: Params }) {
                 href={`/admin/dealers/${offer.dealerId}`}
                 className="text-primary hover:underline"
               >
-                {offer.dealer.name || offer.dealer.username}
+                {(offer.dealer.name || offer.dealer.username) +
+                  (offer.dealer.subName ? ` • ${offer.dealer.subName}` : '')}
               </Link>
 
               <span className="text-muted-foreground">Заявка:</span>
@@ -87,15 +92,33 @@ export default async function OfferDetailPage({ params }: { params: Params }) {
 
               <span className="text-muted-foreground">Создано:</span>
               <span>{format(offer.createdAt, 'dd.MM.yyyy HH:mm')}</span>
+
+              <span className="text-muted-foreground">Удалено:</span>
+              <span>{offer.deletedAt ? format(offer.deletedAt, 'dd.MM.yyyy HH:mm') : '-'}</span>
             </div>
 
             <div className="border-t pt-4">
-              <DeleteDialog
-                entityName="Предложение"
-                entityId={offer.id}
-                onDelete={deleteOffer}
-                redirectTo="/admin/offers"
-              />
+              <div className="flex flex-wrap items-center gap-2">
+                {isDeleted ? (
+                  <RestoreButton
+                    entityName="Предложение"
+                    entityId={offer.id}
+                    onRestore={restoreOffer}
+                  />
+                ) : (
+                  <DeleteDialog
+                    entityName="Предложение"
+                    entityId={offer.id}
+                    onDelete={deleteOffer}
+                    redirectTo="/admin/offers"
+                  />
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+              Цена и комментарий редактируются только дилером. Админ может только
+              скрыть/восстановить предложение.
             </div>
           </CardContent>
         </Card>

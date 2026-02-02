@@ -75,6 +75,7 @@ export default function InquiryDetailPage() {
 
   // Initialize platform user
   useEffect(() => {
+    let cancelled = false;
     const webApp = getWebApp();
     const userId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
 
@@ -83,8 +84,15 @@ export default function InquiryDetailPage() {
       return;
     }
 
-    setPlatformUserId(userId);
-    setReady(true);
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setPlatformUserId(userId);
+      setReady(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   // Fetch inquiry with polling

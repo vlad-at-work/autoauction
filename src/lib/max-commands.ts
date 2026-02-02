@@ -12,9 +12,21 @@ interface MaxApiCommand {
   method: 'POST' | 'GET' | 'DELETE';
   endpoint: string;
   description: string;
-  body?: Record<string, any>;
+  body?: Record<string, unknown>;
   headers: Record<string, string>;
   curl?: string;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (typeof value !== 'object' || value == null) return null;
+  return value as Record<string, unknown>;
+}
+
+function readStringField(value: unknown, key: string): string | undefined {
+  const record = asRecord(value);
+  if (!record) return undefined;
+  const found = record[key];
+  return typeof found === 'string' ? found : undefined;
 }
 
 /**
@@ -72,7 +84,7 @@ export function createMaxRegistrationCommands(
 export async function registerMaxWebhook(
   botToken: string,
   webhookUrl: string
-): Promise<{ success: boolean; error?: string; data?: any }> {
+): Promise<{ success: boolean; error?: string; data?: unknown }> {
   try {
     const response = await fetch('https://platform-api.max.ru/subscriptions', {
       method: 'POST',
@@ -83,12 +95,12 @@ export async function registerMaxWebhook(
       body: JSON.stringify({ url: webhookUrl }),
     });
 
-    const data = await response.json();
+    const data = (await response.json()) as unknown;
 
     if (!response.ok) {
       return {
         success: false,
-        error: data.error || `HTTP ${response.status}`,
+        error: readStringField(data, 'error') || `HTTP ${response.status}`,
         data,
       };
     }
@@ -114,16 +126,17 @@ export async function verifyMaxWebhook(
       headers: { Authorization: botToken },
     });
 
-    const data = (await response.json()) as any;
+    const data = (await response.json()) as unknown;
 
     if (!response.ok) {
-      return { success: false, error: data.error };
+      return { success: false, error: readStringField(data, 'error') || `HTTP ${response.status}` };
     }
 
+    const url = readStringField(data, 'url');
     return {
       success: true,
-      registered: !!data.url,
-      url: data.url,
+      registered: !!url,
+      url,
     };
   } catch (err) {
     return {
@@ -146,8 +159,8 @@ export async function unregisterMaxWebhook(
     });
 
     if (!response.ok) {
-      const data = await response.json();
-      return { success: false, error: data.error };
+      const data = (await response.json()) as unknown;
+      return { success: false, error: readStringField(data, 'error') || `HTTP ${response.status}` };
     }
 
     return { success: true };
@@ -164,17 +177,17 @@ export async function unregisterMaxWebhook(
  */
 export async function getMaxBotInfo(
   botToken: string
-): Promise<{ success: boolean; botInfo?: any; error?: string }> {
+): Promise<{ success: boolean; botInfo?: unknown; error?: string }> {
   try {
     const response = await fetch('https://platform-api.max.ru/me', {
       method: 'GET',
       headers: { Authorization: botToken },
     });
 
-    const data = await response.json();
+    const data = (await response.json()) as unknown;
 
     if (!response.ok) {
-      return { success: false, error: data.error };
+      return { success: false, error: readStringField(data, 'error') || `HTTP ${response.status}` };
     }
 
     return { success: true, botInfo: data };
@@ -206,15 +219,25 @@ export async function sendMaxTestMessage(
       }),
     });
 
-    const data = await response.json();
+    const data = (await response.json()) as unknown;
 
     if (!response.ok) {
-      return { success: false, error: data.error };
+      return { success: false, error: readStringField(data, 'error') || `HTTP ${response.status}` };
     }
+
+    const result = asRecord(data)?.result;
+    const resultRecord = asRecord(result);
+    const rawMessageId = resultRecord?.message_id;
+    const messageId =
+      typeof rawMessageId === 'string'
+        ? rawMessageId
+        : typeof rawMessageId === 'number'
+          ? String(rawMessageId)
+          : undefined;
 
     return {
       success: true,
-      messageId: data.result?.message_id,
+      messageId,
     };
   } catch (err) {
     return {
@@ -227,10 +250,7 @@ export async function sendMaxTestMessage(
 /**
  * Print registration instructions
  */
-export function printMaxRegistrationInstructions(
-  botToken: string,
-  webhookUrl: string
-): string {
+export function printMaxRegistrationInstructions(botToken: string, webhookUrl: string): string {
   const commands = createMaxRegistrationCommands(botToken, webhookUrl);
 
   return `

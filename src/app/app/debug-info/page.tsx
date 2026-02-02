@@ -18,12 +18,15 @@ type WebAppDebugInfo = {
 };
 
 export default function DebugInfoPage() {
+  const isProd = process.env.NODE_ENV === 'production';
   const [info, setInfo] = useState<WebAppDebugInfo | null>(null);
   const [sendState, setSendState] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const [sendError, setSendError] = useState<string | null>(null);
   const [localTime, setLocalTime] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isProd) return;
+
     const loadInfo = () => {
       const webApp = getWebApp();
       const platform = detectPlatform();
@@ -48,7 +51,15 @@ export default function DebugInfoPage() {
     }, 100);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isProd]);
+
+  if (isProd) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center p-6">
+        <p className="text-muted-foreground text-sm">Страница отладки недоступна в production.</p>
+      </div>
+    );
+  }
 
   if (!info) {
     return (

@@ -136,7 +136,4 @@ export async function notifyDealerOfTransactionAccepted(
   return sendMaxMessage(chatId, text);
 }
 
-// Keep old name as alias for backward compatibility during migration
-export const notifyDealerOfLeadAccepted = notifyDealerOfTransactionAccepted;
-
 export { sendTelegramMessage, sendMaxMessage };

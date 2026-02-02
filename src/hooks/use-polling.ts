@@ -12,11 +12,7 @@ type UsePollingOptions<T> = {
  * Hook for polling data at regular intervals with focus-based refresh
  * Combines setInterval + window focus listener for real-time updates
  */
-export function usePolling<T>({
-  fetcher,
-  interval = 12000,
-  enabled = true,
-}: UsePollingOptions<T>) {
+export function usePolling<T>({ fetcher, interval = 12000, enabled = true }: UsePollingOptions<T>) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const mountedRef = useRef(true);
@@ -38,7 +34,9 @@ export function usePolling<T>({
     mountedRef.current = true;
     if (!enabled) return;
 
-    refresh();
+    queueMicrotask(() => {
+      void refresh();
+    });
 
     const id = setInterval(refresh, interval);
     const handleFocus = () => refresh();

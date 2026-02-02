@@ -19,13 +19,8 @@ export async function GET(request: Request) {
 
     const platformEnum = platform === 'max' ? 'MAX' : 'TELEGRAM';
 
-    const buyer = await prisma.buyer.findUnique({
-      where: {
-        platform_platformUserId: {
-          platform: platformEnum,
-          platformUserId,
-        },
-      },
+    const buyer = await prisma.buyer.findFirst({
+      where: { platform: platformEnum, platformUserId, deletedAt: null },
       select: {
         id: true,
         inquiriesUsedThisMonth: true,
@@ -49,11 +44,15 @@ export async function GET(request: Request) {
     const inquiries = await prisma.inquiry.findMany({
       where: {
         buyerId: buyer.id,
+        deletedAt: null,
       },
       include: {
+        offers: {
+          where: { deletedAt: null },
+          select: { id: true },
+        },
         _count: {
           select: {
-            offers: true,
             transactions: true,
           },
         },
@@ -69,6 +68,14 @@ export async function GET(request: Request) {
       },
     });
 
+    const normalizedInquiries = inquiries.map(({ offers, _count, ...rest }) => ({
+      ...rest,
+      _count: {
+        offers: offers.length,
+        transactions: _count.transactions,
+      },
+    }));
+
     // Check if limits should be reset
     const now = new Date();
     let remainingInquiries = MAX_INQUIRIES_PER_MONTH - buyer.inquiriesUsedThisMonth;
@@ -81,7 +88,7 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json({
-      inquiries,
+      inquiries: normalizedInquiries,
       limits: {
         used: Math.max(0, MAX_INQUIRIES_PER_MONTH - remainingInquiries),
         max: MAX_INQUIRIES_PER_MONTH,
