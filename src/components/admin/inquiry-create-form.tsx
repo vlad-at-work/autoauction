@@ -16,16 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { createInquiry } from '@/lib/admin/actions';
-
-function toDateTimeLocalValue(date: Date): string {
-  const pad = (value: number) => String(value).padStart(2, '0');
-  const yyyy = date.getFullYear();
-  const mm = pad(date.getMonth() + 1);
-  const dd = pad(date.getDate());
-  const hh = pad(date.getHours());
-  const min = pad(date.getMinutes());
-  return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
-}
+import { toDateTimeLocalValue } from '@/lib/date-utils';
 
 export function InquiryCreateForm() {
   const router = useRouter();

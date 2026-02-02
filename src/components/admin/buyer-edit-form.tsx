@@ -14,22 +14,13 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { updateBuyer } from '@/lib/admin/actions';
+import { toDateTimeLocalValue } from '@/lib/date-utils';
 
 type BuyerEditFormProps = {
   buyerId: string;
   inquiriesUsedThisMonth: number;
   inquiryLimitResetAt: Date;
 };
-
-function toDateTimeLocalValue(date: Date): string {
-  const pad = (value: number) => String(value).padStart(2, '0');
-  const yyyy = date.getFullYear();
-  const mm = pad(date.getMonth() + 1);
-  const dd = pad(date.getDate());
-  const hh = pad(date.getHours());
-  const min = pad(date.getMinutes());
-  return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
-}
 
 export function BuyerEditForm({
   buyerId,

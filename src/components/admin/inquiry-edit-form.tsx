@@ -16,6 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { updateInquiry } from '@/lib/admin/actions';
+import { toDateTimeLocalValue } from '@/lib/date-utils';
 
 type InquiryEditFormProps = {
   inquiryId: string;
@@ -33,16 +34,6 @@ type InquiryEditFormProps = {
   expiresAt: Date;
   isExpired: boolean;
 };
-
-function toDateTimeLocalValue(date: Date): string {
-  const pad = (value: number) => String(value).padStart(2, '0');
-  const yyyy = date.getFullYear();
-  const mm = pad(date.getMonth() + 1);
-  const dd = pad(date.getDate());
-  const hh = pad(date.getHours());
-  const min = pad(date.getMinutes());
-  return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
-}
 
 export function InquiryEditForm({
   inquiryId,
