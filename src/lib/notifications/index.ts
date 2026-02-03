@@ -2,12 +2,16 @@
  * Unified notification service
  * Sends notifications to users via their registered platform (Telegram or MAX)
  * Includes deep links for direct navigation to relevant sections
+ *
+ * Supports routing to correct bot:
+ * - Buyer notifications → customer bots (TG_BOT_TOKEN, MAX_BOT_TOKEN)
+ * - Dealer notifications → dealer bots (TG_BOT_TOKEN_DEALER, MAX_BOT_TOKEN_DEALER)
  */
 
 import type { Platform } from '@prisma/client';
 
-import { sendMaxMessage, sendMaxMessageWithButton } from './max';
-import { sendTelegramMessage } from './telegram';
+import { sendMaxMessage, sendMaxMessageWithButton, type MaxBotType } from './max';
+import { sendTelegramMessage, type TelegramBotType } from './telegram';
 import { createNotificationButtons, formatTelegramNotification } from '../deeplinks';
 
 type NotifyResult = {
@@ -134,6 +138,100 @@ export async function notifyDealerOfTransactionAccepted(
   }
 
   return sendMaxMessage(chatId, text);
+}
+
+/**
+ * Send password reset code to dealer via their registered platform
+ * Uses dealer bot tokens for delivery
+ */
+export async function sendDealerPasswordResetCode(
+  dealer: {
+    platform: Platform;
+    platformChatId?: string | null;
+    platformUserId?: string | null;
+  },
+  code: string
+): Promise<NotifyResult> {
+  if (!dealer.platform || !dealer.platformUserId) {
+    return { success: false, error: 'Dealer platform not configured' };
+  }
+
+  const chatId = dealer.platformChatId || dealer.platformUserId;
+  const text = `🔐 Код сброса пароля: ${code}\n\nЭтот код действителен 10 минут.\nЕсли вы не запрашивали сброс пароля, проигнорируйте это сообщение.`;
+
+  const botType: TelegramBotType | MaxBotType = 'dealer';
+
+  if (dealer.platform === 'TELEGRAM') {
+    return sendTelegramMessage(chatId, text, undefined, botType);
+  }
+
+  return sendMaxMessage(chatId, text, undefined, botType);
+}
+
+/**
+ * Send notification to dealer about new inquiry (using dealer bot)
+ * This replaces the old notifyDealerOfNewInquiry that used hardcoded dealers
+ */
+export async function notifyDealerOfNewInquiryViaBot(
+  dealer: {
+    platform: Platform;
+    platformChatId?: string | null;
+    platformUserId?: string | null;
+  },
+  inquiryId: string,
+  carModel: string,
+  carSubmodel: string,
+  transmission: string,
+  color: string
+): Promise<NotifyResult> {
+  if (!dealer.platform || !dealer.platformUserId) {
+    return { success: false, error: 'Dealer platform not configured' };
+  }
+
+  const chatId = dealer.platformChatId || dealer.platformUserId;
+  const text = `🚗 Новая заявка!\n\n${carModel} ${carSubmodel}\n${transmission} • ${color}\n\nОткройте приложение, чтобы сделать предложение.`;
+
+  const botType: TelegramBotType | MaxBotType = 'dealer';
+
+  if (dealer.platform === 'TELEGRAM') {
+    // TODO: Add deep link button to dealer interface
+    return sendTelegramMessage(chatId, text, undefined, botType);
+  }
+
+  // TODO: Add deep link button to dealer interface
+  return sendMaxMessage(chatId, text, undefined, botType);
+}
+
+/**
+ * Send notification to dealer when their offer is accepted (using dealer bot)
+ */
+export async function notifyDealerOfAcceptedOfferViaBot(
+  dealer: {
+    platform: Platform;
+    platformChatId?: string | null;
+    platformUserId?: string | null;
+  },
+  carModel: string,
+  carSubmodel: string,
+  price: number,
+  buyerName: string,
+  buyerPhone: string
+): Promise<NotifyResult> {
+  if (!dealer.platform || !dealer.platformUserId) {
+    return { success: false, error: 'Dealer platform not configured' };
+  }
+
+  const chatId = dealer.platformChatId || dealer.platformUserId;
+  const formattedPrice = price.toLocaleString('ru-RU');
+  const text = `🎉 Покупатель принял ваше предложение!\n\n${carModel} ${carSubmodel}\nЦена: ${formattedPrice} ₽\n\nПокупатель: ${buyerName}\nТелефон: ${buyerPhone}\n\nСвяжитесь с покупателем как можно скорее!`;
+
+  const botType: TelegramBotType | MaxBotType = 'dealer';
+
+  if (dealer.platform === 'TELEGRAM') {
+    return sendTelegramMessage(chatId, text, undefined, botType);
+  }
+
+  return sendMaxMessage(chatId, text, undefined, botType);
 }
 
 export { sendTelegramMessage, sendMaxMessage };

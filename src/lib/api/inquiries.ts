@@ -49,13 +49,15 @@ export type InquiriesResponse = {
 };
 
 export async function getMyInquiries(
-  platformUserId: string,
-  platform: string
+  initData: string,
+  platform: 'max' | 'telegram'
 ): Promise<{ inquiries: Inquiry[]; limits: InquiryLimits }> {
   try {
-    const res = await fetch(
-      `/api/buyers/me/inquiries?platformUserId=${platformUserId}&platform=${platform}`
-    );
+    const res = await fetch('/api/buyers/me/inquiries', {
+      headers: {
+        Authorization: `Bearer ${platform}:${initData}`,
+      },
+    });
 
     if (!res.ok) {
       throw new Error('Не удалось загрузить заявки');
@@ -83,10 +85,15 @@ export async function getMyInquiries(
 
 export async function getInquiryById(
   inquiryId: string,
-  platformUserId: string
+  initData: string,
+  platform: 'max' | 'telegram'
 ): Promise<Inquiry | null> {
   try {
-    const res = await fetch(`/api/inquiries/${inquiryId}?platformUserId=${platformUserId}`);
+    const res = await fetch(`/api/inquiries/${inquiryId}`, {
+      headers: {
+        Authorization: `Bearer ${platform}:${initData}`,
+      },
+    });
 
     if (!res.ok) {
       return null;

@@ -1,17 +1,36 @@
 /**
  * Server-side WebApp authentication validation
  * Validates that requests are actually coming from Telegram or MAX WebView
+ *
+ * Supports both customer and dealer bots:
+ * - Customer: TG_BOT_TOKEN, MAX_BOT_TOKEN
+ * - Dealer: TG_BOT_TOKEN_DEALER, MAX_BOT_TOKEN_DEALER
  */
 
 import { createHmac } from 'crypto';
 
+// Customer bot tokens
 const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN;
 const MAX_BOT_TOKEN = process.env.MAX_BOT_TOKEN;
+
+// Dealer bot tokens
+const TG_BOT_TOKEN_DEALER = process.env.TG_BOT_TOKEN_DEALER;
+const MAX_BOT_TOKEN_DEALER = process.env.MAX_BOT_TOKEN_DEALER;
+
+export type BotType = 'customer' | 'dealer';
+
+const DEFAULT_INIT_DATA_MAX_AGE_SECONDS = 24 * 60 * 60;
+const INIT_DATA_MAX_AGE_SECONDS = (() => {
+  const parsed = Number(process.env.WEBAPP_INIT_DATA_MAX_AGE_SECONDS);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_INIT_DATA_MAX_AGE_SECONDS;
+})();
 
 export type WebAppValidationResult = {
   valid: boolean;
   platform?: 'telegram' | 'max';
   userId?: string;
+  chatId?: string;
+  botType?: BotType;
   error?: string;
 };
 
@@ -21,12 +40,18 @@ export type WebAppValidationResult = {
  * Telegram sends initData as URL-encoded string with HMAC-SHA256 signature
  * Format: user=%7B%22id%22...&hash=ABC123...
  */
-export function validateTelegramWebAppData(initData: string): WebAppValidationResult {
-  console.log('[validateTelegramWebAppData] Starting validation');
+export function validateTelegramWebAppData(
+  initData: string,
+  botType: BotType = 'customer'
+): WebAppValidationResult {
+  console.log('[validateTelegramWebAppData] Starting validation, botType:', botType);
 
-  if (!TG_BOT_TOKEN) {
-    console.error('[validateTelegramWebAppData] TG_BOT_TOKEN not configured');
-    return { valid: false, error: 'TG_BOT_TOKEN not configured' };
+  const token = botType === 'dealer' ? TG_BOT_TOKEN_DEALER : TG_BOT_TOKEN;
+
+  if (!token) {
+    const tokenName = botType === 'dealer' ? 'TG_BOT_TOKEN_DEALER' : 'TG_BOT_TOKEN';
+    console.error(`[validateTelegramWebAppData] ${tokenName} not configured`);
+    return { valid: false, error: `${tokenName} not configured` };
   }
 
   if (!initData) {
@@ -56,7 +81,7 @@ export function validateTelegramWebAppData(initData: string): WebAppValidationRe
       .join('\n');
 
     // Calculate expected hash: HMAC-SHA256 with secret = SHA256(bot_token)
-    const secret = createHmac('sha256', 'WebAppData').update(TG_BOT_TOKEN).digest();
+    const secret = createHmac('sha256', 'WebAppData').update(token).digest();
 
     const expectedHash = createHmac('sha256', secret).update(dataCheckString).digest('hex');
 
@@ -67,10 +92,10 @@ export function validateTelegramWebAppData(initData: string): WebAppValidationRe
 
     console.log('[validateTelegramWebAppData] Signature valid, checking freshness...');
 
-    // Check auth_date freshness (max 5 minutes old)
+    // Check auth_date freshness
     const authDate = parseInt(params.get('auth_date') || '0', 10);
     const now = Math.floor(Date.now() / 1000);
-    if (now - authDate > 300) {
+    if (now - authDate > INIT_DATA_MAX_AGE_SECONDS) {
       console.error('[validateTelegramWebAppData] initData expired:', {
         authDate,
         now,
@@ -94,12 +119,26 @@ export function validateTelegramWebAppData(initData: string): WebAppValidationRe
       return { valid: false, error: 'No user ID in data' };
     }
 
+    // Extract chat ID if available
+    const chatData = params.get('chat');
+    let chatId: string | undefined;
+    if (chatData) {
+      try {
+        const chat = JSON.parse(chatData);
+        chatId = chat?.id?.toString();
+      } catch {
+        // Chat data parsing failed, continue without it
+      }
+    }
+
     console.log('[validateTelegramWebAppData] Validation successful, userId:', user.id);
 
     return {
       valid: true,
       platform: 'telegram',
       userId: user.id.toString(),
+      chatId: chatId || user.id.toString(), // Fallback to user ID as chat ID
+      botType,
     };
   } catch (err) {
     console.error('[validateTelegramWebAppData] Exception during validation:', err);
@@ -116,12 +155,18 @@ export function validateTelegramWebAppData(initData: string): WebAppValidationRe
  * MAX sends initData with HMAC-SHA256 signature
  * Format similar to Telegram
  */
-export function validateMaxWebAppData(initData: string): WebAppValidationResult {
-  console.log('[validateMaxWebAppData] Starting validation');
+export function validateMaxWebAppData(
+  initData: string,
+  botType: BotType = 'customer'
+): WebAppValidationResult {
+  console.log('[validateMaxWebAppData] Starting validation, botType:', botType);
 
-  if (!MAX_BOT_TOKEN) {
-    console.error('[validateMaxWebAppData] MAX_BOT_TOKEN not configured');
-    return { valid: false, error: 'MAX_BOT_TOKEN not configured' };
+  const token = botType === 'dealer' ? MAX_BOT_TOKEN_DEALER : MAX_BOT_TOKEN;
+
+  if (!token) {
+    const tokenName = botType === 'dealer' ? 'MAX_BOT_TOKEN_DEALER' : 'MAX_BOT_TOKEN';
+    console.error(`[validateMaxWebAppData] ${tokenName} not configured`);
+    return { valid: false, error: `${tokenName} not configured` };
   }
 
   if (!initData) {
@@ -151,7 +196,7 @@ export function validateMaxWebAppData(initData: string): WebAppValidationResult 
       .join('\n');
 
     // Calculate expected hash: HMAC-SHA256 with secret = "WebAppData" + bot_token
-    const secret = createHmac('sha256', 'WebAppData' + MAX_BOT_TOKEN).digest();
+    const secret = createHmac('sha256', 'WebAppData' + token).digest();
 
     const expectedHash = createHmac('sha256', secret).update(dataCheckString).digest('hex');
 
@@ -162,10 +207,10 @@ export function validateMaxWebAppData(initData: string): WebAppValidationResult 
 
     console.log('[validateMaxWebAppData] Signature valid, checking freshness...');
 
-    // Check auth_date freshness (max 5 minutes old)
+    // Check auth_date freshness
     const authDate = parseInt(params.get('auth_date') || '0', 10);
     const now = Math.floor(Date.now() / 1000);
-    if (now - authDate > 300) {
+    if (now - authDate > INIT_DATA_MAX_AGE_SECONDS) {
       console.error('[validateMaxWebAppData] initData expired:', {
         authDate,
         now,
@@ -189,12 +234,26 @@ export function validateMaxWebAppData(initData: string): WebAppValidationResult 
       return { valid: false, error: 'No user ID in data' };
     }
 
+    // Extract chat ID if available
+    const chatData = params.get('chat');
+    let chatId: string | undefined;
+    if (chatData) {
+      try {
+        const chat = JSON.parse(chatData);
+        chatId = chat?.id?.toString();
+      } catch {
+        // Chat data parsing failed, continue without it
+      }
+    }
+
     console.log('[validateMaxWebAppData] Validation successful, userId:', user.id);
 
     return {
       valid: true,
       platform: 'max',
       userId: user.id.toString(),
+      chatId: chatId || user.id.toString(), // Fallback to user ID as chat ID
+      botType,
     };
   } catch (err) {
     console.error('[validateMaxWebAppData] Exception during validation:', err);
@@ -208,8 +267,13 @@ export function validateMaxWebAppData(initData: string): WebAppValidationResult 
 /**
  * Validate WebApp request
  * Checks Authorization header for signed WebApp data
+ *
+ * Header format: "Bearer <platform>:<initData>" or "Bearer <platform>:<botType>:<initData>"
  */
-export function validateWebAppRequest(authHeader?: string | null): WebAppValidationResult {
+export function validateWebAppRequest(
+  authHeader?: string | null,
+  defaultBotType: BotType = 'customer'
+): WebAppValidationResult {
   console.log('[validateWebAppRequest] Validating request, hasHeader:', !!authHeader);
 
   if (!authHeader) {
@@ -217,31 +281,50 @@ export function validateWebAppRequest(authHeader?: string | null): WebAppValidat
     return { valid: false, error: 'No Authorization header' };
   }
 
-  // Format: "Bearer <platform>:<initData>"
+  // Format: "Bearer <platform>:<initData>" or "Bearer <platform>:<botType>:<initData>"
   if (!authHeader.startsWith('Bearer ')) {
     console.error('[validateWebAppRequest] Invalid Authorization format');
     return { valid: false, error: 'Invalid Authorization format' };
   }
 
   const encoded = authHeader.substring(7);
-  const colonIndex = encoded.indexOf(':');
+  const firstColonIndex = encoded.indexOf(':');
 
-  if (colonIndex < 0) {
+  if (firstColonIndex < 0) {
     console.error('[validateWebAppRequest] No colon in authorization data');
     return { valid: false, error: 'Invalid authorization data' };
   }
 
-  const platform = encoded.substring(0, colonIndex);
-  const initData = encoded.substring(colonIndex + 1);
+  const platform = encoded.substring(0, firstColonIndex);
+  const remaining = encoded.substring(firstColonIndex + 1);
 
-  console.log('[validateWebAppRequest] Platform:', platform, 'initData length:', initData.length);
+  // Check if botType is specified (format: platform:botType:initData)
+  let botType: BotType = defaultBotType;
+  let initData: string;
+
+  if (remaining.startsWith('customer:') || remaining.startsWith('dealer:')) {
+    const secondColonIndex = remaining.indexOf(':');
+    botType = remaining.substring(0, secondColonIndex) as BotType;
+    initData = remaining.substring(secondColonIndex + 1);
+  } else {
+    initData = remaining;
+  }
+
+  console.log(
+    '[validateWebAppRequest] Platform:',
+    platform,
+    'botType:',
+    botType,
+    'initData length:',
+    initData.length
+  );
 
   if (platform === 'telegram') {
-    return validateTelegramWebAppData(initData);
+    return validateTelegramWebAppData(initData, botType);
   }
 
   if (platform === 'max') {
-    return validateMaxWebAppData(initData);
+    return validateMaxWebAppData(initData, botType);
   }
 
   console.error('[validateWebAppRequest] Unknown platform:', platform);

@@ -48,10 +48,15 @@ type OfferPageData = {
 async function getOfferDetail(
   inquiryId: string,
   offerId: string,
-  platformUserId: string
+  platform: 'max' | 'telegram',
+  initData: string
 ): Promise<OfferPageData | null> {
   try {
-    const res = await fetch(`/api/inquiries/${inquiryId}?platformUserId=${platformUserId}`);
+    const res = await fetch(`/api/inquiries/${inquiryId}`, {
+      headers: {
+        Authorization: `Bearer ${platform}:${initData}`,
+      },
+    });
     if (!res.ok) return null;
 
     const data = await res.json();
@@ -103,13 +108,15 @@ export default function OfferDetailPage() {
   const loadData = useCallback(async () => {
     const webApp = getWebApp();
     const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
+    const platform = detectPlatform();
+    const initData = webApp?.initData || null;
 
-    if (!platformUserId) {
+    if (!platformUserId || !platform || !initData) {
       router.replace('/app');
       return;
     }
 
-    const result = await getOfferDetail(inquiryId, offerId, platformUserId);
+    const result = await getOfferDetail(inquiryId, offerId, platform, initData);
 
     if (!result) {
       router.replace(`/app/inquiry/${inquiryId}`);
@@ -162,10 +169,10 @@ export default function OfferDetailPage() {
     }
 
     const webApp = getWebApp();
-    const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
     const platform = detectPlatform();
+    const initData = webApp?.initData || null;
 
-    if (!platformUserId || !platform) {
+    if (!platform || !initData) {
       toast.error('Ошибка авторизации');
       return;
     }
@@ -175,11 +182,12 @@ export default function OfferDetailPage() {
     try {
       const response = await fetch('/api/transactions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          Authorization: `Bearer ${platform}:${initData}`,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           offerId,
-          platform,
-          platformUserId,
         }),
       });
 

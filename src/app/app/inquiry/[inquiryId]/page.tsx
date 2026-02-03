@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TopBar } from '@/components/ui/top-bar';
 import { usePolling } from '@/hooks/use-polling';
-import { getWebApp } from '@/app/app/webapp-ready';
+import { detectPlatform, getWebApp } from '@/app/app/webapp-ready';
 import { formatPrice, formatRelativeTime } from '@/lib/inquiry-utils';
 
 type DealerOfferGroup = {
@@ -54,10 +54,15 @@ type InquiryDetail = {
 
 async function getInquiryDetail(
   inquiryId: string,
-  platformUserId: string
+  platform: 'max' | 'telegram',
+  initData: string
 ): Promise<InquiryDetail | null> {
   try {
-    const res = await fetch(`/api/inquiries/${inquiryId}?platformUserId=${platformUserId}`);
+    const res = await fetch(`/api/inquiries/${inquiryId}`, {
+      headers: {
+        Authorization: `Bearer ${platform}:${initData}`,
+      },
+    });
     if (!res.ok) return null;
     return (await res.json()) as InquiryDetail;
   } catch {
@@ -69,6 +74,8 @@ export default function InquiryDetailPage() {
   const params = useParams();
   const router = useRouter();
   const [platformUserId, setPlatformUserId] = useState<string | null>(null);
+  const [platform, setPlatform] = useState<'max' | 'telegram' | null>(null);
+  const [initData, setInitData] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
   const inquiryId = params.inquiryId as string;
@@ -78,8 +85,10 @@ export default function InquiryDetailPage() {
     let cancelled = false;
     const webApp = getWebApp();
     const userId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
+    const detectedPlatform = detectPlatform();
+    const detectedInitData = webApp?.initData || null;
 
-    if (!userId) {
+    if (!userId || !detectedPlatform || !detectedInitData) {
       router.replace('/app');
       return;
     }
@@ -87,6 +96,8 @@ export default function InquiryDetailPage() {
     queueMicrotask(() => {
       if (cancelled) return;
       setPlatformUserId(userId);
+      setPlatform(detectedPlatform);
+      setInitData(detectedInitData);
       setReady(true);
     });
 
@@ -97,19 +108,19 @@ export default function InquiryDetailPage() {
 
   // Fetch inquiry with polling
   const fetcher = useCallback(async (): Promise<InquiryDetail | null> => {
-    if (!platformUserId) return null;
-    const data = await getInquiryDetail(inquiryId, platformUserId);
+    if (!platformUserId || !platform || !initData) return null;
+    const data = await getInquiryDetail(inquiryId, platform, initData);
     if (!data) {
       router.replace('/app/dashboard');
       return null;
     }
     return data;
-  }, [inquiryId, platformUserId, router]);
+  }, [inquiryId, initData, platform, platformUserId, router]);
 
   const { data: inquiry, loading } = usePolling<InquiryDetail | null>({
     fetcher,
     interval: 10000,
-    enabled: ready && !!platformUserId,
+    enabled: ready && !!platformUserId && !!platform && !!initData,
   });
 
   if (!ready || loading || !inquiry) {

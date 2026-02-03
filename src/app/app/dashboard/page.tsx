@@ -22,6 +22,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [platformUserId, setPlatformUserId] = useState<string | null>(null);
   const [platform, setPlatform] = useState<'max' | 'telegram' | null>(null);
+  const [initData, setInitData] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [daysUntilReset, setDaysUntilReset] = useState<number | null>(null);
 
@@ -32,8 +33,9 @@ export default function DashboardPage() {
     const webApp = getWebApp();
     const detectedPlatform = detectPlatform();
     const detectedUserId = webApp?.initDataUnsafe?.user?.id?.toString() || null;
+    const detectedInitData = webApp?.initData || null;
 
-    if (!detectedUserId || !detectedPlatform) {
+    if (!detectedUserId || !detectedPlatform || !detectedInitData) {
       router.replace('/app');
       return;
     }
@@ -42,6 +44,7 @@ export default function DashboardPage() {
       if (cancelled) return;
       setPlatform(detectedPlatform);
       setPlatformUserId(detectedUserId);
+      setInitData(detectedInitData);
       setReady(true);
     });
 
@@ -52,16 +55,16 @@ export default function DashboardPage() {
 
   // Fetch inquiries with polling
   const fetcher = useCallback(async (): Promise<DashboardData> => {
-    if (!platformUserId || !platform) {
+    if (!platformUserId || !platform || !initData) {
       return { inquiries: [], limits: null };
     }
-    return getMyInquiries(platformUserId, platform);
-  }, [platformUserId, platform]);
+    return getMyInquiries(initData, platform);
+  }, [initData, platform, platformUserId]);
 
   const { data, loading } = usePolling<DashboardData>({
     fetcher,
     interval: 12000,
-    enabled: ready && !!platformUserId && !!platform,
+    enabled: ready && !!platformUserId && !!platform && !!initData,
   });
 
   const inquiries = data?.inquiries ?? [];

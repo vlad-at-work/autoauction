@@ -1,11 +1,8 @@
 import type { Metadata } from 'next';
-import { Figtree } from 'next/font/google';
 import { Toaster } from 'sonner';
 
 import './globals.css';
 import { GlobalLoading } from '@/components/global-loading';
-
-const fontSans = Figtree({ subsets: ['latin'], variable: '--font-sans' });
 
 const siteUrl = (() => {
   const envUrl = process.env.NEXT_PUBLIC_APP_URL;
@@ -66,7 +63,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru" className={fontSans.variable} suppressHydrationWarning>
+    <html lang="ru" suppressHydrationWarning>
       <body className="antialiased">
         <GlobalLoading />
         {children}

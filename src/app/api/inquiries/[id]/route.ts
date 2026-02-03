@@ -1,17 +1,20 @@
 import { NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
+import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 
 const MAX_TRANSACTIONS_PER_INQUIRY = 3;
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const { searchParams } = new URL(request.url);
-    const platformUserId = searchParams.get('platformUserId');
-
-    if (!platformUserId) {
-      return NextResponse.json({ error: 'Отсутствует platformUserId' }, { status: 400 });
+    const authHeader = request.headers.get('authorization');
+    const validation = validateWebAppRequest(authHeader);
+    if (!validation.valid || !validation.userId) {
+      return NextResponse.json(
+        { error: 'Неавторизованно: ' + (validation.error || 'unknown error') },
+        { status: 401 }
+      );
     }
 
     const inquiry = await prisma.inquiry.findFirst({
@@ -67,7 +70,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     }
 
     // Check ownership
-    if (inquiry.buyer.platformUserId !== platformUserId) {
+    if (inquiry.buyer.platformUserId !== validation.userId) {
       return NextResponse.json({ error: 'Нет доступа' }, { status: 403 });
     }
 

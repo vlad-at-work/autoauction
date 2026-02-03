@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { prisma } from '@/lib/db';
+import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { notifyDealerOfTransactionAccepted, notifyBuyer } from '@/lib/notifications';
 
 const MAX_TRANSACTIONS_PER_INQUIRY = 3;
@@ -19,12 +20,19 @@ function formatPhoneRU(phone: string): string {
 
 const transactionCreateSchema = z.object({
   offerId: z.string().min(1),
-  platform: z.enum(['max', 'telegram']),
-  platformUserId: z.string().min(1),
 });
 
 export async function POST(request: Request) {
   try {
+    const authHeader = request.headers.get('authorization');
+    const validation = validateWebAppRequest(authHeader);
+    if (!validation.valid || !validation.userId || !validation.platform) {
+      return NextResponse.json(
+        { error: 'Неавторизованно: ' + (validation.error || 'unknown error') },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const parsed = transactionCreateSchema.safeParse(body);
 
@@ -35,8 +43,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const { offerId, platform, platformUserId } = parsed.data;
-    const dbPlatform = platform === 'max' ? 'MAX' : 'TELEGRAM';
+    const { offerId } = parsed.data;
+    const dbPlatform = validation.platform === 'max' ? 'MAX' : 'TELEGRAM';
 
     // Get offer with inquiry and buyer info
     const offer = await prisma.offer.findFirst({
@@ -65,7 +73,7 @@ export async function POST(request: Request) {
     // Verify the user owns this inquiry
     if (
       offer.inquiry.buyer.platform !== dbPlatform ||
-      offer.inquiry.buyer.platformUserId !== platformUserId
+      offer.inquiry.buyer.platformUserId !== validation.userId
     ) {
       return NextResponse.json({ error: 'Нет доступа' }, { status: 403 });
     }

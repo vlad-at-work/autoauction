@@ -1,6 +1,6 @@
 export async function checkBuyerExists(
   platformUserId: string,
-  platform: string,
+  platform: 'max' | 'telegram',
   initData?: string
 ) {
   console.log('[checkBuyerExists] Starting check:', {
@@ -10,14 +10,7 @@ export async function checkBuyerExists(
   });
 
   try {
-    const params = new URLSearchParams({
-      platformUserId,
-      platform,
-    });
-
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
+    const headers: HeadersInit = {};
 
     // Add server-side validation of WebApp initData if provided
     if (initData) {
@@ -25,7 +18,7 @@ export async function checkBuyerExists(
       console.log('[checkBuyerExists] Added auth header with platform:', platform);
     }
 
-    const url = `/api/buyers/me?${params.toString()}`;
+    const url = `/api/buyers/me?platformUserId=${platformUserId}&platform=${platform}`;
     console.log('[checkBuyerExists] Fetching:', url);
 
     const res = await fetch(url, {

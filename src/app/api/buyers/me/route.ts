@@ -2,87 +2,55 @@ import { NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
 import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
+import { isPlatformUserDealer } from '@/lib/auth/dealer-auth';
 
 export async function GET(request: Request) {
-  const startTime = Date.now();
-  console.log('[API /api/buyers/me GET] Request started');
-
   try {
-    const { searchParams } = new URL(request.url);
-    const platformUserId = searchParams.get('platformUserId');
-    const platform = searchParams.get('platform');
     const authHeader = request.headers.get('authorization');
-
-    console.log('[API /api/buyers/me GET] Params:', {
-      platformUserId,
-      platform,
-      hasAuthHeader: !!authHeader,
-    });
-
-    if (!platformUserId || !platform) {
-      console.log('[API /api/buyers/me GET] Missing required params');
+    const validation = validateWebAppRequest(authHeader);
+    if (!validation.valid || !validation.userId || !validation.platform) {
       return NextResponse.json(
-        { error: 'Отсутствует platformUserId или platform' },
-        { status: 400 }
+        { error: 'Неавторизованно: ' + (validation.error || 'unknown error') },
+        { status: 401 }
       );
     }
 
-    // Validate WebApp request if Authorization header is present
-    // This ensures the request is actually coming from Telegram/MAX WebView
-    if (authHeader) {
-      console.log('[API /api/buyers/me GET] Validating auth header...');
-      const validation = validateWebAppRequest(authHeader);
-      console.log('[API /api/buyers/me GET] Validation result:', {
-        valid: validation.valid,
-        error: validation.error,
-        userId: validation.userId,
-      });
+    const { searchParams } = new URL(request.url);
+    const platformUserIdParam = searchParams.get('platformUserId');
+    const platformParam = searchParams.get('platform');
 
-      if (!validation.valid) {
-        console.error('[API /api/buyers/me GET] Auth validation failed:', validation.error);
-        return NextResponse.json(
-          { error: 'Неавторизованно: ' + validation.error },
-          { status: 401 }
-        );
-      }
-      // Verify the user ID matches what was sent
-      if (validation.userId !== platformUserId) {
-        console.error('[API /api/buyers/me GET] User ID mismatch:', {
-          expected: platformUserId,
-          got: validation.userId,
-        });
-        return NextResponse.json({ error: 'User ID mismatch' }, { status: 403 });
-      }
+    if (platformUserIdParam && platformUserIdParam !== validation.userId) {
+      return NextResponse.json({ error: 'User ID mismatch' }, { status: 403 });
     }
 
-    const platformEnum = platform === 'max' ? 'MAX' : 'TELEGRAM';
-    console.log('[API /api/buyers/me GET] Querying database for buyer...', {
-      platformEnum,
-      platformUserId,
-    });
+    if (platformParam && platformParam !== validation.platform) {
+      return NextResponse.json({ error: 'Platform mismatch' }, { status: 403 });
+    }
+
+    const platformEnum = validation.platform === 'max' ? 'MAX' : 'TELEGRAM';
+
+    // Mutual exclusivity check: dealers cannot be buyers
+    const isDealer = await isPlatformUserDealer(platformEnum, validation.userId);
+    if (isDealer) {
+      return NextResponse.json(
+        { error: 'Этот аккаунт зарегистрирован как дилер', isDealer: true },
+        { status: 403 }
+      );
+    }
 
     const buyer = await prisma.buyer.findFirst({
-      where: { platform: platformEnum, platformUserId, deletedAt: null },
+      where: { platform: platformEnum, platformUserId: validation.userId, deletedAt: null },
       select: {
         id: true,
       },
     });
 
-    console.log('[API /api/buyers/me GET] Query result:', {
-      found: !!buyer,
-      buyerId: buyer?.id,
-      duration: Date.now() - startTime,
-    });
-
     if (!buyer) {
-      console.log('[API /api/buyers/me GET] Buyer not found, returning 404');
       return NextResponse.json({ error: 'Покупатель не найден' }, { status: 404 });
     }
 
-    console.log('[API /api/buyers/me GET] Success, returning buyer:', buyer.id);
     return NextResponse.json(buyer);
   } catch (error) {
-    console.error('[API /api/buyers/me GET] Error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Внутренняя ошибка' },
       { status: 500 }
@@ -92,38 +60,44 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as {
-      platform: string;
-      platformUserId: string;
-      platformUserName?: string;
-    };
-
-    const { platform, platformUserId, platformUserName } = body;
-
-    if (!platformUserId || !platform) {
+    const authHeader = request.headers.get('authorization');
+    const validation = validateWebAppRequest(authHeader);
+    if (!validation.valid || !validation.userId || !validation.platform) {
       return NextResponse.json(
-        { error: 'Отсутствует platformUserId или platform' },
-        { status: 400 }
+        { error: 'Неавторизованно: ' + (validation.error || 'unknown error') },
+        { status: 401 }
       );
     }
 
-    const platformEnum = platform === 'max' ? 'MAX' : 'TELEGRAM';
+    const body = (await request.json()) as {
+      platformUserName?: string;
+    };
+    const platformEnum = validation.platform === 'max' ? 'MAX' : 'TELEGRAM';
+
+    // Mutual exclusivity check: dealers cannot be buyers
+    const isDealer = await isPlatformUserDealer(platformEnum, validation.userId);
+    if (isDealer) {
+      return NextResponse.json(
+        { error: 'Этот аккаунт зарегистрирован как дилер', isDealer: true },
+        { status: 403 }
+      );
+    }
 
     const buyer = await prisma.buyer.upsert({
       where: {
         platform_platformUserId: {
           platform: platformEnum,
-          platformUserId,
+          platformUserId: validation.userId,
         },
       },
       update: {
-        platformUserName,
+        platformUserName: body.platformUserName,
         deletedAt: null,
       },
       create: {
         platform: platformEnum,
-        platformUserId,
-        platformUserName,
+        platformUserId: validation.userId,
+        platformUserName: body.platformUserName,
         deletedAt: null,
       },
       select: {

@@ -147,9 +147,21 @@ function MiniAppInquiryFormPageInner() {
     setSubmitState({ status: 'submitting' });
 
     try {
+      const webApp = getWebApp();
+      const platform = detectPlatform();
+      const initData = webApp?.initData;
+
+      if (!platform || !initData) {
+        setSubmitState({ status: 'error', message: 'WebApp не загружен. Попробуйте снова.' });
+        return;
+      }
+
       const res = await fetch('/api/inquiries', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          Authorization: `Bearer ${platform}:${initData}`,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(values),
       });
 

@@ -1,26 +1,25 @@
 import { NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
+import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 
 const MAX_INQUIRIES_PER_MONTH = 2;
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const platformUserId = searchParams.get('platformUserId');
-    const platform = searchParams.get('platform');
-
-    if (!platformUserId || !platform) {
+    const authHeader = request.headers.get('authorization');
+    const validation = validateWebAppRequest(authHeader);
+    if (!validation.valid || !validation.userId || !validation.platform) {
       return NextResponse.json(
-        { error: 'Отсутствует platformUserId или platform' },
-        { status: 400 }
+        { error: 'Неавторизованно: ' + (validation.error || 'unknown error') },
+        { status: 401 }
       );
     }
 
-    const platformEnum = platform === 'max' ? 'MAX' : 'TELEGRAM';
+    const platformEnum = validation.platform === 'max' ? 'MAX' : 'TELEGRAM';
 
     const buyer = await prisma.buyer.findFirst({
-      where: { platform: platformEnum, platformUserId, deletedAt: null },
+      where: { platform: platformEnum, platformUserId: validation.userId, deletedAt: null },
       select: {
         id: true,
         inquiriesUsedThisMonth: true,
