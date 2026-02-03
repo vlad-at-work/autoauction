@@ -16,6 +16,8 @@
     "db:seed": "bun run scripts/seed.ts",
     "db:cleanup": "bun run scripts/cleanup.ts",
     "db:clear": "bun run scripts/nuke-db.ts",
+    "test:suite": "bun run scripts/test-suite-complete.ts",
+    "test:cleanup": "bun run scripts/cleanup-test-data.ts",
     "postinstall": "prisma generate",
     "prepare": "husky"
   },

@@ -4,6 +4,7 @@ const prisma = new PrismaClient();
 async function main() {
   // eslint-disable-next-line no-console
   console.log('Nuking DB...');
+  await prisma.passwordResetCode.deleteMany({});
   await prisma.transaction.deleteMany({});
   await prisma.offer.deleteMany({});
   await prisma.inquiry.deleteMany({});
@@ -17,8 +18,9 @@ async function main() {
   const offers = await prisma.offer.count();
   const transactions = await prisma.transaction.count();
   const dealers = await prisma.dealer.count();
+  const resetCodes = await prisma.passwordResetCode.count();
   // eslint-disable-next-line no-console
-  console.log('Remaining:', { buyers, inquiries, offers, transactions, dealers });
+  console.log('Remaining:', { buyers, inquiries, offers, transactions, dealers, resetCodes });
 }
 
 main().finally(() => prisma.$disconnect());
