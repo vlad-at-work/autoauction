@@ -157,51 +157,89 @@ Both are standard PostgreSQL - no special compatibility concerns.
 
 ## Authentication
 
-- **Buyers**: Authenticated via Max/TG user ID (no password)
-- **Dealers**: Basic Auth using DEALER_CREDENTIALS from .env.local
+- **Buyers**: Authenticated via Max/TG user ID (no password required)
+- **Dealers**: Session-based auth with bcrypt passwords (set on first mini-app access)
+  - Pre-registered by admin with platform + user ID
+  - Password set by dealer on first login from mini-app
+  - Session token valid for 7 days
+  - Password can be reset via admin-generated 6-digit codes
 - **Admins**: Basic Auth using ADMIN_USERNAME/ADMIN_PASSWORD from .env.local
 
-## Hardcoded Dealers System
+## Dealer Registration & Authentication
 
 ### Overview
-When users create inquiries via Max/Telegram, hardcoded dealers automatically receive notifications.
 
-### Flow
-1. User creates inquiry via Max/TG → 2. Hardcoded dealers get notified → 3. Dealers login at /dealer/inquiries → 4. Dealers make offers → 5. Admins see everything at /admin
+Dealers are **pre-registered by admin** with their Telegram/MAX user ID. When they open the mini-app, the app automatically recognizes them and guides them to set a password.
+
+### Registration Flow
+
+**Step 1: Admin Pre-Registers Dealer**
+
+1. Admin goes to `/admin` → Dealers → New Dealer
+2. Provide: Username, Name, Phone, Email, Platform (TELEGRAM/MAX), Platform User ID
+3. Admin does NOT set password - dealer will set it on first login
+
+**Step 2: Dealer Opens Mini-App**
+
+1. Dealer opens Telegram bot: `@autoauctiondealer_bot`
+2. Or MAX bot: `id5010035001_1_bot`
+3. Sends `/start` → Opens mini-app
+4. App auto-detects dealer's platform + user ID
+
+**Step 3: First-Time Password Setup**
+
+1. If no password exists, app redirects to `/dealerinterface/setup`
+2. Dealer sets password (minimum 6 characters)
+3. Backend hashes password with bcrypt (12 rounds)
+4. Session created automatically
+5. Redirected to dashboard
+
+**Step 4: Subsequent Access**
+
+1. Dealer opens mini-app again
+2. App detects password exists
+3. Auto-login if session valid (7 days)
+4. If session expired, dealer taps login button and re-authenticates
 
 ### Configuration Files
-- **src/lib/hardcoded-dealers.ts** - List of dealers who receive notifications
-- **.env.local** - Dealer credentials for portal access
 
-### Adding a New Hardcoded Dealer
+- **Admin UI** (`/admin`) - Create dealers and manage accounts
+- **Env variables** - No dealer credentials needed (removed DEALER_CREDENTIALS)
 
-1. Add credentials to .env.local:
-```env
-DEALER_CREDENTIALS="existing:pass,newdealer:newpass"
-```
+### Adding a New Dealer
 
-2. Add dealer to src/lib/hardcoded-dealers.ts:
-```typescript
-{
-  username: 'newdealer',              // Must match .env credential username
-  name: 'Dealer Display Name',
-  platform: 'TELEGRAM',               // or 'MAX'
-  platformUserId: 'TELEGRAM_USER_ID', // Get from @userinfobot on Telegram
-  platformChatId: 'TELEGRAM_CHAT_ID', // Usually same as userId
-  active: true,                       // Set false to disable notifications
-}
-```
+1. Get dealer's info:
+   - Username: `moscowmotors`
+   - Name: `Moscow Motors`
+   - Telegram User ID: Get from `@userinfobot` on Telegram (or MAX equivalent)
+   - Platform: `TELEGRAM` or `MAX`
 
-3. Restart the application
+2. Admin creates dealer:
+   - Go to Admin → Dealers → New Dealer
+   - Fill form with: username, name, phone, email, platform, platform user ID
+   - Click "Create Dealer"
+   - Do NOT set password (dealer will do this)
+
+3. Dealer opens mini-app:
+   - Searches for bot on their phone
+   - Opens mini-app → Automatically redirected to password setup
+   - Sets password → Logged in
 
 ### Getting Platform User IDs
-- **Telegram**: Use @userinfobot or bot API getUpdates
-- **MAX**: Capture from bot interaction logs
 
-### Disabling Notifications
-Set `active: false` in src/lib/hardcoded-dealers.ts. Dealer can still login but won't get auto-notifications.
+- **Telegram**: Open Telegram → Search for `@userinfobot` → Send `/start` → It shows your ID
+- **MAX**: Open MAX app → Go to Settings → Account → Your profile shows user ID
+
+### Password Reset
+
+- Admin goes to Dealers → Select dealer → Click "Reset Password"
+- Admin generates 6-digit code (valid for 10 minutes)
+- Share code with dealer
+- Dealer goes to mini-app → Click password reset → Enter code + new password
+- Logged in with new password
 
 ### Notification Flow
+
 - Triggered in src/app/api/inquiries/route.ts after inquiry creation
 - Uses notifyDealerOfNewInquiry() from src/lib/notifications/index.ts
 - Sent asynchronously (non-blocking)
@@ -210,28 +248,33 @@ Set `active: false` in src/lib/hardcoded-dealers.ts. Dealer can still login but 
 ## Complete User Flow
 
 ### 1. User Registration (Automatic)
+
 - User opens mini-app in TG/MAX → WebApp SDK detects platform
 - `src/app/app/page.tsx` extracts `initDataUnsafe.user.id` and `chat.id`
 - Buyer record created/updated via upsert in `/api/inquiries` POST
 
 ### 2. Inquiry Creation
+
 - User fills form at `/app/form` (name, phone, car details)
 - POST to `/api/inquiries` creates inquiry with 24h expiry
 - All hardcoded dealers notified via TG/MAX
 
 ### 3. Dealer Makes Offer
+
 - Dealer logs in at `/dealer/inquiries` (Basic Auth)
 - Views active inquiries (not expired)
 - Submits offer via `/api/offers` POST
 - Buyer notified via TG/MAX with deep link
 
 ### 4. User Accepts Offer (Lead Created)
+
 - User clicks notification → opens offer detail page
 - User clicks "Принять предложение"
 - POST to `/api/leads` creates lead with buyer contact info
 - Dealer notified via TG/MAX with buyer name + phone
 
 ### 5. Inquiry Expiration
+
 - Inquiries expire after 24 hours (`expiresAt` field)
 - Expired inquiries hidden from dealer list
 - Offers rejected with HTTP 410 for expired inquiries
@@ -239,38 +282,49 @@ Set `active: false` in src/lib/hardcoded-dealers.ts. Dealer can still login but 
 ## MAX Bot Message Sending
 
 ### API Details
+
 - **Endpoint**: `https://platform-api.max.ru/messages`
 - **Auth**: `Authorization: <MAX_BOT_TOKEN>` (no Bearer prefix)
 - **Chat ID**: Query param `?chat_id=<chatId>`
 - **Body**: `{ "text": "..." }` for plain text
 
 ### Implementation: `src/lib/notifications/max.ts`
+
 - `sendMaxMessage(chatId, text)` - Plain text message
 - `sendMaxMessageWithButton(chatId, text, buttonText, startParam)` - With inline button
 
 ### Button with Deep Link
+
 ```typescript
 body: JSON.stringify({
   text,
-  attachments: [{
-    type: 'inline_keyboard',
-    payload: {
-      buttons: [[{
-        type: 'link',
-        text: buttonText,
-        url: `https://max.ru/${MAX_BOT_NAME}?startapp=${startParam}`
-      }]]
-    }
-  }]
-})
+  attachments: [
+    {
+      type: 'inline_keyboard',
+      payload: {
+        buttons: [
+          [
+            {
+              type: 'link',
+              text: buttonText,
+              url: `https://max.ru/${MAX_BOT_NAME}?startapp=${startParam}`,
+            },
+          ],
+        ],
+      },
+    },
+  ],
+});
 ```
 
 ### Debug/Testing
+
 - `/api/debug/max/send-test` (POST) - Send test message
 - Requires `DEBUG_MAX_TEST_MESSAGE_ENABLED=true` or non-production env
 - `/api/debug/max/ping` (GET) - Ping with random message
 
 ### Environment Variables
+
 ```env
 MAX_BOT_TOKEN="your_token"
 MAX_BOT_NAME="id5010035001_bot"
@@ -281,32 +335,38 @@ TG_BOT_NAME="autoauction_bot"
 ## Key Files Reference
 
 ### User Flow
+
 - `/src/app/app/page.tsx` - Entry point, platform detection
 - `/src/app/app/form/page.tsx` - Inquiry form
 - `/src/app/app/dashboard/page.tsx` - User's inquiries
 - `/src/app/app/inquiry/[id]/offer/[offerId]/page.tsx` - Accept offer
 
 ### API Routes
+
 - `/src/app/api/inquiries/route.ts` - Create inquiry
 - `/src/app/api/offers/route.ts` - Create offer
 - `/src/app/api/leads/route.ts` - Accept offer (create lead)
 
 ### Notifications
+
 - `/src/lib/notifications/index.ts` - High-level notification service
 - `/src/lib/notifications/max.ts` - MAX API
 - `/src/lib/notifications/telegram.ts` - Telegram API
 - `/src/lib/hardcoded-dealers.ts` - Dealer config
 
 ### Dealer Portal
+
 - `/src/app/dealer/inquiries/page.tsx` - List inquiries
 - `/src/app/dealer/inquiries/[id]/page.tsx` - Make offer
 
 ### Admin Portal
+
 - `/src/app/admin/` - Full admin dashboard (all data visible)
 
 ## Bot Setup (Required for Mini-App to Work)
 
 ### Telegram Bot Setup
+
 The "Something went wrong" error means the mini-app URL is not configured in BotFather.
 
 1. Open @BotFather in Telegram
@@ -321,6 +381,7 @@ The "Something went wrong" error means the mini-app URL is not configured in Bot
 **Deep link format**: `https://t.me/autoauction_bot?startapp=<param>`
 
 ### MAX Bot Setup
+
 The "Не нашли чат" error means the mini-app needs to be registered in MAX developer cabinet.
 
 1. Go to MAX organization cabinet (requires verified Russian юрлицо)
@@ -334,7 +395,9 @@ The "Не нашли чат" error means the mini-app needs to be registered in 
 **Deep link format**: `https://max.ru/id5010035001_bot?startapp=<param>`
 
 ### Testing Message Sending
+
 MAX messages work (as shown in your screenshot). To test:
+
 ```bash
 curl -X POST "https://platform-api.max.ru/messages?chat_id=YOUR_CHAT_ID" \
   -H "Authorization: YOUR_MAX_BOT_TOKEN" \
@@ -343,6 +406,7 @@ curl -X POST "https://platform-api.max.ru/messages?chat_id=YOUR_CHAT_ID" \
 ```
 
 Or use the debug endpoint:
+
 ```bash
 curl -X POST "http://localhost:3000/api/debug/max/send-test" \
   -H "Content-Type: application/json" \
