@@ -208,27 +208,25 @@ Dealers are **pre-registered by admin** with their Telegram/MAX user ID. When th
 
 ### Adding a New Dealer
 
-1. Get dealer's info:
-   - Username: `moscowmotors`
-   - Name: `Moscow Motors`
-   - Telegram User ID: Get from `@userinfobot` on Telegram (or MAX equivalent)
-   - Platform: `TELEGRAM` or `MAX`
+**Simple Flow (No Platform ID Needed)**:
 
-2. Admin creates dealer:
-   - Go to Admin → Dealers → New Dealer
-   - Fill form with: username, name, phone, email, platform, platform user ID
+1. Admin creates dealer:
+   - Go to `/admin` → Dealers → New Dealer
+   - Fill: username, name, phone, email
    - Click "Create Dealer"
-   - Do NOT set password (dealer will do this)
+   - Share bot link with dealer
 
-3. Dealer opens mini-app:
-   - Searches for bot on their phone
-   - Opens mini-app → Automatically redirected to password setup
-   - Sets password → Logged in
+2. Dealer opens mini-app:
+   - Opens `@autoauctiondealer_bot` (Telegram) or `id5010035001_1_bot` (MAX)
+   - System auto-claims unclaimed dealer account
+   - Dealer sets password → Logged in
 
-### Getting Platform User IDs
+**If Dealer Not Pre-Created**:
 
-- **Telegram**: Open Telegram → Search for `@userinfobot` → Send `/start` → It shows your ID
-- **MAX**: Open MAX app → Go to Settings → Account → Your profile shows user ID
+- Dealer opens mini-app → Shows: "Not registered. Your TELEGRAM ID: 123456789"
+- Dealer shares ID with admin
+- Admin creates account
+- Dealer opens mini-app again → Account claimed
 
 ### Password Reset
 

@@ -70,9 +70,10 @@ export function DealerCreateForm() {
         </div>
       )}
 
-      <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
-        ⚠️ Дилеры не регистрируются сами. После создания дилера не забудьте добавить ему доступ в
-        `DEALER_CREDENTIALS` (Basic Auth), иначе он не сможет зайти в портал дилера.
+      <div className="rounded-md border bg-blue-100 px-3 py-2 text-sm text-blue-900">
+        ℹ️ После создания дилер сможет зайти в мини-приложение дилера через @autoauctiondealer_bot
+        (Telegram) или id5010035001_1_bot (MAX). При первом входе система автоматически свяжет его
+        аккаунт с платформой и попросит установить пароль.
       </div>
 
       <FieldGroup>

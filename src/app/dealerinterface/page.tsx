@@ -98,10 +98,12 @@ export default function DealerInterfaceHomePage() {
             }
 
             if (result.status === 'not_dealer') {
-              // Platform user is not a registered dealer
+              // Platform user is not a registered dealer - show their ID
               setLoadingState('error');
               setErrorMessage(
-                'Вы не зарегистрированы как дилер. Обратитесь к администратору для регистрации.'
+                `Вы не зарегистрированы как дилер.\n\n` +
+                  `Ваш ${platform} ID: ${platformUserId}\n\n` +
+                  `Отправьте этот ID администратору для регистрации.`
               );
               return;
             }
@@ -139,11 +141,11 @@ export default function DealerInterfaceHomePage() {
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center px-4">
-      <div className="flex flex-col items-center gap-4 text-center">
+      <div className="flex flex-col items-center gap-4 text-center max-w-md">
         {loadingState !== 'error' && loadingState !== 'blocked' && (
           <Loader2 className="text-muted-foreground size-12 animate-spin" />
         )}
-        <p className="text-muted-foreground text-base">
+        <p className="text-muted-foreground text-base whitespace-pre-line">
           {loadingState === 'loading' && 'Загрузка...'}
           {loadingState === 'checking' && 'Проверка аккаунта дилера...'}
           {loadingState === 'redirect' && 'Перенаправление...'}

@@ -43,7 +43,7 @@ This guide tests the complete user journey with real phones:
 
 **Navigation**: Admin → Dealers → "New Dealer" button
 
-**Form Data**:
+**Form Data** (Platform info NOT needed - auto-claimed on first login):
 
 ```
 Username:    moscowmotors     (unique, no spaces, lowercase)
@@ -54,19 +54,23 @@ Description: Official Lada dealer in Moscow
 Active:      ✅ Checked
 ```
 
+**Note**: Admin form does NOT have Platform or Platform User ID fields. System will auto-claim this dealer when they first open the mini-app.
+
 **Actions**:
 
 1. Fill in all fields
 2. Click "Create Dealer"
-3. **Note the Dealer ID** from URL or page (e.g., `cm1abc123...`)
+3. **Note the Dealer ID** from URL (e.g., `cm1abc123...`)
+4. Share bot link with dealer: `@autoauctiondealer_bot` (Telegram) or `id5010035001_1_bot` (MAX)
 
 **Expected**:
 
-- ✅ Redirected to dealer detail page
 - ✅ Dealer created successfully
 - ✅ Shows: `passwordHash: Not Set` (dealer hasn't logged in yet)
-- ✅ Shows: `platform: null` (not associated with Telegram/MAX yet)
+- ✅ Shows: `platform: null` (will be set on first login)
+- ✅ Shows: `platformUserId: null` (will be set on first login)
 - ✅ Shows: `Active: Yes`
+- ✅ Info message: "After creation, dealer can access via @autoauctiondealer_bot..."
 
 **Values to Record**:
 
@@ -100,21 +104,31 @@ Dealer ID:       cm1abc123...
 
 ---
 
-**Step 2A.2**: First-time password setup
+**Step 2A.2**: System auto-claims dealer account
+
+**What happens automatically**:
+
+1. App detects Telegram user ID from WebApp
+2. Finds unclaimed dealer `moscowmotors` (platform=null)
+3. **Auto-claims**: Updates dealer with platform=TELEGRAM, platformUserId=<your_id>
+4. Redirects to `/dealerinterface/setup`
+
+---
+
+**Step 2A.3**: First-time password setup
 
 **Expected UI** at `/dealerinterface/setup`:
 
-- Title: **"Настройка пароля"** (Password Setup)
-- Subtitle: Instructions about first-time setup
+- Title: **"Настройка пароля"**
 - Form fields:
-  - **Username** dropdown or input: Select `moscowmotors`
+  - **Username** dropdown: Shows `moscowmotors` (auto-populated)
   - **Password** input: Minimum 6 characters
   - **Confirm Password** input
   - **"Установить пароль"** button
 
 **Actions**:
 
-1. Select username: `moscowmotors`
+1. Username already selected: `moscowmotors`
 2. Enter password: `DealerPass123!`
 3. Confirm password: `DealerPass123!`
 4. Tap **"Установить пароль"**
@@ -124,23 +138,21 @@ Dealer ID:       cm1abc123...
 - ✅ Password set successfully
 - ✅ Session created automatically
 - ✅ Redirected to `/dealerinterface/dashboard`
-- ✅ Dashboard header shows **"Moscow Motors"** (dealer name)
-- ✅ Section: **"Активные заявки"** with message "Пока нет активных заявок"
-- ✅ Refresh button (↻) visible in top-right
-- ✅ Logout button visible
+- ✅ Dashboard shows **"Moscow Motors"**
+- ✅ Section: **"Активные заявки"** (empty)
 
 ---
 
-**Step 2A.3**: Verify in admin (Computer)
+**Step 2A.4**: Verify in admin (Computer)
 
 **Navigation**: Admin → Dealers → moscowmotors
 
-**Expected Changes**:
+**Expected Changes** (from auto-claiming):
 
-- ✅ `platform`: **TELEGRAM**
-- ✅ `platformUserId`: Shows your Telegram user ID (e.g., "123456789")
-- ✅ `platformChatId`: Shows your Telegram chat ID
-- ✅ `passwordHash`: Shows encrypted bcrypt hash (starts with "$2")
+- ✅ `platform`: **TELEGRAM** (was null)
+- ✅ `platformUserId`: Your Telegram ID (was null)
+- ✅ `platformChatId`: Your chat ID (was null)
+- ✅ `passwordHash`: Encrypted hash (was null)
 
 **Values to Record**:
 
@@ -148,6 +160,7 @@ Dealer ID:       cm1abc123...
 Dealer Platform:       TELEGRAM
 Dealer Telegram ID:    123456789
 Password Hash Present: Yes
+Auto-Claimed:          Yes ✓
 ```
 
 ---
