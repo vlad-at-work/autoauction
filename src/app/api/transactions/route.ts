@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { prisma } from '@/lib/db';
 import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
-import { notifyDealerOfTransactionAccepted, notifyBuyer } from '@/lib/notifications';
+import { notifyDealerOfAcceptedOfferViaBot, notifyBuyer } from '@/lib/notifications';
 
 const MAX_TRANSACTIONS_PER_INQUIRY = 3;
 
@@ -152,7 +152,7 @@ ${remainingAcceptances > 0 ? `📋 Вы можете принять ещё ${rem
     console.log('Sending acceptance notification to buyer:', offer.inquiry.buyer);
 
     // IMPORTANT: await notifications to avoid serverless "fire-and-forget" drops.
-    await Promise.allSettled([
+    const notifications: Array<Promise<unknown>> = [
       notifyBuyer(
         {
           platform: offer.inquiry.buyer.platform,
@@ -161,15 +161,32 @@ ${remainingAcceptances > 0 ? `📋 Вы можете принять ещё ${rem
         },
         buyerMessage
       ),
-      notifyDealerOfTransactionAccepted(
-        offer.dealer,
-        offer.inquiry.model,
-        offer.inquiry.submodel,
-        offer.price,
-        offer.inquiry.name,
-        offer.inquiry.phone
-      ),
-    ]);
+    ];
+
+    if (offer.dealer.platform && offer.dealer.platformUserId) {
+      notifications.push(
+        notifyDealerOfAcceptedOfferViaBot(
+          {
+            platform: offer.dealer.platform,
+            platformChatId: offer.dealer.platformChatId,
+            platformUserId: offer.dealer.platformUserId,
+          },
+          offer.inquiryId,
+          offer.inquiry.model,
+          offer.inquiry.submodel,
+          offer.price,
+          offer.inquiry.name,
+          offer.inquiry.phone
+        )
+      );
+    } else {
+      console.warn(
+        '[POST /api/transactions] Skipping dealer notification: dealer platform not configured',
+        { dealerId: offer.dealerId }
+      );
+    }
+
+    await Promise.allSettled(notifications);
 
     return NextResponse.json({
       id: transaction.id,

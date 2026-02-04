@@ -13,6 +13,7 @@ import type { Platform } from '@prisma/client';
 import { sendMaxMessage, sendMaxMessageWithButton, type MaxBotType } from './max';
 import { sendTelegramMessage, type TelegramBotType } from './telegram';
 import { createNotificationButtons, formatTelegramNotification } from '../deeplinks';
+import { getAppBaseUrl } from '@/lib/app-url';
 
 type NotifyResult = {
   success: boolean;
@@ -75,69 +76,22 @@ export async function notifyBuyer(buyer: BuyerInfo, text: string): Promise<Notif
   return sendMaxMessage(chatId, text);
 }
 
-/**
- * Send notification about a new inquiry to a dealer
- */
-export async function notifyDealerOfNewInquiry(
-  dealer: {
-    platform: Platform;
-    platformChatId?: string;
-    platformUserId: string;
-  },
-  inquiryId: string,
-  carModel: string,
-  carSubmodel: string,
-  transmission: string,
-  color: string
-): Promise<NotifyResult> {
-  const chatId = dealer.platformChatId || dealer.platformUserId;
+function createDealerWebAppButton(startParam: string, buttonText: string) {
+  const appUrl = getAppBaseUrl();
+  const fullAppUrl = `${appUrl}/dealerinterface?startapp=${encodeURIComponent(startParam)}`;
 
-  const text = `Новая заявка!\n\n${carModel} ${carSubmodel}\n${transmission} • ${color}\n\nПерейдите в личный кабинет дилера, чтобы сделать предложение.`;
-
-  if (dealer.platform === 'TELEGRAM') {
-    return sendTelegramMessage(chatId, text);
-  }
-
-  return sendMaxMessage(chatId, text);
-}
-
-/**
- * Send notification to dealer when a buyer accepts their offer (transaction created)
- */
-export async function notifyDealerOfTransactionAccepted(
-  dealer: {
-    id: string;
-    username: string;
-  },
-  carModel: string,
-  carSubmodel: string,
-  price: number,
-  buyerName: string,
-  buyerPhone: string
-): Promise<NotifyResult> {
-  // Get dealer from hardcoded list to find their notification channel
-  const { getHardcodedDealerByUsername } = await import('@/lib/hardcoded-dealers');
-  const hardcodedDealer = getHardcodedDealerByUsername(dealer.username);
-
-  if (!hardcodedDealer) {
-    console.warn(`Dealer ${dealer.username} not in hardcoded list, skipping notification`);
-    return { success: false, error: 'Dealer not in hardcoded list' };
-  }
-
-  if (!hardcodedDealer.active) {
-    return { success: false, error: 'Dealer notifications disabled' };
-  }
-
-  const chatId = hardcodedDealer.platformChatId || hardcodedDealer.platformUserId;
-  const formattedPrice = price.toLocaleString('ru-RU');
-
-  const text = `🎉 Покупатель принял ваше предложение!\n\n${carModel} ${carSubmodel}\nЦена: ${formattedPrice} ₽\n\nПокупатель: ${buyerName}\nТелефон: ${buyerPhone}\n\nСвяжитесь с покупателем как можно скорее!`;
-
-  if (hardcodedDealer.platform === 'TELEGRAM') {
-    return sendTelegramMessage(chatId, text);
-  }
-
-  return sendMaxMessage(chatId, text);
+  return {
+    inline_keyboard: [
+      [
+        {
+          text: buttonText,
+          web_app: {
+            url: fullAppUrl,
+          },
+        },
+      ],
+    ],
+  };
 }
 
 /**
@@ -190,16 +144,16 @@ export async function notifyDealerOfNewInquiryViaBot(
 
   const chatId = dealer.platformChatId || dealer.platformUserId;
   const text = `🚗 Новая заявка!\n\n${carModel} ${carSubmodel}\n${transmission} • ${color}\n\nОткройте приложение, чтобы сделать предложение.`;
+  const startParam = `inquiry:${inquiryId}`;
 
   const botType: TelegramBotType | MaxBotType = 'dealer';
 
   if (dealer.platform === 'TELEGRAM') {
-    // TODO: Add deep link button to dealer interface
-    return sendTelegramMessage(chatId, text, undefined, botType);
+    const replyMarkup = createDealerWebAppButton(startParam, '📱 Открыть заявку');
+    return sendTelegramMessage(chatId, text, replyMarkup, botType);
   }
 
-  // TODO: Add deep link button to dealer interface
-  return sendMaxMessage(chatId, text, undefined, botType);
+  return sendMaxMessageWithButton(chatId, text, '📱 Открыть заявку', startParam, botType);
 }
 
 /**
@@ -211,6 +165,7 @@ export async function notifyDealerOfAcceptedOfferViaBot(
     platformChatId?: string | null;
     platformUserId?: string | null;
   },
+  inquiryId: string,
   carModel: string,
   carSubmodel: string,
   price: number,
@@ -224,14 +179,16 @@ export async function notifyDealerOfAcceptedOfferViaBot(
   const chatId = dealer.platformChatId || dealer.platformUserId;
   const formattedPrice = price.toLocaleString('ru-RU');
   const text = `🎉 Покупатель принял ваше предложение!\n\n${carModel} ${carSubmodel}\nЦена: ${formattedPrice} ₽\n\nПокупатель: ${buyerName}\nТелефон: ${buyerPhone}\n\nСвяжитесь с покупателем как можно скорее!`;
+  const startParam = `inquiry:${inquiryId}`;
 
   const botType: TelegramBotType | MaxBotType = 'dealer';
 
   if (dealer.platform === 'TELEGRAM') {
-    return sendTelegramMessage(chatId, text, undefined, botType);
+    const replyMarkup = createDealerWebAppButton(startParam, '📱 Открыть заявку');
+    return sendTelegramMessage(chatId, text, replyMarkup, botType);
   }
 
-  return sendMaxMessage(chatId, text, undefined, botType);
+  return sendMaxMessageWithButton(chatId, text, '📱 Открыть заявку', startParam, botType);
 }
 
 export { sendTelegramMessage, sendMaxMessage };

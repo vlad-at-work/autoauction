@@ -8,8 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DeleteDialog } from '@/components/admin/delete-dialog';
 import { DealerEditForm } from '@/components/admin/dealer-edit-form';
+import { DealerInviteLinks } from '@/components/admin/dealer-invite-links';
 import { RestoreButton } from '@/components/admin/restore-button';
 import { deleteDealer, restoreDealer } from '@/lib/admin/actions';
+import { createDealerClaimToken } from '@/lib/auth/dealer-claim';
 
 type Params = Promise<{ id: string }>;
 
@@ -36,6 +38,18 @@ export default async function DealerDetailPage({ params }: { params: Params }) {
   }
 
   const isDeleted = dealer.deletedAt != null;
+  const claimToken = createDealerClaimToken(dealer.id);
+  const startParam = `claim:${dealer.id}:${claimToken}`;
+  const telegramBotName = process.env.TG_BOT_NAME_DEALER;
+  const maxBotName = process.env.MAX_BOT_NAME_DEALER;
+
+  const telegramInviteUrl = telegramBotName
+    ? `https://t.me/${telegramBotName}?startapp=${encodeURIComponent(startParam)}`
+    : null;
+
+  const maxInviteUrl = maxBotName
+    ? `https://max.ru/${maxBotName}?startapp=${encodeURIComponent(startParam)}`
+    : null;
 
   return (
     <div className="space-y-6">
@@ -78,6 +92,18 @@ export default async function DealerDetailPage({ params }: { params: Params }) {
               <span className="text-muted-foreground">Email:</span>
               <span>{dealer.email || '-'}</span>
 
+              <span className="text-muted-foreground">Платформа:</span>
+              <span>{dealer.platform || '-'}</span>
+
+              <span className="text-muted-foreground">Platform user ID:</span>
+              <span className="font-mono">{dealer.platformUserId || '-'}</span>
+
+              <span className="text-muted-foreground">Platform chat ID:</span>
+              <span className="font-mono">{dealer.platformChatId || '-'}</span>
+
+              <span className="text-muted-foreground">Пароль:</span>
+              <span>{dealer.passwordHash ? 'Установлен' : 'Не установлен'}</span>
+
               <span className="text-muted-foreground">Всего предложений:</span>
               <span>{dealer._count.offers}</span>
 
@@ -89,6 +115,13 @@ export default async function DealerDetailPage({ params }: { params: Params }) {
 
               <span className="text-muted-foreground">Удалён:</span>
               <span>{dealer.deletedAt ? format(dealer.deletedAt, 'dd.MM.yyyy HH:mm') : '-'}</span>
+            </div>
+
+            <div className="pt-4 border-t">
+              <CardTitle className="text-base">Приглашение дилеру</CardTitle>
+              <div className="mt-3">
+                <DealerInviteLinks telegramUrl={telegramInviteUrl} maxUrl={maxInviteUrl} />
+              </div>
             </div>
 
             <div className="pt-4 border-t">

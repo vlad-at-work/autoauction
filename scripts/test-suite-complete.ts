@@ -70,8 +70,6 @@ const createdIds = {
 async function step1_CreateDealer() {
   console.log('\n📝 Step 1: Admin creates dealer...');
 
-  const passwordHash = await hashPassword(TEST_DEALER.password);
-
   const dealer = await prisma.dealer.create({
     data: {
       username: TEST_DEALER.username,
@@ -80,10 +78,6 @@ async function step1_CreateDealer() {
       email: TEST_DEALER.email,
       description: TEST_DEALER.description,
       active: true,
-      platform: TEST_DEALER.platform,
-      platformUserId: TEST_DEALER.platformUserId,
-      platformChatId: TEST_DEALER.platformChatId,
-      passwordHash,
     },
   });
 
@@ -94,39 +88,50 @@ async function step1_CreateDealer() {
     username: dealer.username,
     name: dealer.name,
     hasPassword: !!dealer.passwordHash,
+    hasPlatform: !!dealer.platform,
   });
 
   // Verify
-  if (!dealer.passwordHash) {
-    throw new Error('Dealer password hash not set!');
-  }
+  if (dealer.passwordHash || dealer.platform)
+    throw new Error('Dealer should be unclaimed initially!');
 
   return dealer;
 }
 
-async function step2_VerifyDealerAuth(dealer: any) {
-  console.log('\n🔐 Step 2: Verify dealer authentication...');
+async function step2_ClaimDealerAndSetPassword(dealer: any) {
+  console.log('\n🔐 Step 2: Dealer claims account and sets password...');
 
-  // Create session token
-  const token = createSessionToken({
-    id: dealer.id,
-    platform: dealer.platform,
-    platformUserId: dealer.platformUserId,
-  });
-
-  console.log('✅ Session token created:', token.substring(0, 20) + '...');
-
-  // Verify dealer can be found
-  const foundDealer = await prisma.dealer.findUnique({
+  // Simulate dealer "claim" (platform binding happens on first WebApp open)
+  await prisma.dealer.update({
     where: { id: dealer.id },
+    data: {
+      platform: TEST_DEALER.platform,
+      platformUserId: TEST_DEALER.platformUserId,
+      platformChatId: TEST_DEALER.platformChatId,
+    },
   });
 
-  if (!foundDealer) {
-    throw new Error('Dealer not found after creation!');
+  // Simulate /setup-password
+  const passwordHash = await hashPassword(TEST_DEALER.password);
+  const updated = await prisma.dealer.update({
+    where: { id: dealer.id },
+    data: { passwordHash },
+  });
+
+  if (!updated.passwordHash) {
+    throw new Error('Dealer password hash not set!');
   }
 
-  console.log('✅ Dealer authentication ready');
+  const token = createSessionToken({
+    id: dealer.id,
+    platform: TEST_DEALER.platform,
+    platformUserId: TEST_DEALER.platformUserId,
+  });
 
+  console.log(
+    '✅ Dealer claimed + password set; session token created:',
+    token.substring(0, 20) + '...'
+  );
   return token;
 }
 
@@ -475,7 +480,7 @@ async function runCompleteSuite() {
     const dealer = await step1_CreateDealer();
 
     // Step 2: Verify dealer authentication
-    const sessionToken = await step2_VerifyDealerAuth(dealer);
+    const sessionToken = await step2_ClaimDealerAndSetPassword(dealer);
 
     // Step 3: Create customer
     const buyer = await step3_CreateCustomer();

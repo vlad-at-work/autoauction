@@ -2,12 +2,12 @@
 
 ## Extremely important
 
-- Consider docs/max_integration.txt before making any changes
-- Review docs/MAX_WEBHOOK_RESEARCH.md for latest MAX API findings and webhook requirements
+- Consider docs/archived_docs/max_integration.txt before making any changes (archived reference)
+- Review docs/archived_docs/MAX_WEBHOOK_RESEARCH.md for latest MAX API findings and webhook requirements (archived reference)
 - Start all coding sessions with `nvm use 22`
 - Before committing, `bun run build` needs to succeed.
 - Don't adjust tests if commit doesn't pass because of tests
-- MAX messaging currently returns "Unknown recipient" — likely requires webhook setup; see MAX_WEBHOOK_RESEARCH.md for fix strategy
+- MAX messaging currently returns "Unknown recipient" — likely requires webhook setup; see docs/archived_docs/MAX_WEBHOOK_RESEARCH.md for fix strategy
 
 ## Project Overview
 
@@ -23,6 +23,7 @@ sleep 5 && tail -50 /tmp/next-dev.log
 - Do not commit unless specifically asked
 - Do not push unless specifically asked
 - Do not create more .mds unless specifically asked
+- Do not modify `TODO.md` unless I explicitly ask. If you want to add something to TODO, ask first.
   End messages with Files changed/added, lines affected, commit message (even if there is no commit)
   Always end with a brief (1-2 line) summary of changes / reasoning why.
 
@@ -72,7 +73,7 @@ src/
   types/
     index.ts              # TypeScript types
 docs/
-  plan.md                 # Project plan
+  archived_docs/           # Archived docs (legacy)
 ```
 
 ## Coding Standards
@@ -159,7 +160,7 @@ Both are standard PostgreSQL - no special compatibility concerns.
 
 - **Buyers**: Authenticated via Max/TG user ID (no password required)
 - **Dealers**: Session-based auth with bcrypt passwords (set on first mini-app access)
-  - Pre-registered by admin with platform + user ID
+  - Created by admin (username + contact fields); claimed on first run via invite link
   - Password set by dealer on first login from mini-app
   - Session token valid for 7 days
   - Password can be reset via admin-generated 6-digit codes
@@ -169,30 +170,31 @@ Both are standard PostgreSQL - no special compatibility concerns.
 
 ### Overview
 
-Dealers are **pre-registered by admin** with their Telegram/MAX user ID. When they open the mini-app, the app automatically recognizes them and guides them to set a password.
+Dealers are **created by admin** (no platform IDs needed). The dealer then uses an **invite link** (Telegram/MAX) to bind their messenger account to that dealer profile and set a password.
 
 ### Registration Flow
 
-**Step 1: Admin Pre-Registers Dealer**
+**Step 1: Admin Creates Dealer**
 
 1. Admin goes to `/admin` → Dealers → New Dealer
-2. Provide: Username, Name, Phone, Email, Platform (TELEGRAM/MAX), Platform User ID
-3. Admin does NOT set password - dealer will set it on first login
+2. Provide: Username, Name, Phone, Email (no platform fields)
+3. Admin does NOT set password — dealer will set it on first login
 
-**Step 2: Dealer Opens Mini-App**
+**Step 2: Admin Sends Invite Link**
 
-1. Dealer opens Telegram bot: `@autoauctiondealer_bot`
-2. Or MAX bot: `id5010035001_1_bot`
-3. Sends `/start` → Opens mini-app
-4. App auto-detects dealer's platform + user ID
+1. Admin opens dealer detail page
+2. Copies Telegram or MAX invite link
+3. Sends the link to the dealer
 
-**Step 3: First-Time Password Setup**
+**Step 3: Dealer Opens Invite Link and Sets Password**
 
-1. If no password exists, app redirects to `/dealerinterface/setup`
-2. Dealer sets password (minimum 6 characters)
-3. Backend hashes password with bcrypt (12 rounds)
-4. Session created automatically
-5. Redirected to dashboard
+1. Dealer opens the invite link in Telegram/MAX
+2. Dealer mini-app opens and binds their platform account to this dealer profile
+3. App redirects to `/dealerinterface/setup`
+4. Dealer sets password (minimum 6 characters)
+5. Backend hashes password with bcrypt (12 rounds)
+6. Session created automatically
+7. Redirected to dashboard
 
 **Step 4: Subsequent Access**
 
@@ -214,11 +216,11 @@ Dealers are **pre-registered by admin** with their Telegram/MAX user ID. When th
    - Go to `/admin` → Dealers → New Dealer
    - Fill: username, name, phone, email
    - Click "Create Dealer"
-   - Share bot link with dealer
+   - Open dealer page → copy invite link → share with dealer
 
 2. Dealer opens mini-app:
-   - Opens `@autoauctiondealer_bot` (Telegram) or `id5010035001_1_bot` (MAX)
-   - System auto-claims unclaimed dealer account
+   - Opens invite link in Telegram/MAX
+   - System binds platform account to that dealer profile
    - Dealer sets password → Logged in
 
 **If Dealer Not Pre-Created**:
@@ -226,7 +228,13 @@ Dealers are **pre-registered by admin** with their Telegram/MAX user ID. When th
 - Dealer opens mini-app → Shows: "Not registered. Your TELEGRAM ID: 123456789"
 - Dealer shares ID with admin
 - Admin creates account
-- Dealer opens mini-app again → Account claimed
+- Admin sends invite link
+- Dealer opens invite link → Account claimed
+
+**Fallback behavior**
+
+- If there is exactly **one** unclaimed dealer in the system, opening `/dealerinterface` can auto-bind without an invite link.
+- If there are **multiple** unclaimed dealers, the dealer must use an invite link.
 
 ### Password Reset
 
@@ -239,9 +247,8 @@ Dealers are **pre-registered by admin** with their Telegram/MAX user ID. When th
 ### Notification Flow
 
 - Triggered in src/app/api/inquiries/route.ts after inquiry creation
-- Uses notifyDealerOfNewInquiry() from src/lib/notifications/index.ts
-- Sent asynchronously (non-blocking)
-- Errors logged but don't fail inquiry creation
+- Uses `notifyDealerOfNewInquiryViaBot()` from `src/lib/notifications/index.ts` (dealer bot tokens)
+- Uses `Promise.allSettled` so notification failures don’t fail inquiry creation
 
 ## Complete User Flow
 
@@ -255,7 +262,7 @@ Dealers are **pre-registered by admin** with their Telegram/MAX user ID. When th
 
 - User fills form at `/app/form` (name, phone, car details)
 - POST to `/api/inquiries` creates inquiry with 24h expiry
-- All hardcoded dealers notified via TG/MAX
+- All active, claimed dealers notified via dealer bots (TG/MAX)
 
 ### 3. Dealer Makes Offer
 

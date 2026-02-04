@@ -3,8 +3,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { inquiryCreateSchema } from '@/lib/schemas/inquiry';
-import { getActiveHardcodedDealers } from '@/lib/hardcoded-dealers';
-import { notifyDealerOfNewInquiry, notifyBuyer } from '@/lib/notifications';
+import { notifyDealerOfNewInquiryViaBot, notifyBuyer } from '@/lib/notifications';
 
 const MAX_INQUIRIES_PER_MONTH = 2;
 const INQUIRY_LIMIT_RESET_DAYS = 15;
@@ -206,8 +205,31 @@ export async function POST(request: Request) {
     const inquiry = result.inquiry!;
     const buyer = result.buyer!;
     const remainingInquiries = result.remainingInquiries!;
-    // Notify buyer and dealers
-    const dealers = getActiveHardcodedDealers();
+
+    // Notify buyer and all active, claimed dealers (via dealer bot tokens)
+    const dealers = await prisma.dealer.findMany({
+      where: {
+        deletedAt: null,
+        active: true,
+        platform: { not: null },
+        platformUserId: { not: null },
+      },
+      select: {
+        platform: true,
+        platformUserId: true,
+        platformChatId: true,
+      },
+    });
+
+    const claimedDealers = dealers.filter(
+      (
+        dealer
+      ): dealer is {
+        platform: NonNullable<(typeof dealers)[number]['platform']>;
+        platformUserId: NonNullable<(typeof dealers)[number]['platformUserId']>;
+        platformChatId: (typeof dealers)[number]['platformChatId'];
+      } => Boolean(dealer.platform && dealer.platformUserId)
+    );
 
     const remainingText =
       remainingInquiries > 0
@@ -224,8 +246,8 @@ export async function POST(request: Request) {
         },
         `✅ Заявка создана!\n\n${input.model} ${input.submodel}\n${input.transmission} • ${input.color}\n\nДилеры начнут присылать вам предложения. Заявка активна 24 часа.${remainingText}`
       ),
-      ...dealers.map((dealer) =>
-        notifyDealerOfNewInquiry(
+      ...claimedDealers.map((dealer) =>
+        notifyDealerOfNewInquiryViaBot(
           {
             platform: dealer.platform,
             platformChatId: dealer.platformChatId,

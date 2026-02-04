@@ -5,6 +5,8 @@
  * Used in notification messages to create clickable buttons that redirect users
  */
 
+import { getAppBaseUrl } from '@/lib/app-url';
+
 export type NotificationDeepLink = {
   telegram: string;
   max: string;
@@ -83,7 +85,7 @@ export function createNotificationButtons(
   telegram: TelegramButton;
   max: MaxButton;
 } {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://autoauction-two.vercel.app';
+  const appUrl = getAppBaseUrl();
   const payload = resourceId ? `${context}:${resourceId}` : context;
   const fullAppUrl = `${appUrl}/app?startapp=${payload}`;
 

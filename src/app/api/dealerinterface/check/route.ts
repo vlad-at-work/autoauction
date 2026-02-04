@@ -5,6 +5,7 @@ import {
   isPlatformUserBuyer,
   validateSessionToken,
 } from '@/lib/auth/dealer-auth';
+import { validateDealerClaimToken } from '@/lib/auth/dealer-claim';
 import { prisma } from '@/lib/db';
 import { Platform } from '@prisma/client';
 
@@ -15,6 +16,7 @@ import { Platform } from '@prisma/client';
  * - { status: 'authenticated' } - dealer is logged in with valid session
  * - { status: 'needs_password' } - dealer exists and has password, needs to login
  * - { status: 'needs_setup', dealerId } - dealer exists but needs to set password (first login)
+ * - { status: 'needs_invite' } - multiple unclaimed dealers exist; admin must share invite link
  * - { status: 'not_dealer' } - platform user is not a registered dealer
  * - { blocked: true } - platform user is already a buyer
  */
@@ -36,6 +38,19 @@ export async function POST(request: NextRequest) {
     }
 
     const prismaPlat = platform.toUpperCase() as Platform;
+
+    const body = (await request.json().catch(() => null)) as {
+      startParam?: string | null;
+    } | null;
+    const startParamRaw = body?.startParam ?? null;
+    const startParam = (() => {
+      if (!startParamRaw || typeof startParamRaw !== 'string') return null;
+      try {
+        return decodeURIComponent(startParamRaw);
+      } catch {
+        return startParamRaw;
+      }
+    })();
 
     // Check if this platform user is already a buyer (mutual exclusivity)
     const isBuyer = await isPlatformUserBuyer(prismaPlat, platformUserId);
@@ -66,13 +81,68 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Check for unclaimed dealer accounts (admin created, waiting for platform association)
-    // For now, we require admin to create dealers with platform info
-    // Future: could allow dealers to claim by username
+    // Invite link claiming: startapp="claim:<dealerId>:<token>"
+    if (startParam?.startsWith('claim:')) {
+      const [, dealerId, token] = startParam.split(':');
+      if (!dealerId || !token) {
+        return NextResponse.json({ error: 'Invalid claim link' }, { status: 400 });
+      }
 
-    // Look for any dealer without platform that could be claimed
-    // This is a simplified approach - in production you might want username-based claiming
-    const unclaimedDealer = await prisma.dealer.findFirst({
+      const payload = validateDealerClaimToken(token);
+      if (!payload || payload.dealerId !== dealerId) {
+        return NextResponse.json({ error: 'Claim link expired or invalid' }, { status: 400 });
+      }
+
+      const dealer = await prisma.dealer.findUnique({
+        where: { id: dealerId },
+        select: {
+          id: true,
+          active: true,
+          deletedAt: true,
+          platform: true,
+          platformUserId: true,
+          passwordHash: true,
+        },
+      });
+
+      if (!dealer || dealer.deletedAt) {
+        return NextResponse.json({ error: 'Dealer not found' }, { status: 404 });
+      }
+
+      if (!dealer.active) {
+        return NextResponse.json({ error: 'Dealer is inactive' }, { status: 403 });
+      }
+
+      if (dealer.platform || dealer.platformUserId) {
+        return NextResponse.json({ error: 'Dealer already claimed' }, { status: 409 });
+      }
+
+      try {
+        await prisma.dealer.update({
+          where: { id: dealerId },
+          data: {
+            platform: prismaPlat,
+            platformUserId,
+            platformChatId: chatId || platformUserId,
+          },
+        });
+      } catch (error) {
+        if (
+          typeof error === 'object' &&
+          error &&
+          'code' in error &&
+          (error as { code?: string }).code === 'P2002'
+        ) {
+          return NextResponse.json({ error: 'Account already bound to a dealer' }, { status: 409 });
+        }
+        throw error;
+      }
+
+      return NextResponse.json({ status: 'needs_setup', dealerId });
+    }
+
+    // Fallback: allow auto-claim only when there is exactly ONE unclaimed dealer
+    const unclaimedDealers = await prisma.dealer.findMany({
       where: {
         platform: null,
         platformUserId: null,
@@ -80,13 +150,13 @@ export async function POST(request: NextRequest) {
         active: true,
       },
       orderBy: { createdAt: 'asc' },
+      take: 2, // detect "more than 1"
+      select: { id: true },
     });
 
-    if (unclaimedDealer) {
-      // Allow this platform user to claim this dealer account
-      // Update dealer with platform info (password will be set in setup)
+    if (unclaimedDealers.length === 1) {
       await prisma.dealer.update({
-        where: { id: unclaimedDealer.id },
+        where: { id: unclaimedDealers[0].id },
         data: {
           platform: prismaPlat,
           platformUserId,
@@ -94,7 +164,11 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      return NextResponse.json({ status: 'needs_setup', dealerId: unclaimedDealer.id });
+      return NextResponse.json({ status: 'needs_setup', dealerId: unclaimedDealers[0].id });
+    }
+
+    if (unclaimedDealers.length > 1) {
+      return NextResponse.json({ status: 'needs_invite' });
     }
 
     // No dealer account available

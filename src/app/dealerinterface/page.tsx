@@ -31,11 +31,34 @@ export default function DealerInterfaceHomePage() {
         const initDataUnsafe = webApp?.initDataUnsafe as Record<string, unknown> | undefined;
         const chatId = (initDataUnsafe?.chat as { id?: number })?.id?.toString() || platformUserId;
 
+        // Deep link / invite params:
+        // Telegram: tgWebAppStartParam
+        // MAX: startapp
+        // Also read URL query (web_app buttons)
+        let startParam =
+          (initDataUnsafe?.tgWebAppStartParam as string | undefined) ||
+          (initDataUnsafe?.startapp as string | undefined);
+        if (!startParam && typeof window !== 'undefined') {
+          const params = new URLSearchParams(window.location.search);
+          startParam = params.get('startapp') || undefined;
+        }
+
+        const nextPath = (() => {
+          if (!startParam) return null;
+          if (startParam.startsWith('inquiry:')) {
+            const [, inquiryId] = startParam.split(':');
+            return inquiryId ? `/dealerinterface/inquiry/${inquiryId}` : null;
+          }
+          if (startParam === 'dashboard') return '/dealerinterface/dashboard';
+          return null;
+        })();
+
         console.log('[/dealerinterface] WebApp detected:', {
           platform,
           platformUserId,
           chatId,
           hasInitData: !!initData,
+          startParam,
           attempt,
         });
 
@@ -54,6 +77,7 @@ export default function DealerInterfaceHomePage() {
                 platformUserId,
                 platform: platform.toUpperCase(),
                 chatId,
+                startParam,
               }),
             });
 
@@ -81,19 +105,35 @@ export default function DealerInterfaceHomePage() {
 
             if (result.status === 'authenticated') {
               // Dealer is authenticated, go to dashboard
-              router.replace('/dealerinterface/dashboard');
+              router.replace(nextPath || '/dealerinterface/dashboard');
               return;
             }
 
             if (result.status === 'needs_password') {
               // Dealer exists but needs to enter password
-              router.replace('/dealerinterface/login');
+              router.replace(
+                nextPath
+                  ? `/dealerinterface/login?next=${encodeURIComponent(nextPath)}`
+                  : '/dealerinterface/login'
+              );
               return;
             }
 
             if (result.status === 'needs_setup') {
               // New dealer - needs to claim account with username and set password
-              router.replace(`/dealerinterface/setup?dealerId=${result.dealerId}`);
+              router.replace(
+                nextPath
+                  ? `/dealerinterface/setup?dealerId=${result.dealerId}&next=${encodeURIComponent(nextPath)}`
+                  : `/dealerinterface/setup?dealerId=${result.dealerId}`
+              );
+              return;
+            }
+
+            if (result.status === 'needs_invite') {
+              setLoadingState('error');
+              setErrorMessage(
+                'Есть несколько дилеров, ожидающих привязки. Попросите у администратора ссылку приглашения.'
+              );
               return;
             }
 

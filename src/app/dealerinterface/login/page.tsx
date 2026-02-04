@@ -1,7 +1,7 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState, useEffect } from 'react';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -10,8 +10,11 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 
-export default function DealerLoginPage() {
+function DealerLoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextParam = searchParams.get('next');
+  const nextPath = nextParam && nextParam.startsWith('/dealerinterface') ? nextParam : null;
 
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -104,7 +107,7 @@ export default function DealerLoginPage() {
       }
 
       // Login successful, redirect to dashboard
-      router.replace('/dealerinterface/dashboard');
+      router.replace(nextPath || '/dealerinterface/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка');
       setLoading(false);
@@ -172,5 +175,19 @@ export default function DealerLoginPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function DealerLoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <Loader2 className="size-8 animate-spin text-muted-foreground" />
+        </div>
+      }
+    >
+      <DealerLoginContent />
+    </Suspense>
   );
 }

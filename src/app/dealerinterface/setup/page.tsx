@@ -14,6 +14,8 @@ function SetupPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dealerId = searchParams.get('dealerId');
+  const nextParam = searchParams.get('next');
+  const nextPath = nextParam && nextParam.startsWith('/dealerinterface') ? nextParam : null;
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -109,7 +111,7 @@ function SetupPasswordContent() {
       }
 
       // Password set successfully, redirect to dashboard
-      router.replace('/dealerinterface/dashboard');
+      router.replace(nextPath || '/dealerinterface/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка');
       setLoading(false);
