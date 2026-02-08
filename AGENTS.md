@@ -419,6 +419,46 @@ Test files use `TEST_DATA_PREFIX` constant for isolation. Cleanup scripts remove
 
 ---
 
+## Mock Authentication (Development Only)
+
+For E2E testing without real Telegram/MAX credentials, set in `.env.local`:
+
+```env
+MOCK_WEBAPP_AUTH="true"
+```
+
+**⚠️ Only works in development** — This flag is automatically disabled in production (`NODE_ENV=production`).
+
+### How to Use Mock Auth
+
+In tests, use this header format:
+
+```
+Authorization: Bearer mock:<platform>:<botType>:<userId>
+```
+
+Examples:
+
+- `Bearer mock:telegram:customer:test_buyer_123`
+- `Bearer mock:telegram:dealer:test_dealer_456`
+- `Bearer mock:max:customer:test_user_789`
+
+### What It Does
+
+When enabled:
+
+- **Skips HMAC signature validation** — No need for real initData from Telegram/MAX
+- **Mocks notifications** — Messages logged to console instead of sent to real users
+- **Allows any userId** — Create test users on the fly
+
+When disabled (production):
+
+- All requests require valid Telegram/MAX signatures
+- Notifications sent to real users
+- **Mock auth returns 401 Unauthorized**
+
+---
+
 ## Vercel MCP Integration
 
 Vercel MCP provides AI-powered access to your Vercel project. With it, I can:

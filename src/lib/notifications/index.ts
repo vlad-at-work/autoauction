@@ -18,7 +18,9 @@ import { sendTelegramMessage, type TelegramBotType } from './telegram';
 import { createNotificationButtons, formatTelegramNotification } from '../deeplinks';
 import { getAppBaseUrl } from '@/lib/app-url';
 
-const MOCK_NOTIFICATIONS = process.env.MOCK_WEBAPP_AUTH === 'true';
+// Mock notifications in development when MOCK_WEBAPP_AUTH is enabled
+const MOCK_NOTIFICATIONS =
+  process.env.MOCK_WEBAPP_AUTH === 'true' && process.env.NODE_ENV !== 'production';
 
 type NotifyResult = {
   success: boolean;

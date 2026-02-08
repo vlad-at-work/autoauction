@@ -179,41 +179,68 @@ bun dev
 
 ## Automated Tests
 
-Unit tests:
+### Unit Tests (Fast, No DB)
 
 ```bash
 bun test
 ```
 
-Live DB integration tests (direct Prisma; requires DB reachable):
+### Integration Tests (Live DB)
 
 ```bash
 bun run test:live-db
 ```
 
-Full DB flow suite (direct Prisma; requires DB reachable):
+### E2E Tests (Playwright)
+
+Requires dev server running on `:3000` with `MOCK_WEBAPP_AUTH=true` in `.env.local`:
 
 ```bash
-bun run test:suite
+# Terminal 1: Start dev server
+bun dev
+
+# Terminal 2: Run E2E tests
+bun run test:e2e           # Headless
+bun run test:e2e:ui        # With UI viewer
+bun run test:e2e:prod      # Against production
 ```
 
-Cleanup test data (prefix-based):
+### Full Test Suite
+
+Runs unit → integration → E2E with cleanup between:
 
 ```bash
-bun run test:cleanup
+bun run test:full
 ```
 
-Build:
+### Test Data Cleanup
+
+```bash
+bun run test:cleanup       # Clean test_ prefixed data
+bun run db:clear           # Nuclear option (dev only)
+```
+
+### Build
 
 ```bash
 bun run build
 ```
 
-Clear DB (dev only):
+### Mock Auth (Development Only)
 
-```bash
-bun run db:clear
+For E2E testing without real Telegram/MAX accounts, add to `.env.local`:
+
+```env
+MOCK_WEBAPP_AUTH="true"
 ```
+
+This enables mock authentication via headers:
+
+```
+Authorization: Bearer mock:<platform>:<botType>:<userId>
+```
+
+**⚠️ Only works in development** — Automatically disabled in production.
 
 ## Manual Test (Two Phones) — Condensed
 

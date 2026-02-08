@@ -20,8 +20,9 @@ const MAX_BOT_TOKEN = process.env.MAX_BOT_TOKEN;
 const TG_BOT_TOKEN_DEALER = process.env.TG_BOT_TOKEN_DEALER;
 const MAX_BOT_TOKEN_DEALER = process.env.MAX_BOT_TOKEN_DEALER;
 
-// Mock auth mode for testing
-const MOCK_AUTH_ENABLED = process.env.MOCK_WEBAPP_AUTH === 'true';
+// Mock auth mode for testing - only enabled in development
+const MOCK_AUTH_ENABLED =
+  process.env.MOCK_WEBAPP_AUTH === 'true' && process.env.NODE_ENV !== 'production';
 
 export type BotType = 'customer' | 'dealer';
 
