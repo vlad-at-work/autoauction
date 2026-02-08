@@ -168,11 +168,36 @@ bun run db:clear     # ⚠️ Wipe database (dev only)
 ### Testing
 
 ```bash
-bun test             # Unit tests only
-bun run test:live-db # DB integration tests (requires .env.local)
-bun run test:suite   # Full flow suite
-bun run test:cleanup # Clean test-prefixed data
+# Unit tests (fast, no DB)
+bun test
+
+# Integration tests (live DB, requires .env.local)
+bun run test:live-db
+
+# E2E tests (requires dev server running on :3000)
+bun run test:e2e           # Headless
+bun run test:e2e:ui        # With UI
+bun run test:e2e:prod      # Against production
+
+# Full suite (unit + integration + e2e with cleanup)
+bun run test:full
+
+# Cleanup test data
+bun run test:cleanup
 ```
+
+**Test Structure:**
+
+- `src/__tests__/unit/` — Pure logic tests (fast)
+- `src/__tests__/happy/` — DB integration tests
+- `e2e/` — Playwright E2E tests (requires running dev server)
+
+**E2E Notes:**
+
+- Uses Playwright (not Cypress) — more stable on macOS
+- Tests use mock auth (`Bearer mock:<platform>:<userId>`)
+- Requires `MOCK_WEBAPP_AUTH=true` in env
+- Run `bun run e2e:install` to install Chromium
 
 ### Utility Scripts
 

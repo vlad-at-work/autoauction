@@ -5,7 +5,7 @@
  * Runs all tests in sequence:
  * 1. Unit tests
  * 2. Integration tests (with live DB)
- * 3. E2E tests (via Cypress)
+ * 3. E2E tests (via Playwright)
  *
  * DANGER: Uses test_ prefix isolation and cleans up after
  */
@@ -58,10 +58,10 @@ async function runTests() {
   }
 
   // Step 5: E2E tests (requires dev server running)
-  console.log('5️⃣ Running E2E tests (Cypress)...');
+  console.log('5️⃣ Running E2E tests (Playwright)...');
   console.log('   Make sure dev server is running on localhost:3000');
   try {
-    await $`cypress run`;
+    await $`npx playwright test`;
     console.log('✅ E2E tests passed\n');
   } catch (error) {
     console.error('❌ E2E tests failed:', error);
