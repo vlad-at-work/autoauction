@@ -18,6 +18,13 @@
 
 ---
 
+## Language Note
+
+**UI/UX Language:** Russian (all user-facing text, notifications, forms)
+**Development Communication:** English (code comments, commit messages, docs)
+
+Maintain this separation: write code/docs in English, but user strings must be in Russian.
+
 ## Quick Start
 
 ```bash

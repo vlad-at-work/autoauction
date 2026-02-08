@@ -241,70 +241,58 @@ function DealerOfferCard({
   inquiryId: string;
   canAcceptMore: boolean;
 }) {
+  // Only show the latest offer from each dealer
+  const latestOffer = dealerGroup.offers[0];
+  const isAccepted = latestOffer?.isAccepted || dealerGroup.hasTransaction;
+  const canAccept = canAcceptMore && !dealerGroup.hasTransaction;
+
+  if (!latestOffer) return null;
+
   return (
-    <Card className={dealerGroup.hasTransaction ? 'border-green-200 bg-green-50/50' : ''}>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">{dealerGroup.dealerName}</CardTitle>
-          {dealerGroup.hasTransaction && (
-            <Badge className="bg-green-600 text-sm">
-              <Check className="mr-1 size-4" />
-              Принято
-            </Badge>
+    <Card className={isAccepted ? 'border-green-200 bg-green-50' : 'border-gray-100 bg-white'}>
+      <div className="flex items-center gap-4 p-4">
+        {/* Left: Price */}
+        <div className="flex-shrink-0 min-w-[100px]">
+          <div className="text-xl font-bold text-gray-900">{formatPrice(latestOffer.price)}</div>
+          <div className="text-xs text-gray-400 mt-0.5">
+            {formatRelativeTime(new Date(latestOffer.createdAt))}
+          </div>
+        </div>
+
+        {/* Middle: Dealer Name */}
+        <div className="flex-1 min-w-0">
+          <div className="text-base font-semibold text-gray-900 truncate">
+            {dealerGroup.dealerName}
+          </div>
+          {latestOffer.comment && (
+            <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{latestOffer.comment}</p>
           )}
         </div>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-3">
-        {dealerGroup.offers.map((offer, index) => {
-          const isLatest = index === 0;
-          const canAccept = canAcceptMore && !dealerGroup.hasTransaction && isLatest;
 
-          return (
-            <div
-              key={offer.id}
-              className={`rounded-lg border p-4 ${
-                offer.isAccepted
-                  ? 'border-green-300 bg-green-100'
-                  : isLatest
-                    ? 'border-blue-200 bg-white'
-                    : 'border-gray-200 bg-gray-50 opacity-70'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold">{formatPrice(offer.price)}</span>
-                  {isLatest && !offer.isAccepted && (
-                    <Badge variant="outline" className="text-sm">
-                      Актуальное
-                    </Badge>
-                  )}
-                  {offer.isAccepted && (
-                    <Badge className="bg-green-600 text-sm">
-                      <Check className="mr-1 size-4" />
-                      Вы приняли
-                    </Badge>
-                  )}
-                </div>
-                <span className="text-muted-foreground text-sm">
-                  {formatRelativeTime(new Date(offer.createdAt))}
-                </span>
-              </div>
-              {offer.comment && (
-                <p className="text-muted-foreground mt-2 text-base">{offer.comment}</p>
-              )}
-              {canAccept && (
-                <div className="mt-4">
-                  <Button asChild size="lg" className="w-full text-base">
-                    <Link href={`/app/inquiry/${inquiryId}/offer/${offer.id}`}>
-                      Принять предложение
-                    </Link>
-                  </Button>
-                </div>
-              )}
+        {/* Right: Action Button */}
+        <div className="flex-shrink-0">
+          {isAccepted ? (
+            <div className="inline-flex items-center px-4 py-2 rounded-md bg-green-600 text-white text-sm font-medium">
+              <Check className="mr-1 size-4" />
+              Принято
             </div>
-          );
-        })}
-      </CardContent>
+          ) : canAccept ? (
+            <Button
+              asChild
+              size="sm"
+              className="bg-green-600 hover:bg-green-700 text-white font-medium px-4"
+            >
+              <Link href={`/app/inquiry/${inquiryId}/offer/${latestOffer.id}`}>
+                Выбрать победителем
+              </Link>
+            </Button>
+          ) : (
+            <div className="inline-flex items-center px-3 py-1.5 rounded-md bg-gray-100 text-gray-500 text-sm">
+              Недоступно
+            </div>
+          )}
+        </div>
+      </div>
     </Card>
   );
 }

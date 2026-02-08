@@ -5,6 +5,9 @@
  * Supports both customer and dealer bots:
  * - Customer: TG_BOT_TOKEN, MAX_BOT_TOKEN
  * - Dealer: TG_BOT_TOKEN_DEALER, MAX_BOT_TOKEN_DEALER
+ *
+ * Mock mode: Set MOCK_WEBAPP_AUTH=true to bypass signature validation
+ * (for testing only - uses X-Mock-User-Id and X-Mock-Platform headers)
  */
 
 import { createHmac } from 'crypto';
@@ -16,6 +19,9 @@ const MAX_BOT_TOKEN = process.env.MAX_BOT_TOKEN;
 // Dealer bot tokens
 const TG_BOT_TOKEN_DEALER = process.env.TG_BOT_TOKEN_DEALER;
 const MAX_BOT_TOKEN_DEALER = process.env.MAX_BOT_TOKEN_DEALER;
+
+// Mock auth mode for testing
+const MOCK_AUTH_ENABLED = process.env.MOCK_WEBAPP_AUTH === 'true';
 
 export type BotType = 'customer' | 'dealer';
 
@@ -265,10 +271,54 @@ export function validateMaxWebAppData(
 }
 
 /**
+ * Parse mock auth header for testing
+ * Format: "Bearer mock:<platform>:<userId>" or "Bearer mock:<platform>:<botType>:<userId>"
+ */
+function parseMockAuthHeader(
+  authHeader: string,
+  defaultBotType: BotType
+): WebAppValidationResult | null {
+  if (!authHeader.startsWith('Bearer mock:')) return null;
+
+  const parts = authHeader.substring(12).split(':'); // Remove "Bearer mock:"
+  if (parts.length < 2) return null;
+
+  const platform = parts[0] as 'telegram' | 'max';
+  if (platform !== 'telegram' && platform !== 'max') {
+    return { valid: false, error: 'Invalid mock platform' };
+  }
+
+  let botType: BotType = defaultBotType;
+  let userId: string;
+
+  if (parts[1] === 'customer' || parts[1] === 'dealer') {
+    botType = parts[1] as BotType;
+    userId = parts[2];
+  } else {
+    userId = parts[1];
+  }
+
+  if (!userId) {
+    return { valid: false, error: 'No mock userId provided' };
+  }
+
+  console.log('[parseMockAuthHeader] Mock auth:', { platform, botType, userId });
+
+  return {
+    valid: true,
+    platform,
+    userId,
+    chatId: userId,
+    botType,
+  };
+}
+
+/**
  * Validate WebApp request
  * Checks Authorization header for signed WebApp data
  *
  * Header format: "Bearer <platform>:<initData>" or "Bearer <platform>:<botType>:<initData>"
+ * Mock format (when MOCK_WEBAPP_AUTH=true): "Bearer mock:<platform>:<userId>"
  */
 export function validateWebAppRequest(
   authHeader?: string | null,
@@ -279,6 +329,17 @@ export function validateWebAppRequest(
   if (!authHeader) {
     console.error('[validateWebAppRequest] No Authorization header');
     return { valid: false, error: 'No Authorization header' };
+  }
+
+  // Check for mock auth mode (testing only)
+  if (MOCK_AUTH_ENABLED && authHeader.includes('mock:')) {
+    console.log('[validateWebAppRequest] Using mock auth mode');
+    return (
+      parseMockAuthHeader(authHeader, defaultBotType) || {
+        valid: false,
+        error: 'Invalid mock auth',
+      }
+    );
   }
 
   // Format: "Bearer <platform>:<initData>" or "Bearer <platform>:<botType>:<initData>"
