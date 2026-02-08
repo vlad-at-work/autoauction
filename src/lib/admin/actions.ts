@@ -420,6 +420,12 @@ export async function restoreDealer(id: string): Promise<ActionResult> {
 
 const dealerUpdateSchema = z
   .object({
+    username: z
+      .string()
+      .min(1, 'Укажите username (логин дилера)')
+      .max(100, 'Слишком длинный username')
+      .regex(/^[a-zA-Z0-9._-]+$/, 'Username может содержать только латиницу, цифры и ._-')
+      .optional(),
     name: z.string().max(200, 'Слишком длинное имя').optional().nullable(),
     subName: z.string().max(200, 'Слишком длинное название').optional().nullable(),
     phone: z.string().max(50, 'Слишком длинный телефон').optional().nullable(),
@@ -441,6 +447,7 @@ const dealerUpdateSchema = z
 export async function updateDealer(
   id: string,
   data: {
+    username?: string;
     name?: string | null;
     subName?: string | null;
     phone?: string | null;
@@ -468,6 +475,10 @@ export async function updateDealer(
     return { success: true };
   } catch (error) {
     console.error('Update dealer error:', error);
+    // Check for unique constraint violation on username
+    if (error instanceof Error && error.message?.includes('unique constraint')) {
+      return { success: false, error: 'Дилер с таким username уже существует' };
+    }
     return { success: false, error: 'Не удалось обновить дилера' };
   }
 }

@@ -19,6 +19,7 @@ import { updateDealer } from '@/lib/admin/actions';
 
 type DealerEditFormProps = {
   dealerId: string;
+  username: string;
   name: string | null;
   subName: string | null;
   phone: string | null;
@@ -29,6 +30,7 @@ type DealerEditFormProps = {
 
 export function DealerEditForm({
   dealerId,
+  username,
   name,
   subName,
   phone,
@@ -39,6 +41,7 @@ export function DealerEditForm({
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string> | null>(null);
 
+  const [nextUsername, setNextUsername] = useState(username);
   const [nextName, setNextName] = useState(name ?? '');
   const [nextSubName, setNextSubName] = useState(subName ?? '');
   const [nextPhone, setNextPhone] = useState(phone ?? '');
@@ -52,6 +55,7 @@ export function DealerEditForm({
     setFieldErrors(null);
 
     const res = await updateDealer(dealerId, {
+      username: nextUsername,
       name: nextName ? nextName : null,
       subName: nextSubName ? nextSubName : null,
       phone: nextPhone ? nextPhone : null,
@@ -80,6 +84,17 @@ export function DealerEditForm({
       )}
 
       <FieldGroup>
+        <Field orientation="vertical" data-invalid={!!fieldErrors?.username}>
+          <FieldLabel>Username (логин)</FieldLabel>
+          <FieldContent>
+            <Input value={nextUsername} onChange={(e) => setNextUsername(e.target.value)} />
+            <FieldDescription>Логин для входа в систему.</FieldDescription>
+            <FieldError
+              errors={[fieldErrors?.username ? { message: fieldErrors.username } : undefined]}
+            />
+          </FieldContent>
+        </Field>
+
         <Field orientation="vertical" data-invalid={!!fieldErrors?.name}>
           <FieldLabel>Имя дилера</FieldLabel>
           <FieldContent>

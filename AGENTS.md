@@ -1,426 +1,494 @@
 # AGENTS.md - Development Guidelines
 
-## Extremely important
+## Table of Contents
 
-- Consider docs/archived_docs/max_integration.txt before making any changes (archived reference)
-- Review docs/archived_docs/MAX_WEBHOOK_RESEARCH.md for latest MAX API findings and webhook requirements (archived reference)
-- Start all coding sessions with `nvm use 22`
-- Before committing, `bun run build` needs to succeed.
-- Don't adjust tests if commit doesn't pass because of tests
-- MAX messaging currently returns "Unknown recipient" — likely requires webhook setup; see docs/archived_docs/MAX_WEBHOOK_RESEARCH.md for fix strategy
+- [Quick Start](#quick-start)
+- [Project Overview](#project-overview)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Routes & Apps](#routes--apps)
+- [Common Commands](#common-commands)
+- [Database](#database)
+- [Authentication](#authentication)
+- [Flows](#flows)
+- [Notifications](#notifications)
+- [Environment Variables](#environment-variables)
+- [Testing](#testing)
+- [Troubleshooting](#troubleshooting)
+
+---
+
+## Quick Start
+
+```bash
+nvm use 22
+bun install
+bun dev
+```
+
+**Before committing:** `bun run build` must succeed.
+
+**Do not commit/push unless explicitly asked.**
+
+---
 
 ## Project Overview
 
-AutoAuction is a car inquiry/offer platform connecting buyers (via Max/Telegram) with dealers.
+AutoAuction is a car inquiry/offer platform connecting:
 
-## Hint for running with node 20:
+- **Buyers** — via Telegram/MAX mini-app at `/app`
+- **Dealers** — via separate dealer mini-app at `/dealerinterface`
 
-export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && nvm use v20.19.6 && cd /Users/vlad/Documents/\_projects/\_glebproj/autoauction && pkill -f "next dev" 2>/dev/null; sleep 1; bun run dev > /tmp/next-dev.log 2>&1 &
-sleep 5 && tail -50 /tmp/next-dev.log
+**Flow:** Buyer creates inquiry → Dealers submit competing offers (up to 5 per dealer) → Buyer accepts up to 3 offers → Transaction recorded with immutable snapshots.
 
-## Important
+**Archived docs:** See `docs/archived_docs/` for historical reference (MAX webhook research, migration plans, etc.).
 
-- Do not commit unless specifically asked
-- Do not push unless specifically asked
-- Do not create more .mds unless specifically asked
-- Do not modify `TODO.md` unless I explicitly ask. If you want to add something to TODO, ask first.
-  End messages with Files changed/added, lines affected, commit message (even if there is no commit)
-  Always end with a brief (1-2 line) summary of changes / reasoning why.
+---
 
 ## Tech Stack
 
-- **Runtime**: Bun (use `bun` instead of `npm`/`yarn`)
-- **Framework**: Next.js 16 with App Router
-- **UI**: shadcn/ui components + Tailwind CSS v4
-- **Database**: PostgreSQL via Prisma (Neon for MVP)
-- **Deployment**: Vercel
+| Layer      | Technology                           |
+| ---------- | ------------------------------------ |
+| Runtime    | Bun (use `bun` not `npm`/`yarn`)     |
+| Framework  | Next.js 16 with App Router           |
+| UI         | shadcn/ui + Tailwind CSS v4          |
+| Database   | PostgreSQL via Prisma (Neon for MVP) |
+| Deployment | Vercel                               |
+| Bots       | Telegram Bot API + MAX Platform API  |
 
-## Commands
-
-```bash
-bun dev          # Start dev server
-bun build        # Production build
-bun lint         # Run ESLint
-bun test         # Run tests
-```
+---
 
 ## Project Structure
 
 ```
 src/
-  app/                    # Next.js App Router
-    page.tsx              # Landing page
-    layout.tsx            # Root layout
-    globals.css           # Global styles
-    app/                  # Mini app routes (Max/TG WebView)
-      page.tsx
-      form/page.tsx
-    dealer/               # Dealer dashboard
-      page.tsx
-      inquiries/
-        page.tsx
-        [id]/page.tsx
-    api/                  # API routes
-      inquiries/
-      offers/
-      webhooks/
-  components/
-    ui/                   # shadcn components
+  app/
+    app/                    # Customer mini-app (buyer flow)
+      page.tsx              # Entry, platform detection
+      form/page.tsx         # Inquiry form
+      dashboard/page.tsx    # Buyer's inquiries
+      inquiry/[id]/page.tsx # Inquiry detail
+    dealerinterface/        # Dealer mini-app
+      page.tsx              # Entry, auth check
+      setup/page.tsx        # First-time password set
+      login/page.tsx        # Dealer login
+      dashboard/page.tsx    # Active inquiries
+      inquiry/[id]/page.tsx # Make offer
+    admin/                  # Admin dashboard (Basic Auth)
+    api/                    # API routes
+      inquiries/            # Create/manage inquiries
+      dealerinterface/      # Dealer API (offers, auth)
+      transactions/         # Accept offers
+      webhooks/             # Telegram/MAX webhooks
+  components/ui/            # shadcn components
   lib/
-    utils.ts              # Utility functions
-    db.ts                 # Database client
-    max.ts                # Max Messenger utilities
-  types/
-    index.ts              # TypeScript types
-docs/
-  archived_docs/           # Archived docs (legacy)
+    notifications/          # Telegram/MAX messaging
+    auth/                   # Auth utilities
+    form-options.ts         # Car model/submodel data
+    constants.ts            # App constants
+  __tests__/                # Tests
+    unit/                   # Pure logic tests
+    happy/                  # DB integration tests
+prisma/
+  schema.prisma             # Database schema
+scripts/                    # Utility scripts
 ```
 
-## Coding Standards
+---
 
-- TypeScript strict mode
-- ESLint with Airbnb-style rules
-- Prettier for formatting
-- Pre-commit hooks via husky + lint-staged
+## Routes & Apps
 
-## Form Data - Model/Submodel Mapping
+### Customer Mini-App (`/app`)
 
-```typescript
-const MODEL_SUBMODELS = {
-  Granta: ['sedan', 'liftbek', 'khetchbek', 'universal', 'Cross', 'Drive Active'],
-  Vesta: ['sedan', 'Cross', 'SW', 'SW Cross'],
-  'Niva Travel': ['Niva Travel'],
-  Largus: ['universal', 'Cross', 'furgon'],
-  'Niva Legend': ['Niva Legend', 'Niva Legend Bronto'],
-  Iskra: ['sedan', 'SW', 'SW Cross'],
-  Aura: ['Aura'],
-  Sportivnye: [
-    'Vesta Sportline',
-    'Vesta SW Sportline',
-    'Granta Sportline',
-    'Granta Sportline liftbek',
-    'Granta Sport sedan',
-    'Granta Sport liftbek',
-  ],
-} as const;
+Entry point for buyers via Telegram/MAX WebView.
 
-const STATUS_OPTIONS = [
-  'Podderzhivayu rossiyskikh boytsov v zone SVO',
-  'Uchastnik SVO / mobilizovannyy',
-  'Semya uchastnika SVO',
-  'Veteran boyevykh deystviy',
-  'Drugoye',
-] as const;
+| Route                               | Purpose                                                  |
+| ----------------------------------- | -------------------------------------------------------- |
+| `/app`                              | Entry, validates `initData`, routes to form or dashboard |
+| `/app/form`                         | Create new inquiry                                       |
+| `/app/dashboard`                    | View my inquiries and offers                             |
+| `/app/inquiry/[id]`                 | Inquiry detail with offers                               |
+| `/app/inquiry/[id]/offer/[offerId]` | Accept specific offer                                    |
 
-const TRANSMISSION_OPTIONS = ['Mekhanika', 'Avtomat', 'Ne vazhno'] as const;
+### Dealer Mini-App (`/dealerinterface`)
 
-const COLOR_OPTIONS = [
-  'Belyy',
-  'Chernyy',
-  'Serebristyy',
-  'Seryy',
-  'Krasnyy',
-  'Siniy',
-  'Korichnevyy',
-  'Drugoye',
-] as const;
+Entry point for dealers via Telegram/MAX WebView.
+
+| Route                             | Purpose                                         |
+| --------------------------------- | ----------------------------------------------- |
+| `/dealerinterface`                | Entry point, auto-redirects based on auth state |
+| `/dealerinterface/setup`          | First-time password setup (after invite link)   |
+| `/dealerinterface/login`          | Dealer login                                    |
+| `/dealerinterface/dashboard`      | Active inquiries list                           |
+| `/dealerinterface/inquiry/[id]`   | Submit offers on inquiry                        |
+| `/dealerinterface/reset-password` | Password reset with 6-digit code                |
+
+### Admin Dashboard (`/admin`)
+
+Basic Auth protected. Full CRUD for all data.
+
+| Route                 | Purpose                           |
+| --------------------- | --------------------------------- |
+| `/admin`              | Dashboard overview                |
+| `/admin/buyers`       | Manage buyers                     |
+| `/admin/dealers`      | Create dealers, copy invite links |
+| `/admin/inquiries`    | Manage inquiries                  |
+| `/admin/offers`       | View all offers                   |
+| `/admin/transactions` | Transactions + billing fields     |
+
+---
+
+## Common Commands
+
+### Development
+
+```bash
+bun dev              # Start dev server
+bun build            # Production build (required before commit)
+bun lint             # ESLint
 ```
 
-## Max Messenger Integration
+### Database
 
-Include the bridge library in mini app pages:
-
-```html
-<script src="https://st.max.ru/js/max-web-app.js"></script>
+```bash
+bun run db:generate  # Regenerate Prisma client
+bun run db:push      # Push schema changes
+bun run db:migrate   # Create/run migrations
+bun run db:seed      # Seed test data
+bun run db:clear     # ⚠️ Wipe database (dev only)
 ```
 
-Access user data:
+### Testing
 
-```typescript
-// window.WebApp is available after script loads
-const { initDataUnsafe, platform, version } = window.WebApp;
-const userId = initDataUnsafe?.user?.id;
-const userName = initDataUnsafe?.user?.name;
+```bash
+bun test             # Unit tests only
+bun run test:live-db # DB integration tests (requires .env.local)
+bun run test:suite   # Full flow suite
+bun run test:cleanup # Clean test-prefixed data
 ```
 
-Key methods:
+### Utility Scripts
 
-- `WebApp.ready()` - Signal app is ready
-- `WebApp.close()` - Close mini app
-- `WebApp.requestContact()` - Request phone number
+```bash
+# Testing notifications
+bun run scripts/test-max-notification.ts
+bun run scripts/test-telegram-notification.ts
 
-Deep link format: `https://max.ru/<botName>?startapp=<payload>`
+# Database inspection
+bun run scripts/show-buyers.ts
+bun run scripts/check-buyers.ts
+```
 
-## Database Notes
+---
 
-MVP uses Neon Postgres. Production will migrate to Yandex Managed PostgreSQL.
-Both are standard PostgreSQL - no special compatibility concerns.
+## Database
+
+### Key Models
+
+| Model               | Key Fields                                                                                     |
+| ------------------- | ---------------------------------------------------------------------------------------------- |
+| `Buyer`             | `(platform, platformUserId)` unique, `inquiriesUsedThisMonth` (max 2), `inquiryLimitResetAt`   |
+| `Dealer`            | `(platform, platformUserId)` unique (nullable until claimed), `passwordHash`, `platformChatId` |
+| `Inquiry`           | `expiresAt` (24h default)                                                                      |
+| `Offer`             | Multiple per dealer per inquiry (cap: 5)                                                       |
+| `Transaction`       | Unique `(inquiryId, dealerId)`, max 3 per inquiry, immutable snapshots                         |
+| `PasswordResetCode` | 6-digit, expires 10 min                                                                        |
+
+### Limits (Enforced in API)
+
+- Buyer: 2 inquiries per 15-day rolling window
+- Dealer: 5 offers per inquiry
+- Inquiry: 3 accepted offers (transactions) max
+
+### Migration Notes
+
+- MVP uses Neon PostgreSQL
+- Production migrates to Yandex Managed PostgreSQL
+- Both are standard PostgreSQL — no compatibility issues
+
+---
 
 ## Authentication
 
-- **Buyers**: Authenticated via Max/TG user ID (no password required)
-- **Dealers**: Session-based auth with bcrypt passwords (set on first mini-app access)
-  - Created by admin (username + contact fields); claimed on first run via invite link
-  - Password set by dealer on first login from mini-app
-  - Session token valid for 7 days
-  - Password can be reset via admin-generated 6-digit codes
-- **Admins**: Basic Auth using ADMIN_USERNAME/ADMIN_PASSWORD from .env.local
+### Buyers
 
-## Dealer Registration & Authentication
+- Authenticated via Telegram/MAX user ID from `initDataUnsafe.user.id`
+- No password required
+- Auto-created on first mini-app open
 
-### Overview
+### Dealers
 
-Dealers are **created by admin** (no platform IDs needed). The dealer then uses an **invite link** (Telegram/MAX) to bind their messenger account to that dealer profile and set a password.
+**Registration Flow:**
 
-### Registration Flow
+1. **Admin creates dealer** at `/admin/dealers/new` (username, name, phone, email)
+2. **Admin sends invite link** from dealer detail page (Telegram or MAX)
+3. **Dealer opens invite link** → binds platform account → sets password → logged in
+4. **Subsequent access:** Session valid 7 days, auto-login if valid
 
-**Step 1: Admin Creates Dealer**
+**Fallback:** If exactly one unclaimed dealer exists, opening `/dealerinterface` auto-binds without invite link.
 
-1. Admin goes to `/admin` → Dealers → New Dealer
-2. Provide: Username, Name, Phone, Email (no platform fields)
-3. Admin does NOT set password — dealer will set it on first login
+**Password Reset:**
 
-**Step 2: Admin Sends Invite Link**
+- Admin generates 6-digit code (valid 10 min)
+- Dealer uses code at `/dealerinterface/reset-password`
 
-1. Admin opens dealer detail page
-2. Copies Telegram or MAX invite link
-3. Sends the link to the dealer
+### Admins
 
-**Step 3: Dealer Opens Invite Link and Sets Password**
+- Basic Auth via `ADMIN_USERNAME` / `ADMIN_PASSWORD` env vars
+- Protects `/admin/*` routes
 
-1. Dealer opens the invite link in Telegram/MAX
-2. Dealer mini-app opens and binds their platform account to this dealer profile
-3. App redirects to `/dealerinterface/setup`
-4. Dealer sets password (minimum 6 characters)
-5. Backend hashes password with bcrypt (12 rounds)
-6. Session created automatically
-7. Redirected to dashboard
+---
 
-**Step 4: Subsequent Access**
+## Flows
 
-1. Dealer opens mini-app again
-2. App detects password exists
-3. Auto-login if session valid (7 days)
-4. If session expired, dealer taps login button and re-authenticates
+### Buyer Flow
 
-### Configuration Files
+1. Open `/app` in Telegram/MAX → WebApp SDK detects platform
+2. Server validates `initData` → routes to `/app/form` (new) or `/app/dashboard` (existing)
+3. Submit inquiry → `POST /api/inquiries`
+   - Upserts buyer, checks inquiry limit, creates inquiry (24h expiry)
+   - Notifies all active, claimed dealers via dealer bots
+4. Dealer submits offers → buyer gets notification with button
+5. Buyer accepts offer → `POST /api/transactions`
+   - Creates transaction with immutable snapshots
+   - Reveals buyer contact to dealer
+   - Notifies dealer of acceptance
 
-- **Admin UI** (`/admin`) - Create dealers and manage accounts
-- **Env variables** - No dealer credentials needed (removed DEALER_CREDENTIALS)
+### Dealer Flow
 
-### Adding a New Dealer
+1. Admin creates dealer profile
+2. Admin copies invite link (Telegram or MAX) from dealer detail page
+3. Dealer opens link → mini-app binds account → sets password → dashboard
+4. Sees active inquiries → submits up to 5 offers per inquiry
+5. When buyer accepts → receives notification with buyer contact info
 
-**Simple Flow (No Platform ID Needed)**:
+### Inquiry Expiration
 
-1. Admin creates dealer:
-   - Go to `/admin` → Dealers → New Dealer
-   - Fill: username, name, phone, email
-   - Click "Create Dealer"
-   - Open dealer page → copy invite link → share with dealer
-
-2. Dealer opens mini-app:
-   - Opens invite link in Telegram/MAX
-   - System binds platform account to that dealer profile
-   - Dealer sets password → Logged in
-
-**If Dealer Not Pre-Created**:
-
-- Dealer opens mini-app → Shows: "Not registered. Your TELEGRAM ID: 123456789"
-- Dealer shares ID with admin
-- Admin creates account
-- Admin sends invite link
-- Dealer opens invite link → Account claimed
-
-**Fallback behavior**
-
-- If there is exactly **one** unclaimed dealer in the system, opening `/dealerinterface` can auto-bind without an invite link.
-- If there are **multiple** unclaimed dealers, the dealer must use an invite link.
-
-### Password Reset
-
-- Admin goes to Dealers → Select dealer → Click "Reset Password"
-- Admin generates 6-digit code (valid for 10 minutes)
-- Share code with dealer
-- Dealer goes to mini-app → Click password reset → Enter code + new password
-- Logged in with new password
-
-### Notification Flow
-
-- Triggered in src/app/api/inquiries/route.ts after inquiry creation
-- Uses `notifyDealerOfNewInquiryViaBot()` from `src/lib/notifications/index.ts` (dealer bot tokens)
-- Uses `Promise.allSettled` so notification failures don’t fail inquiry creation
-
-## Complete User Flow
-
-### 1. User Registration (Automatic)
-
-- User opens mini-app in TG/MAX → WebApp SDK detects platform
-- `src/app/app/page.tsx` extracts `initDataUnsafe.user.id` and `chat.id`
-- Buyer record created/updated via upsert in `/api/inquiries` POST
-
-### 2. Inquiry Creation
-
-- User fills form at `/app/form` (name, phone, car details)
-- POST to `/api/inquiries` creates inquiry with 24h expiry
-- All active, claimed dealers notified via dealer bots (TG/MAX)
-
-### 3. Dealer Makes Offer
-
-- Dealer logs in at `/dealer/inquiries` (Basic Auth)
-- Views active inquiries (not expired)
-- Submits offer via `/api/offers` POST
-- Buyer notified via TG/MAX with deep link
-
-### 4. User Accepts Offer (Lead Created)
-
-- User clicks notification → opens offer detail page
-- User clicks "Принять предложение"
-- POST to `/api/leads` creates lead with buyer contact info
-- Dealer notified via TG/MAX with buyer name + phone
-
-### 5. Inquiry Expiration
-
-- Inquiries expire after 24 hours (`expiresAt` field)
-- Expired inquiries hidden from dealer list
+- Inquiries expire after 24 hours (`expiresAt`)
+- Expired inquiries hidden from dealer dashboard
 - Offers rejected with HTTP 410 for expired inquiries
 
-## MAX Bot Message Sending
+---
 
-### API Details
+## Notifications
 
-- **Endpoint**: `https://platform-api.max.ru/messages`
-- **Auth**: `Authorization: <MAX_BOT_TOKEN>` (no Bearer prefix)
-- **Chat ID**: Query param `?chat_id=<chatId>`
-- **Body**: `{ "text": "..." }` for plain text
+### Deep Link Formats
 
-### Implementation: `src/lib/notifications/max.ts`
+| Platform | Format                                           |
+| -------- | ------------------------------------------------ |
+| Telegram | `https://t.me/{TG_BOT_NAME}?startapp={param}`    |
+| MAX      | `https://max.ru/{MAX_BOT_NAME}?startapp={param}` |
 
-- `sendMaxMessage(chatId, text)` - Plain text message
-- `sendMaxMessageWithButton(chatId, text, buttonText, startParam)` - With inline button
+### Key Files
 
-### Button with Deep Link
+- `src/lib/notifications/index.ts` — High-level notification service
+- `src/lib/notifications/telegram.ts` — Telegram Bot API
+- `src/lib/notifications/max.ts` — MAX Platform API
 
-```typescript
-body: JSON.stringify({
-  text,
-  attachments: [
-    {
-      type: 'inline_keyboard',
-      payload: {
-        buttons: [
-          [
-            {
-              type: 'link',
-              text: buttonText,
-              url: `https://max.ru/${MAX_BOT_NAME}?startapp=${startParam}`,
-            },
-          ],
-        ],
-      },
-    },
-  ],
-});
+### MAX API Notes
+
+- Endpoint: `POST https://platform-api.max.ru/messages?chat_id={chatId}`
+- Auth: `Authorization: {MAX_BOT_TOKEN}` (no Bearer prefix)
+- May return "Unknown recipient" until webhook/subscription requirements met
+
+### Debug Endpoints
+
+```bash
+# Send test message (requires DEBUG_MAX_TEST_MESSAGE_ENABLED=true)
+POST /api/debug/max/send-test
+{ "chatId": "...", "text": "..." }
+
+# Ping with random message
+GET /api/debug/max/ping
 ```
 
-### Debug/Testing
+---
 
-- `/api/debug/max/send-test` (POST) - Send test message
-- Requires `DEBUG_MAX_TEST_MESSAGE_ENABLED=true` or non-production env
-- `/api/debug/max/ping` (GET) - Ping with random message
+## Environment Variables
 
-### Environment Variables
+### Critical for Local Dev
 
 ```env
-MAX_BOT_TOKEN="your_token"
-MAX_BOT_NAME="id5010035001_bot"
-TG_BOT_TOKEN="your_tg_token"
-TG_BOT_NAME="autoauction_bot"
+# Database
+POSTGRES_PRISMA_URL="..."
+POSTGRES_URL_NON_POOLING="..."
+
+# Admin
+ADMIN_USERNAME="..."
+ADMIN_PASSWORD="..."
+
+# Session
+SESSION_SECRET="..."
+
+# Telegram (customer bot)
+TG_BOT_TOKEN="..."
+TG_BOT_NAME="..."
+NEXT_PUBLIC_TELEGRAM_BOT_NAME="..."
+
+# Telegram (dealer bot)
+TG_BOT_TOKEN_DEALER="..."
+TG_BOT_NAME_DEALER="..."
+
+# MAX (customer bot)
+MAX_BOT_TOKEN="..."
+MAX_BOT_NAME="..."
+NEXT_PUBLIC_MAX_BOT_NAME="..."
+
+# MAX (dealer bot)
+MAX_BOT_TOKEN_DEALER="..."
+MAX_BOT_NAME_DEALER="..."
+NEXT_PUBLIC_MAX_BOT_NAME_DEALER="..."
+
+# Deep links
+NEXT_PUBLIC_APP_URL="http://localhost:3000"  # or deployed URL
 ```
 
-## Key Files Reference
+See README.md for complete env var documentation.
 
-### User Flow
+---
 
-- `/src/app/app/page.tsx` - Entry point, platform detection
-- `/src/app/app/form/page.tsx` - Inquiry form
-- `/src/app/app/dashboard/page.tsx` - User's inquiries
-- `/src/app/app/inquiry/[id]/offer/[offerId]/page.tsx` - Accept offer
+## Testing
 
-### API Routes
+### Test Structure
 
-- `/src/app/api/inquiries/route.ts` - Create inquiry
-- `/src/app/api/offers/route.ts` - Create offer
-- `/src/app/api/leads/route.ts` - Accept offer (create lead)
+```
+src/__tests__/
+  unit/           # Fast, no DB
+    form-options.test.ts
+    inquiry-schema.test.ts
+    dealer-auth.test.ts
+    ...
+  happy/          # DB integration (requires .env.local)
+    buyer-flow.test.ts
+    dealer-interface.test.ts
+    admin-flow.test.ts
+    ...
+```
 
-### Notifications
-
-- `/src/lib/notifications/index.ts` - High-level notification service
-- `/src/lib/notifications/max.ts` - MAX API
-- `/src/lib/notifications/telegram.ts` - Telegram API
-- `/src/lib/hardcoded-dealers.ts` - Dealer config
-
-### Dealer Portal
-
-- `/src/app/dealer/inquiries/page.tsx` - List inquiries
-- `/src/app/dealer/inquiries/[id]/page.tsx` - Make offer
-
-### Admin Portal
-
-- `/src/app/admin/` - Full admin dashboard (all data visible)
-
-## Bot Setup (Required for Mini-App to Work)
-
-### Telegram Bot Setup
-
-The "Something went wrong" error means the mini-app URL is not configured in BotFather.
-
-1. Open @BotFather in Telegram
-2. Send `/mybots` → select `autoauction_bot`
-3. Bot Settings → Configure Mini App (or Menu Button)
-4. Set the Web App URL to your deployed app:
-   ```
-   https://autoauction.vercel.app/app
-   ```
-5. Optionally set domain: `/setdomain` → select bot → enter domain
-
-**Deep link format**: `https://t.me/autoauction_bot?startapp=<param>`
-
-### MAX Bot Setup
-
-The "Не нашли чат" error means the mini-app needs to be registered in MAX developer cabinet.
-
-1. Go to MAX organization cabinet (requires verified Russian юрлицо)
-2. Navigate to: Чат-бот и мини-приложение → Настроить
-3. Enter the mini-app HTTPS URL:
-   ```
-   https://autoauction.vercel.app/app
-   ```
-4. Save and wait for moderation (up to 48h)
-
-**Deep link format**: `https://max.ru/id5010035001_bot?startapp=<param>`
-
-### Testing Message Sending
-
-MAX messages work (as shown in your screenshot). To test:
+### Running Tests
 
 ```bash
-curl -X POST "https://platform-api.max.ru/messages?chat_id=YOUR_CHAT_ID" \
-  -H "Authorization: YOUR_MAX_BOT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"text": "Test message"}'
+# Unit only (fast)
+bun test
+
+# With DB (slower, needs env)
+bun run test:live-db
+
+# Full suite
+bun run test:suite
+
+# Cleanup test data (prefix-based)
+bun run test:cleanup
 ```
 
-Or use the debug endpoint:
+### Test Data Cleanup
+
+Test files use `TEST_DATA_PREFIX` constant for isolation. Cleanup scripts remove data with these prefixes.
+
+---
+
+## Troubleshooting
+
+### Build Issues
+
+| Issue         | Fix                                   |
+| ------------- | ------------------------------------- |
+| Prisma errors | `bun run db:generate`                 |
+| Type errors   | Check `strict: true` in tsconfig.json |
+| Lint failures | `bun lint --fix`                      |
+
+### Runtime Issues
+
+| Issue                              | Cause                                     | Fix                                               |
+| ---------------------------------- | ----------------------------------------- | ------------------------------------------------- |
+| "Something went wrong" in Telegram | Mini-app URL not configured in BotFather  | Configure Web App URL in @BotFather               |
+| "Не нашли чат" in MAX              | Mini-app not registered in MAX cabinet    | Register in MAX developer cabinet                 |
+| "Unknown recipient" (MAX)          | Missing webhook/subscription              | See `docs/archived_docs/MAX_WEBHOOK_RESEARCH.md`  |
+| "Not registered" (dealer)          | Dealer profile not created or not claimed | Admin creates dealer → sends invite link          |
+| "Needs invite" (dealer)            | Multiple unclaimed dealers                | Use invite link from admin dealer detail          |
+| Buttons open wrong domain          | `NEXT_PUBLIC_APP_URL` not set             | Set env var or rely on `VERCEL_URL`               |
+| Missing notifications              | Dealer not claimed or no bot tokens       | Verify dealer has `platform`/`platformUserId` set |
+
+### Database Issues
 
 ```bash
-curl -X POST "http://localhost:3000/api/debug/max/send-test" \
-  -H "Content-Type: application/json" \
-  -d '{"chatId": "YOUR_CHAT_ID", "text": "Test"}'
+# Reset Prisma client
+rm -rf node_modules/.prisma && bun run db:generate
+
+# Check connection
+bun run scripts/show-buyers.ts
+
+# Nuclear option (dev only)
+bun run db:clear
 ```
 
-## API Conventions
+---
 
-- All API routes under `/api/`
-- JSON request/response bodies
-- Standard HTTP status codes
-- Dealer routes require auth header (MVP: Basic auth)
+## Reference Data
+
+### Car Models & Submodels
+
+Source of truth: `src/lib/form-options.ts`
+
+Key exports:
+
+- `MODEL_SUBMODELS` — Map of models to submodels
+- `STATUS_OPTIONS` — SVO status options
+- `TRANSMISSION_OPTIONS` — Transmission types
+- `COLOR_OPTIONS` — Color options
+
+### Constants
+
+Source: `src/lib/constants.ts`
+
+- `MAX_OFFERS_PER_INQUIRY = 5`
+- `MAX_TRANSACTIONS_PER_INQUIRY = 3`
+- `MAX_INQUIRIES_PER_PERIOD = 2`
+- `INQUIRY_LIMIT_DAYS = 15`
+- `INQUIRY_EXPIRY_HOURS = 24`
+- `SESSION_MAX_AGE_DAYS = 7`
+
+---
+
+## Bot Setup Checklist
+
+### Telegram (Customer Bot)
+
+- [ ] @BotFather: Create bot
+- [ ] @BotFather: Configure Mini App URL (`/mybots` → Bot Settings → Configure Mini App)
+- [ ] Set URL to `{NEXT_PUBLIC_APP_URL}/app`
+
+### Telegram (Dealer Bot)
+
+- [ ] @BotFather: Create separate dealer bot
+- [ ] @BotFather: Configure Mini App URL to `{NEXT_PUBLIC_APP_URL}/dealerinterface`
+
+### MAX (Customer Bot)
+
+- [ ] MAX organization cabinet (requires verified Russian юрлицо)
+- [ ] Navigate to: Чат-бот и мини-приложение → Настроить
+- [ ] Enter Mini App URL: `{NEXT_PUBLIC_APP_URL}/app`
+- [ ] Wait for moderation (up to 48h)
+
+### MAX (Dealer Bot)
+
+- [ ] Same as above, URL: `{NEXT_PUBLIC_APP_URL}/dealerinterface`
+
+---
+
+## Message Conventions
+
+- End messages with: Files changed/added, lines affected, commit message (even if no commit)
+- Always end with 1-2 line summary of changes/reasoning
+- Do not modify `TODO.md` unless explicitly asked
+- Do not create additional `.md` files unless specifically asked
+
+## Autocommit Policy
+
+If the work is complete in one go (all changes made, tested, and build passes), **autocommit but do not autopush**:
+
+1. Stage all changes: `git add -A`
+2. Commit with descriptive message following the format above
+3. Stop — do not push unless explicitly requested
+
+This keeps the commit history clean while ensuring no work is lost.

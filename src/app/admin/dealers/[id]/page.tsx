@@ -153,6 +153,7 @@ export default async function DealerDetailPage({ params }: { params: Params }) {
             <CardContent>
               <DealerEditForm
                 dealerId={dealer.id}
+                username={dealer.username}
                 name={dealer.name}
                 subName={dealer.subName}
                 phone={dealer.phone}

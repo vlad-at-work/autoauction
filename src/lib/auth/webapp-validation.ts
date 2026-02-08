@@ -195,8 +195,8 @@ export function validateMaxWebAppData(
       .map(([key, value]) => `${key}=${value}`)
       .join('\n');
 
-    // Calculate expected hash: HMAC-SHA256 with secret = "WebAppData" + bot_token
-    const secret = createHmac('sha256', 'WebAppData' + token).digest();
+    // Calculate expected hash: HMAC-SHA256 with secret = HMAC_SHA256("WebAppData", bot_token)
+    const secret = createHmac('sha256', 'WebAppData').update(token).digest();
 
     const expectedHash = createHmac('sha256', secret).update(dataCheckString).digest('hex');
 
