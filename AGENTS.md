@@ -394,6 +394,44 @@ Test files use `TEST_DATA_PREFIX` constant for isolation. Cleanup scripts remove
 
 ---
 
+## Vercel MCP Integration
+
+Vercel MCP provides AI-powered access to your Vercel project. With it, I can:
+
+- **Check deployment status** — View latest deployments, build logs, errors
+- **Read/update environment variables** — Add/remove env vars without Vercel UI
+- **Analyze build failures** — Query deployment logs for error patterns
+- **List domains & aliases** — See production/preview URLs
+- **Trigger redeploys** — Promote deployments or retry failed builds
+
+### MCP Setup (One-time)
+
+1. **Install Vercel MCP in Cursor/VS Code:**
+   - Open Cursor settings → MCP
+   - Add server: `https://mcp.vercel.com`
+   - Or use one-click install: https://vercel.com/docs/ai-resources/vercel-mcp
+
+2. **Authorize access:**
+   - Browser opens to vercel.com
+   - Log in with your Vercel account
+   - Grant access to `autoauction` project
+
+3. **Project-specific URL (recommended):**
+   - Use: `https://mcp.vercel.com/<your-team>/autoauction`
+   - This auto-fills project context in all queries
+
+### MCP Usage Examples
+
+Once connected, I can run queries like:
+
+- "Check latest deployment status"
+- "Show production env vars (sensitive values redacted)"
+- "Why did the last build fail?"
+- "List recent preview deployments"
+- "Set env var X to value Y"
+
+**Note:** I cannot create new projects or delete existing ones. I also cannot access deployment logs containing sensitive data unless explicitly allowed.
+
 ## Troubleshooting
 
 ### Build Issues
