@@ -68,11 +68,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
 
-    const update = (await request.json()) as MaxWebhookUpdate;
+    const rawBody = await request.json();
+    console.warn('[MAX] Raw webhook payload:', JSON.stringify(rawBody).substring(0, 500));
+
+    const update = rawBody as MaxWebhookUpdate;
 
     // Validate MAX event structure
     if (!update.type || !update.object) {
-      console.warn('[MAX] Invalid webhook format');
+      console.warn(
+        '[MAX] Invalid webhook format - type:',
+        update.type,
+        'has object:',
+        !!update.object
+      );
       return NextResponse.json({ ok: true });
     }
 
