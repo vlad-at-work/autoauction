@@ -39,16 +39,18 @@ export default async function DealerDetailPage({ params }: { params: Params }) {
 
   const isDeleted = dealer.deletedAt != null;
   const claimToken = createDealerClaimToken(dealer.id);
-  const startParam = `claim:${dealer.id}:${claimToken}`;
+  // Use ?start= parameter so bot sends welcome message first, then user clicks button to open app
+  // This ensures chat is established before mini-app opens
+  const startParam = `claim_${dealer.id}_${claimToken}`;
   const telegramBotName = process.env.TG_BOT_NAME_DEALER;
   const maxBotName = process.env.MAX_BOT_NAME_DEALER;
 
   const telegramInviteUrl = telegramBotName
-    ? `https://t.me/${telegramBotName}?startapp=${encodeURIComponent(startParam)}`
+    ? `https://t.me/${telegramBotName}?start=${encodeURIComponent(startParam)}`
     : null;
 
   const maxInviteUrl = maxBotName
-    ? `https://max.ru/${maxBotName}?startapp=${encodeURIComponent(startParam)}`
+    ? `https://max.ru/${maxBotName}?start=${encodeURIComponent(startParam)}`
     : null;
 
   return (

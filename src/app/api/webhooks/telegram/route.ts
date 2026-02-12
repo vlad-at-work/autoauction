@@ -72,8 +72,10 @@ export async function POST(request: Request) {
 
     // Route to appropriate handler
     if (update.message) {
-      if (update.message.text === '/start') {
-        await handleTelegramStart(update.message, botType);
+      const text = update.message.text || '';
+      if (text.startsWith('/start')) {
+        const startParam = text.substring(6).trim(); // Extract parameter after /start
+        await handleTelegramStart(update.message, botType, startParam);
       } else {
         await handleTelegramMessage(update.message, botType);
       }
@@ -91,7 +93,7 @@ export async function POST(request: Request) {
   }
 }
 
-async function handleTelegramStart(message: TelegramMessage, botType: BotType) {
+async function handleTelegramStart(message: TelegramMessage, botType: BotType, startParam: string) {
   const chatId = message.chat.id;
   const userId = message.from.id;
   const firstName = message.from.first_name || 'User';
@@ -100,39 +102,45 @@ async function handleTelegramStart(message: TelegramMessage, botType: BotType) {
   if (!token) return;
 
   console.warn(
-    `[Telegram] User started ${botType} bot: ${userId} (chat: ${chatId}, name: ${firstName})`
+    `[Telegram] User started ${botType} bot: ${userId} (chat: ${chatId}, name: ${firstName}, param: ${startParam || 'none'})`
   );
 
   if (botType === 'dealer') {
-    const text = `👋 Добро пожаловать, ${firstName}!
+    if (startParam && startParam.startsWith('claim_')) {
+      // Invite link: send welcome with claim button
+      await handleTelegramDealerInvite(message, startParam);
+    } else {
+      // Regular start
+      const text = `👋 Добро пожаловать, ${firstName}!
 
 Это AutoAuction для дилеров - платформа обратных аукционов.
 
 Нажмите кнопку ниже, чтобы открыть панель дилера:`;
 
-    try {
-      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text,
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: '📱 Панель дилера',
-                  web_app: {
-                    url: `${process.env.NEXT_PUBLIC_APP_URL}/dealerinterface`,
+      try {
+        await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: '📱 Панель дилера',
+                    web_app: {
+                      url: `${process.env.NEXT_PUBLIC_APP_URL}/dealerinterface`,
+                    },
                   },
-                },
+                ],
               ],
-            ],
-          },
-        }),
-      });
-    } catch (err) {
-      console.error('[Telegram] Failed to send dealer start message:', err);
+            },
+          }),
+        });
+      } catch (err) {
+        console.error('[Telegram] Failed to send dealer start message:', err);
+      }
     }
   } else {
     // Customer bot
@@ -166,6 +174,45 @@ async function handleTelegramStart(message: TelegramMessage, botType: BotType) {
     } catch (err) {
       console.error('[Telegram] Failed to send customer start message:', err);
     }
+  }
+}
+
+async function handleTelegramDealerInvite(message: TelegramMessage, claimParam: string) {
+  const chatId = message.chat.id;
+  const firstName = message.from.first_name || 'User';
+  const token = getBotToken('dealer');
+
+  if (!token) return;
+
+  const text = `🎉 Добро пожаловать в AutoAuction, ${firstName}!
+
+Вы получили приглашение стать дилером на нашей платформе обратных аукционов.
+
+Нажмите кнопку ниже, чтобы активировать вашу учетную запись:`;
+
+  try {
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: '🚀 Активировать учетную запись',
+                web_app: {
+                  url: `${process.env.NEXT_PUBLIC_APP_URL}/dealerinterface?startapp=${claimParam}`,
+                },
+              },
+            ],
+          ],
+        },
+      }),
+    });
+  } catch (err) {
+    console.error('[Telegram] Failed to send dealer invite message:', err);
   }
 }
 

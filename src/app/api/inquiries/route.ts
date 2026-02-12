@@ -151,8 +151,6 @@ export async function POST(request: Request) {
           name: input.name,
           email: input.email,
           phone: input.phone,
-          status: input.status,
-          statusDescription: input.statusDescription,
           model: input.model,
           submodel: input.submodel,
           transmission: input.transmission,
@@ -237,9 +235,6 @@ export async function POST(request: Request) {
         : `\n\n⚠️ Это была ваша последняя заявка в этом периоде.`;
 
     // Build detailed inquiry description
-    const statusText = input.status
-      ? `\n🎖 Статус: ${input.status}${input.statusDescription ? ` (${input.statusDescription})` : ''}`
-      : '';
     const commentText = input.comment ? `\n💬 Комментарий: ${input.comment}` : '';
 
     // IMPORTANT: await notifications to avoid serverless "fire-and-forget" drops.
@@ -250,7 +245,7 @@ export async function POST(request: Request) {
           platformChatId: buyer.platformChatId,
           platformUserId: buyer.platformUserId,
         },
-        `✅ Заявка создана!\n\n🚗 ${input.model} ${input.submodel}\n⚙️ КПП: ${input.transmission}\n🎨 Цвет: ${input.color}${statusText}${commentText}\n\nДилеры начнут присылать вам предложения. Заявка активна 24 часа.${remainingText}`
+        `✅ Заявка создана!\n\n🚗 ${input.model} ${input.submodel}\n⚙️ КПП: ${input.transmission}\n🎨 Цвет: ${input.color}${commentText}\n\nДилеры начнут присылать вам предложения. Заявка активна 24 часа.${remainingText}`
       ),
       ...claimedDealers.map((dealer) =>
         notifyDealerOfNewInquiryViaBot(

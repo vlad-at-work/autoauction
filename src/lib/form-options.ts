@@ -16,8 +16,6 @@ export const MODEL_SUBMODELS = {
   ],
 } as const;
 
-export const STATUS_OPTIONS = ['Первый автомобиль', 'Для семьи', 'Для работы', 'Другое'] as const;
-
 export const TRANSMISSION_OPTIONS = ['Механика', 'Автомат', 'Не важно'] as const;
 
 export const COLOR_OPTIONS = [
@@ -35,4 +33,3 @@ export type Model = keyof typeof MODEL_SUBMODELS;
 export type Submodel<M extends Model = Model> = (typeof MODEL_SUBMODELS)[M][number];
 export type Transmission = (typeof TRANSMISSION_OPTIONS)[number];
 export type Color = (typeof COLOR_OPTIONS)[number];
-export type Status = (typeof STATUS_OPTIONS)[number];

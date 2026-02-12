@@ -97,13 +97,6 @@ export default async function InquiryDetailPage({ params }: { params: Params }) 
               <span className="text-muted-foreground">Цвет:</span>
               <span>{inquiry.color}</span>
 
-              {inquiry.status && inquiry.status !== 'Коллекционер' && (
-                <>
-                  <span className="text-muted-foreground">Статус:</span>
-                  <span>{inquiry.status}</span>
-                </>
-              )}
-
               {inquiry.comment && (
                 <>
                   <span className="text-muted-foreground">Комментарий:</span>
@@ -158,8 +151,6 @@ export default async function InquiryDetailPage({ params }: { params: Params }) 
                 submodel={inquiry.submodel}
                 transmission={inquiry.transmission}
                 color={inquiry.color}
-                status={inquiry.status}
-                statusDescription={inquiry.statusDescription}
                 comment={inquiry.comment}
                 expiresAt={inquiry.expiresAt}
                 isExpired={isExpired}

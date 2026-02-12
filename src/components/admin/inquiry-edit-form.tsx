@@ -28,8 +28,6 @@ type InquiryEditFormProps = {
   submodel: string;
   transmission: string;
   color: string;
-  status: string | null;
-  statusDescription: string | null;
   comment: string | null;
   expiresAt: Date;
   isExpired: boolean;
@@ -45,8 +43,6 @@ export function InquiryEditForm({
   submodel,
   transmission,
   color,
-  status,
-  statusDescription,
   comment,
   expiresAt,
   isExpired,
@@ -62,8 +58,6 @@ export function InquiryEditForm({
   const [nextSubmodel, setNextSubmodel] = useState(submodel);
   const [nextTransmission, setNextTransmission] = useState(transmission);
   const [nextColor, setNextColor] = useState(color);
-  const [nextStatus, setNextStatus] = useState(status ?? '');
-  const [nextStatusDescription, setNextStatusDescription] = useState(statusDescription ?? '');
   const [nextComment, setNextComment] = useState(comment ?? '');
   const [nextExpiresAt, setNextExpiresAt] = useState(toDateTimeLocalValue(expiresAt));
   const [notifyBuyerFlag, setNotifyBuyerFlag] = useState(false);
@@ -93,8 +87,6 @@ export function InquiryEditForm({
       submodel: nextSubmodel,
       transmission: nextTransmission,
       color: nextColor,
-      status: nextStatus ? nextStatus : null,
-      statusDescription: nextStatusDescription ? nextStatusDescription : null,
       comment: nextComment ? nextComment : null,
       expiresAt: parsedExpiresAt,
       notifyBuyer: notifyBuyerFlag,
@@ -205,34 +197,6 @@ export function InquiryEditForm({
             <Input value={nextColor} onChange={(e) => setNextColor(e.target.value)} />
             <FieldError
               errors={[fieldErrors?.color ? { message: fieldErrors.color } : undefined]}
-            />
-          </FieldContent>
-        </Field>
-
-        <Field orientation="vertical" data-invalid={!!fieldErrors?.status}>
-          <FieldLabel>Статус (опционально)</FieldLabel>
-          <FieldContent>
-            <Input value={nextStatus} onChange={(e) => setNextStatus(e.target.value)} />
-            <FieldError
-              errors={[fieldErrors?.status ? { message: fieldErrors.status } : undefined]}
-            />
-          </FieldContent>
-        </Field>
-
-        <Field orientation="vertical" data-invalid={!!fieldErrors?.statusDescription}>
-          <FieldLabel>Описание статуса (опционально)</FieldLabel>
-          <FieldContent>
-            <Textarea
-              value={nextStatusDescription}
-              onChange={(e) => setNextStatusDescription(e.target.value)}
-              rows={3}
-            />
-            <FieldError
-              errors={[
-                fieldErrors?.statusDescription
-                  ? { message: fieldErrors.statusDescription }
-                  : undefined,
-              ]}
             />
           </FieldContent>
         </Field>

@@ -36,7 +36,6 @@ type InquiryDetail = {
   submodel: string;
   transmission: string;
   color: string;
-  status: string | null;
   comment: string | null;
   createdAt: Date;
   expiresAt: Date;
@@ -156,12 +155,6 @@ export default function InquiryDetailPage() {
                   <span className="text-muted-foreground">Цвет:</span>
                   <span className="font-medium">{inquiry.color}</span>
                 </div>
-                {inquiry.status && inquiry.status !== 'Коллекционер' && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Статус:</span>
-                    <span className="font-medium">{inquiry.status}</span>
-                  </div>
-                )}
                 {inquiry.comment && (
                   <div className="flex flex-col gap-1">
                     <span className="text-muted-foreground">Комментарий:</span>

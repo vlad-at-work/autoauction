@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 
-import {
-  COLOR_OPTIONS,
-  MODEL_SUBMODELS,
-  STATUS_OPTIONS,
-  TRANSMISSION_OPTIONS,
-} from '@/lib/form-options';
+import { COLOR_OPTIONS, MODEL_SUBMODELS, TRANSMISSION_OPTIONS } from '@/lib/form-options';
 import { inquiryCreateSchema } from '@/lib/schemas/inquiry';
 
 describe('inquiryCreateSchema', () => {
@@ -16,8 +11,6 @@ describe('inquiryCreateSchema', () => {
     name: 'Олег',
     email: 'test@example.com',
     phone: '79991234567',
-    status: STATUS_OPTIONS[0],
-    statusDescription: undefined,
     model: 'Granta' as const,
     submodel: MODEL_SUBMODELS.Granta[0],
     transmission: TRANSMISSION_OPTIONS[0],
@@ -52,21 +45,6 @@ describe('inquiryCreateSchema', () => {
     expect(res.success).toBe(false);
     if (!res.success) {
       expect(res.error.issues.some((issue) => issue.path.join('.') === 'submodel')).toBe(true);
-    }
-  });
-
-  it('requires statusDescription when status is "Другое"', () => {
-    const res = inquiryCreateSchema.safeParse({
-      ...base,
-      status: 'Другое',
-      statusDescription: '   ',
-    });
-
-    expect(res.success).toBe(false);
-    if (!res.success) {
-      expect(res.error.issues.some((issue) => issue.path.join('.') === 'statusDescription')).toBe(
-        true
-      );
     }
   });
 

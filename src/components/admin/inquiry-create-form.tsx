@@ -31,8 +31,7 @@ export function InquiryCreateForm() {
   const [submodel, setSubmodel] = useState('');
   const [transmission, setTransmission] = useState('');
   const [color, setColor] = useState('');
-  const [status, setStatus] = useState('');
-  const [statusDescription, setStatusDescription] = useState('');
+
   const [comment, setComment] = useState('');
   const [expiresAt, setExpiresAt] = useState(() =>
     toDateTimeLocalValue(new Date(Date.now() + 24 * 60 * 60 * 1000))
@@ -63,8 +62,6 @@ export function InquiryCreateForm() {
       submodel,
       transmission,
       color,
-      status: status ? status : null,
-      statusDescription: statusDescription ? statusDescription : null,
       comment: comment ? comment : null,
       expiresAt: parsedExpiresAt,
     });
@@ -175,34 +172,6 @@ export function InquiryCreateForm() {
             <Input value={color} onChange={(e) => setColor(e.target.value)} />
             <FieldError
               errors={[fieldErrors?.color ? { message: fieldErrors.color } : undefined]}
-            />
-          </FieldContent>
-        </Field>
-
-        <Field orientation="vertical" data-invalid={!!fieldErrors?.status}>
-          <FieldLabel>Статус (опционально)</FieldLabel>
-          <FieldContent>
-            <Input value={status} onChange={(e) => setStatus(e.target.value)} />
-            <FieldError
-              errors={[fieldErrors?.status ? { message: fieldErrors.status } : undefined]}
-            />
-          </FieldContent>
-        </Field>
-
-        <Field orientation="vertical" data-invalid={!!fieldErrors?.statusDescription}>
-          <FieldLabel>Описание статуса (опционально)</FieldLabel>
-          <FieldContent>
-            <Textarea
-              value={statusDescription}
-              onChange={(e) => setStatusDescription(e.target.value)}
-              rows={3}
-            />
-            <FieldError
-              errors={[
-                fieldErrors?.statusDescription
-                  ? { message: fieldErrors.statusDescription }
-                  : undefined,
-              ]}
             />
           </FieldContent>
         </Field>

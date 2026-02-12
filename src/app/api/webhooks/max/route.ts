@@ -128,10 +128,18 @@ async function handleMaxMessageNew(message: MaxMessage, botType: BotType) {
       `[MAX] Message from ${userId} (chat: ${chatId}, bot: ${botType}): "${text.substring(0, 50)}"`
     );
 
-    // Handle /start command
-    if (text === '/start') {
+    // Handle /start command (with or without parameters)
+    if (text.startsWith('/start')) {
+      const startParam = text.substring(6).trim(); // Extract parameter after /start
+
       if (botType === 'dealer') {
-        await handleDealerStart(chatId, firstName);
+        if (startParam && startParam.startsWith('claim_')) {
+          // Invite link: send welcome with claim button
+          await handleDealerInviteStart(chatId, firstName, startParam);
+        } else {
+          // Regular start
+          await handleDealerStart(chatId, firstName);
+        }
       } else {
         await handleCustomerStart(chatId, firstName);
       }
@@ -195,6 +203,39 @@ async function handleDealerStart(chatId: string | number, firstName: string) {
                 type: 'link',
                 text: '📱 Панель дилера',
                 url: `https://max.ru/${maxBotName}?startapp=dashboard`,
+              },
+            ],
+          ],
+        },
+      },
+    ],
+    'dealer'
+  );
+}
+
+async function handleDealerInviteStart(
+  chatId: string | number,
+  firstName: string,
+  claimParam: string
+) {
+  const maxBotName = getMaxBotName('dealer');
+  await sendMaxMessage(
+    chatId,
+    `🎉 Добро пожаловать в AutoAuction, ${firstName}!
+
+Вы получили приглашение стать дилером на нашей платформе обратных аукционов.
+
+Нажмите кнопку ниже, чтобы активировать вашу учетную запись:`,
+    [
+      {
+        type: 'inline_keyboard',
+        payload: {
+          buttons: [
+            [
+              {
+                type: 'link',
+                text: '🚀 Активировать учетную запись',
+                url: `https://max.ru/${maxBotName}?startapp=${claimParam}`,
               },
             ],
           ],

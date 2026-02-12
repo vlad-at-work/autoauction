@@ -170,12 +170,6 @@ export default async function DealerInquiryPage({ params }: { params: Promise<{ 
             <div>
               <span className="font-medium">Цвет:</span> {inquiry.color}
             </div>
-            {inquiry.status && inquiry.status !== 'Коллекционер' && (
-              <div>
-                <span className="font-medium">Статус:</span> {inquiry.status}
-                {inquiry.statusDescription ? ` — ${inquiry.statusDescription}` : ''}
-              </div>
-            )}
             {inquiry.comment && (
               <div>
                 <span className="font-medium">Комментарий:</span> {inquiry.comment}

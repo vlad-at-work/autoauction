@@ -16,8 +16,6 @@ export type Inquiry = {
   name: string;
   email: string | null;
   phone: string;
-  status: string | null;
-  statusDescription: string | null;
   model: string;
   submodel: string;
   transmission: string;

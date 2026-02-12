@@ -32,12 +32,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 
-import {
-  COLOR_OPTIONS,
-  MODEL_SUBMODELS,
-  STATUS_OPTIONS,
-  TRANSMISSION_OPTIONS,
-} from '@/lib/form-options';
+import { COLOR_OPTIONS, MODEL_SUBMODELS, TRANSMISSION_OPTIONS } from '@/lib/form-options';
 import { inquiryCreateSchema, type InquiryCreateInput } from '@/lib/schemas/inquiry';
 
 type SubmitState =
@@ -65,8 +60,6 @@ function MiniAppInquiryFormPageInner() {
       phone: '89266754826',
       transmission: 'Не важно',
       color: 'Серебристый',
-      status: STATUS_OPTIONS[0],
-      statusDescription: undefined,
       comment: undefined,
       consent: false,
     },
@@ -78,7 +71,6 @@ function MiniAppInquiryFormPageInner() {
   const watchedSubmodel = watched.submodel;
   const watchedTransmission = watched.transmission;
   const watchedColor = watched.color;
-  const watchedStatus = watched.status;
   const watchedConsent = watched.consent;
 
   // Load WebApp user data into form - simple, no redirect logic
@@ -350,48 +342,6 @@ function MiniAppInquiryFormPageInner() {
                     </SelectContent>
                   </Select>
                   <FieldError errors={[form.formState.errors.color]} />
-                </FieldContent>
-              </Field>
-            </FieldGroup>
-
-            <FieldGroup>
-              <Field orientation="vertical" data-invalid={!!form.formState.errors.status}>
-                <FieldLabel>Статус (опционально)</FieldLabel>
-                <FieldContent>
-                  <Select
-                    value={watchedStatus}
-                    onValueChange={(value) =>
-                      form.setValue('status', value as never, { shouldValidate: true })
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Выберите статус" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STATUS_OPTIONS.map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {status}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FieldError errors={[form.formState.errors.status]} />
-                </FieldContent>
-              </Field>
-
-              <Field
-                orientation="vertical"
-                className={cn(watchedStatus === 'Другое' ? 'block' : 'hidden')}
-                data-invalid={!!form.formState.errors.statusDescription}
-              >
-                <FieldLabel htmlFor="statusDescription">Описание статуса</FieldLabel>
-                <FieldContent>
-                  <Textarea
-                    id="statusDescription"
-                    {...form.register('statusDescription')}
-                    placeholder="Опишите статус"
-                  />
-                  <FieldError errors={[form.formState.errors.statusDescription]} />
                 </FieldContent>
               </Field>
             </FieldGroup>

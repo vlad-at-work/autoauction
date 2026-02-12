@@ -246,12 +246,6 @@ const inquiryUpdateSchema = z
       .optional(),
     transmission: z.string().min(1, 'Укажите КПП').max(100, 'Слишком длинное значение').optional(),
     color: z.string().min(1, 'Укажите цвет').max(100, 'Слишком длинное значение').optional(),
-    status: z.string().max(200, 'Слишком длинный статус').optional().nullable(),
-    statusDescription: z
-      .string()
-      .max(500, 'Слишком длинное описание статуса')
-      .optional()
-      .nullable(),
     comment: z.string().max(1000, 'Слишком длинный комментарий').optional().nullable(),
     expiresAt: z.date({ message: 'Некорректная дата окончания' }).optional(),
   })
@@ -272,8 +266,6 @@ export async function updateInquiry(
     submodel?: string;
     transmission?: string;
     color?: string;
-    status?: string | null;
-    statusDescription?: string | null;
     comment?: string | null;
     expiresAt?: Date;
     notifyBuyer?: boolean;
@@ -340,8 +332,6 @@ const inquiryCreateSchema = z.object({
   submodel: z.string().min(1, 'Укажите подмодель').max(100, 'Слишком длинная подмодель'),
   transmission: z.string().min(1, 'Укажите КПП').max(100, 'Слишком длинное значение'),
   color: z.string().min(1, 'Укажите цвет').max(100, 'Слишком длинное значение'),
-  status: z.string().max(200, 'Слишком длинный статус').optional().nullable(),
-  statusDescription: z.string().max(500, 'Слишком длинное описание статуса').optional().nullable(),
   comment: z.string().max(1000, 'Слишком длинный комментарий').optional().nullable(),
   expiresAt: z.date({ message: 'Некорректная дата окончания' }),
 });
@@ -355,8 +345,6 @@ export async function createInquiry(data: {
   submodel: string;
   transmission: string;
   color: string;
-  status?: string | null;
-  statusDescription?: string | null;
   comment?: string | null;
   expiresAt: Date;
 }): Promise<ActionResult> {

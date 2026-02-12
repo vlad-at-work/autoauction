@@ -45,8 +45,6 @@ type Inquiry = {
   submodel: string;
   transmission: string;
   color: string;
-  status?: string | null;
-  statusDescription?: string | null;
   comment?: string | null;
   createdAt: string;
   expiresAt: string;
@@ -261,12 +259,6 @@ export default function DealerInquiryDetailPage() {
             <div>
               <span className="font-medium">Цвет:</span> {inquiry.color}
             </div>
-            {inquiry.status && inquiry.status !== 'Коллекционер' && (
-              <div>
-                <span className="font-medium">Статус:</span> {inquiry.status}
-                {inquiry.statusDescription ? ` — ${inquiry.statusDescription}` : ''}
-              </div>
-            )}
             {inquiry.comment && (
               <div>
                 <span className="font-medium">Комментарий:</span> {inquiry.comment}
