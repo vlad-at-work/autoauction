@@ -156,7 +156,7 @@ export default function InquiryDetailPage() {
                   <span className="text-muted-foreground">Цвет:</span>
                   <span className="font-medium">{inquiry.color}</span>
                 </div>
-                {inquiry.status && (
+                {inquiry.status && inquiry.status !== 'Коллекционер' && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Статус:</span>
                     <span className="font-medium">{inquiry.status}</span>

@@ -16,13 +16,7 @@ export const MODEL_SUBMODELS = {
   ],
 } as const;
 
-export const STATUS_OPTIONS = [
-  'Коллекционер',
-  'Первый автомобиль',
-  'Для семьи',
-  'Для работы',
-  'Другое',
-] as const;
+export const STATUS_OPTIONS = ['Первый автомобиль', 'Для семьи', 'Для работы', 'Другое'] as const;
 
 export const TRANSMISSION_OPTIONS = ['Механика', 'Автомат', 'Не важно'] as const;
 

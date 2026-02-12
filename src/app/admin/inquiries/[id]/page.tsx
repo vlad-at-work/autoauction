@@ -97,7 +97,7 @@ export default async function InquiryDetailPage({ params }: { params: Params }) 
               <span className="text-muted-foreground">Цвет:</span>
               <span>{inquiry.color}</span>
 
-              {inquiry.status && (
+              {inquiry.status && inquiry.status !== 'Коллекционер' && (
                 <>
                   <span className="text-muted-foreground">Статус:</span>
                   <span>{inquiry.status}</span>

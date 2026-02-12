@@ -261,7 +261,7 @@ export default function DealerInquiryDetailPage() {
             <div>
               <span className="font-medium">Цвет:</span> {inquiry.color}
             </div>
-            {inquiry.status && (
+            {inquiry.status && inquiry.status !== 'Коллекционер' && (
               <div>
                 <span className="font-medium">Статус:</span> {inquiry.status}
                 {inquiry.statusDescription ? ` — ${inquiry.statusDescription}` : ''}
