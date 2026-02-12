@@ -169,6 +169,63 @@ MAX caveat:
 
 - MAX may respond with `"Unknown recipient"` until webhook/subscription + user-initiated chat requirements are satisfied (see `docs/archived_docs/MAX_WEBHOOK_RESEARCH.md`).
 
+## Webhook Management
+
+The app supports **dual-bot architecture**: separate bots for customers (buyers) and dealers on both Telegram and MAX platforms. Webhooks are configured via API (not UI).
+
+### Current Status (Production)
+
+| Platform | Bot                            | Status    | Webhook URL                           |
+| -------- | ------------------------------ | --------- | ------------------------------------- |
+| MAX      | Customer (id5010035001_bot)    | ✅ Active | `/api/webhooks/max?bot=customer`      |
+| MAX      | Dealer (id5010035001_1_bot)    | ✅ Active | `/api/webhooks/max?bot=dealer`        |
+| Telegram | Customer (autoauction_bot)     | ✅ Active | `/api/webhooks/telegram?bot=customer` |
+| Telegram | Dealer (autoauctiondealer_bot) | ✅ Active | `/api/webhooks/telegram?bot=dealer`   |
+
+### Management Scripts
+
+```bash
+# Check current webhook status
+./scripts/check-hooks.sh
+
+# Register/update all webhooks (production)
+./scripts/setup-hooks.sh
+
+# Register webhooks for development (e.g., ngrok)
+./scripts/setup-hooks.sh https://abc123.ngrok.io
+
+# Delete all webhooks (switch to polling)
+./scripts/delete-hooks.sh
+```
+
+### Manual Webhook Setup (if needed)
+
+**MAX Platform:**
+
+```bash
+# Customer bot
+curl -X POST https://platform-api.max.ru/subscriptions \
+  -H "Authorization: $MAX_BOT_TOKEN" \
+  -d '{"url": "https://autoauction-two.vercel.app/api/webhooks/max?bot=customer"}'
+
+# Dealer bot
+curl -X POST https://platform-api.max.ru/subscriptions \
+  -H "Authorization: $MAX_BOT_TOKEN_DEALER" \
+  -d '{"url": "https://autoauction-two.vercel.app/api/webhooks/max?bot=dealer"}'
+```
+
+**Telegram:**
+
+```bash
+# Customer bot
+curl -X POST "https://api.telegram.org/bot$TG_BOT_TOKEN/setWebhook" \
+  -d '{"url": "https://autoauction-two.vercel.app/api/webhooks/telegram?bot=customer", "secret_token": "'$TG_WEBHOOK_SECRET'"}'
+
+# Dealer bot
+curl -X POST "https://api.telegram.org/bot$TG_BOT_TOKEN_DEALER/setWebhook" \
+  -d '{"url": "https://autoauction-two.vercel.app/api/webhooks/telegram?bot=dealer", "secret_token": "'$TG_DEALER_WEBHOOK_SECRET'"}'
+```
+
 ## Local Dev
 
 ```bash

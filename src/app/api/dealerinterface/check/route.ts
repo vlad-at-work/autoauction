@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
           platform: true,
           platformUserId: true,
           passwordHash: true,
+          name: true,
         },
       });
 
@@ -138,6 +139,19 @@ export async function POST(request: NextRequest) {
         throw error;
       }
 
+      // Send welcome message to establish chat in user's chat list
+      if (chatId || platformUserId) {
+        const targetChatId = chatId || platformUserId;
+
+        // Fire and forget - don't block response on this
+        if (platform === 'max') {
+          sendMaxWelcomeMessageToDealer(targetChatId, dealer.name).catch((err) => {
+            console.error('[/api/dealerinterface/check] Failed to send welcome message:', err);
+          });
+        }
+        // Telegram welcome message can be added here if needed
+      }
+
       return NextResponse.json({ status: 'needs_setup', dealerId });
     }
 
@@ -151,7 +165,10 @@ export async function POST(request: NextRequest) {
       },
       orderBy: { createdAt: 'asc' },
       take: 2, // detect "more than 1"
-      select: { id: true },
+      select: {
+        id: true,
+        name: true,
+      },
     });
 
     if (unclaimedDealers.length === 1) {
@@ -163,6 +180,17 @@ export async function POST(request: NextRequest) {
           platformChatId: chatId || platformUserId,
         },
       });
+
+      // Send welcome message for auto-claimed dealer too
+      if (chatId || platformUserId) {
+        const targetChatId = chatId || platformUserId;
+
+        if (platform === 'max') {
+          sendMaxWelcomeMessageToDealer(targetChatId, unclaimedDealers[0].name).catch((err) => {
+            console.error('[/api/dealerinterface/check] Failed to send welcome message:', err);
+          });
+        }
+      }
 
       return NextResponse.json({ status: 'needs_setup', dealerId: unclaimedDealers[0].id });
     }
@@ -177,4 +205,65 @@ export async function POST(request: NextRequest) {
     console.error('[/api/dealerinterface/check] Error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+}
+
+/**
+ * Send welcome message to dealer via MAX
+ * This establishes the chat in the user's chat list
+ */
+async function sendMaxWelcomeMessageToDealer(
+  chatId: string,
+  dealerName?: string | null
+): Promise<void> {
+  const MAX_BOT_TOKEN_DEALER = process.env.MAX_BOT_TOKEN_DEALER;
+  const MAX_BOT_NAME_DEALER = process.env.MAX_BOT_NAME_DEALER || 'AutoAuctionDealerBot';
+  const MAX_API_BASE = 'https://platform-api.max.ru';
+
+  if (!MAX_BOT_TOKEN_DEALER || MAX_BOT_TOKEN_DEALER === '<from_vercel>') {
+    console.warn('[sendMaxWelcomeMessageToDealer] MAX_BOT_TOKEN_DEALER not configured');
+    return;
+  }
+
+  const name = dealerName || 'Дилер';
+
+  const url = new URL(`${MAX_API_BASE}/messages`);
+  url.searchParams.set('chat_id', chatId);
+
+  const response = await fetch(url.toString(), {
+    method: 'POST',
+    headers: {
+      Authorization: MAX_BOT_TOKEN_DEALER,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      text: `🎉 Добро пожаловать в AutoAuction, ${name}!
+
+Ваш аккаунт дилера успешно активирован. Теперь вы будете получать уведомления о новых заявках от покупателей.
+
+Нажмите кнопку ниже, чтобы открыть панель дилера:`,
+      attachments: [
+        {
+          type: 'inline_keyboard',
+          payload: {
+            buttons: [
+              [
+                {
+                  type: 'link',
+                  text: '📱 Открыть панель дилера',
+                  url: `https://max.ru/${MAX_BOT_NAME_DEALER}?startapp=dashboard`,
+                },
+              ],
+            ],
+          },
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`MAX API error: ${response.status} - ${errorText}`);
+  }
+
+  // Welcome message sent successfully
 }

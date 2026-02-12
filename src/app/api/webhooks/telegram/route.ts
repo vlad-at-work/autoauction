@@ -2,13 +2,20 @@
  * Telegram Webhook Handler
  *
  * Receives webhook updates from Telegram
+ * Supports both customer and dealer bots
  * Verifies secret token and routes events appropriately
+ *
+ * Query param: ?bot=dealer or ?bot=customer (defaults to customer)
  */
 
 import { NextResponse } from 'next/server';
 
 const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN;
+const TG_BOT_TOKEN_DEALER = process.env.TG_BOT_TOKEN_DEALER;
 const TG_WEBHOOK_SECRET = process.env.TG_WEBHOOK_SECRET;
+const TG_WEBHOOK_SECRET_DEALER = process.env.TG_WEBHOOK_SECRET_DEALER;
+
+type BotType = 'customer' | 'dealer';
 
 type TelegramChat = { id: number };
 type TelegramUser = { id: number; first_name?: string };
@@ -21,20 +28,43 @@ type TelegramUpdate = {
   web_app_data?: unknown;
 };
 
+function getBotToken(botType: BotType): string | undefined {
+  return botType === 'dealer' ? TG_BOT_TOKEN_DEALER : TG_BOT_TOKEN;
+}
+
+function getWebhookSecret(botType: BotType): string | undefined {
+  return botType === 'dealer' ? TG_WEBHOOK_SECRET_DEALER : TG_WEBHOOK_SECRET;
+}
+
 export async function POST(request: Request) {
   try {
+    // Determine which bot this webhook is for
+    const url = new URL(request.url);
+    const botParam = url.searchParams.get('bot');
+    const botType: BotType = botParam === 'dealer' ? 'dealer' : 'customer';
+
+    const token = getBotToken(botType);
+    const expectedSecret = getWebhookSecret(botType);
+
     // Verify webhook secret
     const secret = request.headers.get('x-telegram-bot-api-secret-token');
-    if (secret !== TG_WEBHOOK_SECRET) {
-      console.warn('[Telegram] Invalid webhook secret');
+    if (expectedSecret && secret !== expectedSecret) {
+      console.warn(`[Telegram] Invalid webhook secret for ${botType} bot`);
       return NextResponse.json({ error: 'Invalid secret' }, { status: 403 });
+    }
+
+    if (!token) {
+      const tokenName = botType === 'dealer' ? 'TG_BOT_TOKEN_DEALER' : 'TG_BOT_TOKEN';
+      console.warn(`[Telegram] ${tokenName} not configured`);
+      return NextResponse.json({ ok: true });
     }
 
     const update = (await request.json()) as TelegramUpdate;
 
     // Log incoming update
-    console.log('[Telegram] Received update:', {
+    console.warn('[Telegram] Received update:', {
       update_id: update.update_id,
+      botType,
       type: Object.keys(update).find((k) =>
         ['message', 'callback_query', 'web_app_data'].includes(k)
       ),
@@ -43,80 +73,138 @@ export async function POST(request: Request) {
     // Route to appropriate handler
     if (update.message) {
       if (update.message.text === '/start') {
-        await handleTelegramStart(update.message);
+        await handleTelegramStart(update.message, botType);
       } else {
-        await handleTelegramMessage(update.message);
+        await handleTelegramMessage(update.message, botType);
       }
     } else if (update.callback_query) {
-      await handleTelegramCallback(update.callback_query);
+      await handleTelegramCallback(update.callback_query, botType);
     } else if (update.web_app_data) {
-      await handleTelegramWebAppData(update.web_app_data);
+      await handleTelegramWebAppData(update.web_app_data, botType);
     }
 
     // Telegram requires immediate 200 response
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('[Telegram] Webhook error:', err);
-    // Still return 200 to acknowledge receipt
     return NextResponse.json({ ok: true });
   }
 }
 
-async function handleTelegramStart(message: TelegramMessage) {
+async function handleTelegramStart(message: TelegramMessage, botType: BotType) {
   const chatId = message.chat.id;
   const userId = message.from.id;
   const firstName = message.from.first_name || 'User';
+  const token = getBotToken(botType);
 
-  console.log(`[Telegram] User started bot: ${userId} (chat: ${chatId}, name: ${firstName})`);
+  if (!token) return;
 
-  // Send welcome message with mini-app button
-  const text = `👋 Добро пожаловать, ${firstName}!
+  console.warn(
+    `[Telegram] User started ${botType} bot: ${userId} (chat: ${chatId}, name: ${firstName})`
+  );
+
+  if (botType === 'dealer') {
+    const text = `👋 Добро пожаловать, ${firstName}!
+
+Это AutoAuction для дилеров - платформа обратных аукционов.
+
+Нажмите кнопку ниже, чтобы открыть панель дилера:`;
+
+    try {
+      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text,
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: '📱 Панель дилера',
+                  web_app: {
+                    url: `${process.env.NEXT_PUBLIC_APP_URL}/dealerinterface`,
+                  },
+                },
+              ],
+            ],
+          },
+        }),
+      });
+    } catch (err) {
+      console.error('[Telegram] Failed to send dealer start message:', err);
+    }
+  } else {
+    // Customer bot
+    const text = `👋 Добро пожаловать, ${firstName}!
 
 Это AutoAuction - платформа обратных аукционов для автомобилей.
 
 Нажмите кнопку ниже, чтобы открыть приложение:`;
 
-  try {
-    await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text,
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: '📱 Открыть приложение',
-                web_app: {
-                  url: `${process.env.NEXT_PUBLIC_APP_URL}/app`,
+    try {
+      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text,
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: '📱 Открыть приложение',
+                  web_app: {
+                    url: `${process.env.NEXT_PUBLIC_APP_URL}/app`,
+                  },
                 },
-              },
+              ],
             ],
-          ],
-        },
-      }),
-    });
-  } catch (err) {
-    console.error('[Telegram] Failed to send start message:', err);
+          },
+        }),
+      });
+    } catch (err) {
+      console.error('[Telegram] Failed to send customer start message:', err);
+    }
   }
 }
 
-async function handleTelegramMessage(message: TelegramMessage) {
+async function handleTelegramMessage(message: TelegramMessage, botType: BotType) {
   const chatId = message.chat.id;
   const userId = message.from.id;
   const text = message.text || '';
+  const token = getBotToken(botType);
 
-  console.log(`[Telegram] Message from ${userId}: "${text.substring(0, 50)}"`);
+  if (!token) return;
 
-  // Handle specific commands or messages
-  if (text.includes('помощь') || text.includes('help')) {
-    await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: `ℹ️ Справка по использованию:
+  console.warn(`[Telegram] Message from ${userId} (bot: ${botType}): "${text.substring(0, 50)}"`);
+
+  // Handle help command
+  if (text.toLowerCase().includes('помощь') || text.toLowerCase().includes('help')) {
+    if (botType === 'dealer') {
+      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: `ℹ️ Справка для дилеров:
+
+1. Откройте панель дилера через кнопку "📱 Панель дилера"
+2. Просматривайте активные заявки от покупателей
+3. Делайте свои предложения
+4. Получайте уведомления, когда покупатель принимает ваше предложение
+
+Вопросы? Обратитесь к администратору.`,
+        }),
+      });
+    } else {
+      // Customer help
+      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: `ℹ️ Справка по использованию:
 
 1. Откройте мини-приложение через кнопку "📱 Открыть приложение"
 2. Создайте новую заявку на поиск автомобиля
@@ -124,20 +212,24 @@ async function handleTelegramMessage(message: TelegramMessage) {
 4. Выберите лучшее предложение
 
 Вопросы? Напишите /support`,
-      }),
-    });
+        }),
+      });
+    }
   }
 }
 
-async function handleTelegramCallback(callbackQuery: TelegramCallbackQuery) {
+async function handleTelegramCallback(callbackQuery: TelegramCallbackQuery, botType: BotType) {
   const callbackId = callbackQuery.id;
   const data = callbackQuery.data;
+  const token = getBotToken(botType);
 
-  console.log(`[Telegram] Callback: ${data}`);
+  if (!token) return;
+
+  console.warn(`[Telegram] Callback (bot: ${botType}): ${data}`);
 
   // Acknowledge callback (removes loading state)
   try {
-    await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/answerCallbackQuery`, {
+    await fetch(`https://api.telegram.org/bot${token}/answerCallbackQuery`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -150,6 +242,6 @@ async function handleTelegramCallback(callbackQuery: TelegramCallbackQuery) {
   }
 }
 
-async function handleTelegramWebAppData(webAppData: unknown) {
-  console.log('[Telegram] WebApp data received:', webAppData);
+async function handleTelegramWebAppData(webAppData: unknown, botType: BotType) {
+  console.warn(`[Telegram] WebApp data received (bot: ${botType}):`, webAppData);
 }
