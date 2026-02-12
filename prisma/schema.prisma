@@ -43,9 +43,6 @@ model Inquiry {
   email String?
   phone String
 
-  status            String?
-  statusDescription String?
-
   model        String
   submodel     String
   transmission String

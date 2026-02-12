@@ -47,8 +47,6 @@ const TEST_INQUIRY = {
   submodel: 'sedan',
   transmission: 'Механика',
   color: 'Белый',
-  status: 'Участник СВО',
-  statusDescription: 'Участник СВО / мобилизованный',
   comment: 'Тестовая заявка для автоматизированного теста',
 };
 
@@ -172,8 +170,6 @@ async function step4_CreateInquiry(buyer: any) {
       name: TEST_CUSTOMER.name,
       phone: TEST_CUSTOMER.phone,
       email: TEST_CUSTOMER.email,
-      status: TEST_INQUIRY.status,
-      statusDescription: TEST_INQUIRY.statusDescription,
       model: TEST_INQUIRY.model,
       submodel: TEST_INQUIRY.submodel,
       transmission: TEST_INQUIRY.transmission,
