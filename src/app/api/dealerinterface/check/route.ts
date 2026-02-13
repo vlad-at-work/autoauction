@@ -183,9 +183,13 @@ export async function POST(request: NextRequest) {
           console.log('[/api/dealerinterface/check] Returning: authenticated');
           return NextResponse.json({ status: 'authenticated' });
         }
-        // Dealer not found or inactive - clear cookie and continue
-        console.log('[/api/dealerinterface/check] Session dealer not found, clearing cookie');
+        // Dealer not found or inactive - log and continue to claim flow
+        console.log(
+          '[/api/dealerinterface/check] Session dealer not found/inactive, continuing to claim check'
+        );
       }
+      // Session invalid or dealer gone - continue to claim check below
+      // The old cookie will be overwritten when new dealer is claimed
     }
 
     // Check if dealer exists with this platform
