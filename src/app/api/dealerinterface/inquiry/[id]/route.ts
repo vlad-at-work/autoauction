@@ -27,7 +27,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     });
 
     if (!dealer || !dealer.active) {
-      return NextResponse.json({ error: 'Dealer not found or inactive' }, { status: 403 });
+      // Clear invalid session cookie and return 401 to force re-auth
+      const response = NextResponse.json(
+        { error: 'Dealer not found or inactive' },
+        { status: 401 }
+      );
+      response.cookies.set('dealer_session', '', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 0,
+        path: '/',
+      });
+      return response;
     }
 
     const inquiry = await prisma.inquiry.findFirst({

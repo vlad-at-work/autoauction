@@ -48,7 +48,19 @@ export async function POST(request: NextRequest) {
     });
 
     if (!dealer || !dealer.active) {
-      return NextResponse.json({ error: 'Дилер не найден или неактивен' }, { status: 403 });
+      // Clear invalid session cookie and return 401 to force re-auth
+      const response = NextResponse.json(
+        { error: 'Дилер не найден или неактивен' },
+        { status: 401 }
+      );
+      response.cookies.set('dealer_session', '', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 0,
+        path: '/',
+      });
+      return response;
     }
 
     const inquiry = await prisma.inquiry.findFirst({

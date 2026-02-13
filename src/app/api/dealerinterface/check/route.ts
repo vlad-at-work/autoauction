@@ -173,9 +173,18 @@ export async function POST(request: NextRequest) {
         matches: session?.platform === prismaPlat && session?.platformUserId === platformUserId,
       });
       if (session && session.platform === prismaPlat && session.platformUserId === platformUserId) {
-        // Valid session - dealer is authenticated
-        console.log('[/api/dealerinterface/check] Returning: authenticated');
-        return NextResponse.json({ status: 'authenticated' });
+        // Verify the dealer still exists (may have been deleted in DB wipe)
+        const dealer = await prisma.dealer.findUnique({
+          where: { id: session.dealerId },
+          select: { id: true, active: true },
+        });
+        if (dealer && dealer.active) {
+          // Valid session and dealer exists
+          console.log('[/api/dealerinterface/check] Returning: authenticated');
+          return NextResponse.json({ status: 'authenticated' });
+        }
+        // Dealer not found or inactive - clear cookie and continue
+        console.log('[/api/dealerinterface/check] Session dealer not found, clearing cookie');
       }
     }
 
