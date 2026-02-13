@@ -4,13 +4,8 @@
  * Receives webhook updates from MAX platform for both customer and dealer bots
  * Query param: ?bot=dealer or ?bot=customer (defaults to customer)
  *
- * MAX Webhook Format:
- * {
- *   "update_type": "message_created" | "bot_started" | "message_callback",
- *   "timestamp": 1234567890,
- *   "message": { sender, recipient, body },
- *   "user_locale": "ru"
- * }
+ * MAX API docs: POST /messages?user_id={user_id} for sending
+ * Update object: { update_type, timestamp, message: { sender, recipient, body }, user_locale }
  */
 
 import { NextResponse } from 'next/server';
@@ -27,86 +22,100 @@ const MAX_BOT_NAME_DEALER =
 
 type BotType = 'customer' | 'dealer';
 
-type MaxWebhookUpdate = {
-  update_type: 'message_created' | 'bot_started' | 'message_callback';
-  timestamp: number;
-  // For bot_started events
-  user?: {
-    user_id: number;
-    first_name?: string;
-    last_name?: string;
-    name?: string;
-  };
-  // For bot_started events (parameter from invite link)
-  start_param?: string;
-  // For message_created events
-  message?: {
-    sender?: {
-      user_id: number;
-      first_name?: string;
-      last_name?: string;
-      name?: string;
-    };
-    recipient?: {
-      chat_id: number;
-      chat_type: string;
-    };
-    body?: {
-      text?: string;
-    };
-  };
-  callback?: {
-    user: {
-      user_id: number;
-      name?: string;
-    };
-    payload: string;
-  };
-};
-
 export async function POST(request: Request) {
   try {
     const url = new URL(request.url);
     const botParam = url.searchParams.get('bot');
     const botType: BotType = botParam === 'dealer' ? 'dealer' : 'customer';
 
-    const update = (await request.json()) as MaxWebhookUpdate;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const update = (await request.json()) as Record<string, any>;
 
-    // Extract userId from the right field based on update_type
+    // Log raw payload for debugging (critical to understand MAX's actual format)
+    console.warn('[MAX Webhook] RAW:', JSON.stringify(update).substring(0, 500));
+
+    const updateType = update.update_type as string;
+
+    // Extract userId from all possible locations:
+    // - message.sender.user_id (message_created)
+    // - user.user_id (possible bot_started format)
+    // - message.sender.user_id (bot_started might also use message format)
     const userId =
-      update.update_type === 'bot_started' ? update.user?.user_id : update.message?.sender?.user_id;
+      update.user?.user_id || update.message?.sender?.user_id || update.message?.from?.user_id;
+
+    const chatId = update.chat?.chat_id || update.message?.recipient?.chat_id;
+
+    // Extract start payload from all possible locations
+    const startPayload = update.start_payload || update.start_param || update.payload;
+
+    // Extract message text
+    const messageText = update.message?.body?.text || '';
+
+    // Extract user name
+    const firstName =
+      update.user?.first_name ||
+      update.user?.name ||
+      update.message?.sender?.first_name ||
+      update.message?.sender?.name ||
+      'User';
 
     console.warn('[MAX Webhook]', {
-      update_type: update.update_type,
+      update_type: updateType,
       botType,
       userId,
-      timestamp: update.timestamp,
+      chatId,
+      startPayload,
+      messageText: messageText.substring(0, 50),
+      firstName,
     });
 
-    // Handle different update types
-    switch (update.update_type) {
-      case 'bot_started':
-        // bot_started has user at root level and optional start_param
-        if (update.user) {
-          await handleBotStarted(update.user, update.start_param, botType);
+    switch (updateType) {
+      case 'bot_started': {
+        if (!userId) {
+          console.warn('[MAX Webhook] bot_started but no userId found');
+          break;
         }
-        break;
 
-      case 'message_created':
-        if (update.message) {
-          await handleMessage(update.message, botType);
+        // For bot_started, start_payload may be at root level or we extract from message text
+        let param = startPayload;
+
+        // Also check if message text contains /start with param
+        if (!param && messageText.startsWith('/start')) {
+          param = messageText.substring(7).trim();
+        }
+
+        if (botType === 'dealer') {
+          await handleDealerStart(userId, firstName, param || undefined);
+        } else {
+          await handleBuyerStart(userId, firstName);
         }
         break;
+      }
+
+      case 'message_created': {
+        if (!userId) {
+          console.warn('[MAX Webhook] message_created but no userId found');
+          break;
+        }
+
+        // Handle /start command in message text
+        if (messageText.startsWith('/start')) {
+          const param = messageText.substring(7).trim();
+          if (botType === 'dealer') {
+            await handleDealerStart(userId, firstName, param || undefined);
+          } else {
+            await handleBuyerStart(userId, firstName);
+          }
+        }
+        break;
+      }
 
       case 'message_callback':
-        if (update.callback) {
-          console.warn('[MAX Webhook] Callback received:', update.callback);
-          // Handle button callbacks if needed in future
-        }
+        console.warn('[MAX Webhook] Callback received');
         break;
 
       default:
-        console.warn(`[MAX Webhook] Unknown update_type: ${update.update_type}`);
+        console.warn(`[MAX Webhook] Unknown update_type: ${updateType}`);
     }
 
     // CRITICAL: Must respond quickly with 200 OK (MAX timeout is ~2-3 seconds)
@@ -115,61 +124,6 @@ export async function POST(request: Request) {
     console.error('[MAX Webhook] Error:', err);
     // Still return 200 OK to avoid webhook disconnection
     return NextResponse.json({ ok: true });
-  }
-}
-
-/**
- * Handle bot_started event (user clicks Start button or opens bot)
- * This is sent when user first interacts with the bot
- */
-async function handleBotStarted(
-  user: NonNullable<MaxWebhookUpdate['user']>,
-  startParam: string | undefined,
-  botType: BotType
-) {
-  const userId = user.user_id;
-  const firstName = user.first_name || user.name || 'User';
-
-  if (!userId) {
-    console.warn('[MAX Webhook] Missing user_id in bot_started');
-    return;
-  }
-
-  console.warn(`[MAX Webhook] Bot started by ${userId} (${botType})`, {
-    startParam,
-    firstName,
-  });
-
-  if (botType === 'dealer') {
-    await handleDealerStart(userId, firstName, startParam);
-  } else {
-    await handleBuyerStart(userId, firstName);
-  }
-}
-
-async function handleMessage(message: NonNullable<MaxWebhookUpdate['message']>, botType: BotType) {
-  const userId = message.sender?.user_id;
-  const text = message.body?.text || '';
-  const firstName = message.sender?.first_name || message.sender?.name || 'User';
-
-  if (!userId) {
-    console.warn('[MAX Webhook] Missing user_id in message');
-    return;
-  }
-
-  console.warn(`[MAX Webhook] Message from ${userId} (${botType}):`, {
-    text: text.substring(0, 100),
-  });
-
-  // Handle /start command (with or without parameters)
-  if (text.startsWith('/start')) {
-    const param = text.substring(7).trim(); // Extract parameter after "/start "
-
-    if (botType === 'dealer') {
-      await handleDealerStart(userId, firstName, param);
-    } else {
-      await handleBuyerStart(userId, firstName);
-    }
   }
 }
 
@@ -186,21 +140,15 @@ async function handleDealerStart(userId: number, firstName: string, param?: stri
 
     if (parts.length < 3) {
       console.warn('[MAX Webhook] Invalid invite format:', parts);
-      await sendMaxMessage(
-        userId,
-        '❌ Invalid invite link format. Please contact administrator.',
-        [],
-        'dealer'
-      );
+      await sendMaxMessage(userId, '❌ Invalid invite link format.', [], 'dealer');
       return;
     }
 
     const dealerId = parts[1];
-    const token = parts.slice(2).join('_'); // Token may contain underscores
+    const token = parts.slice(2).join('_');
 
     console.warn('[MAX Webhook] Processing invite:', { dealerId, tokenLength: token.length });
 
-    // Validate token in database
     const dealer = await prisma.dealer.findFirst({
       where: {
         id: dealerId,
@@ -216,27 +164,16 @@ async function handleDealerStart(userId: number, firstName: string, param?: stri
 
     if (!dealer) {
       console.warn('[MAX Webhook] Dealer not found or token mismatch');
-      await sendMaxMessage(
-        userId,
-        '❌ Invite link is invalid. Please contact administrator.',
-        [],
-        'dealer'
-      );
+      await sendMaxMessage(userId, '❌ Invite link is invalid.', [], 'dealer');
       return;
     }
 
     if (!isInviteTokenValid(dealer.inviteTokenExpiresAt)) {
       console.warn('[MAX Webhook] Invite token expired');
-      await sendMaxMessage(
-        userId,
-        '❌ Invite link has expired. Please request a new one from administrator.',
-        [],
-        'dealer'
-      );
+      await sendMaxMessage(userId, '❌ Invite link has expired.', [], 'dealer');
       return;
     }
 
-    // Send welcome with mini-app button
     console.warn('[MAX Webhook] Sending invite welcome for dealer:', dealer.name);
 
     await sendMaxMessage(
@@ -247,13 +184,12 @@ async function handleDealerStart(userId: number, firstName: string, param?: stri
           type: 'open_app',
           text: '🚀 Activate Account',
           app_name: MAX_BOT_NAME_DEALER,
-          payload: param, // Pass setup_xxx_yyy to mini-app as start_param
+          payload: param,
         },
       ],
       'dealer'
     );
   } else {
-    // Regular /start without invite link
     console.warn('[MAX Webhook] Regular dealer start (no invite)');
 
     await sendMaxMessage(

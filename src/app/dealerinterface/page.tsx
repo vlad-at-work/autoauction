@@ -68,6 +68,21 @@ export default function DealerEntry() {
       console.warn('[Dealer Entry] Attempt', attempt, { platform, hasInitData: !!initData });
 
       if (webApp && platform && initData) {
+        // Check for start_param — if it's a setup invite, go directly to setup
+        // (new dealers have no platformUserId yet, so auth/check would return not_found)
+        const initDataUnsafe = webApp.initDataUnsafe as Record<string, unknown> | undefined;
+        const startParam =
+          (initDataUnsafe?.start_param as string | undefined) ||
+          (initDataUnsafe?.tgWebAppStartParam as string | undefined);
+
+        console.warn('[Dealer Entry] start_param:', startParam);
+
+        if (startParam?.startsWith('setup_')) {
+          console.warn('[Dealer Entry] Invite link detected, redirecting to setup...');
+          router.push('/dealerinterface/setup');
+          return;
+        }
+
         checkAuth(initData, platform);
         return;
       }

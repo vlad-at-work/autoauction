@@ -36,8 +36,8 @@ export async function sendMaxMessage(
   }
 
   try {
+    // MAX API: user_id/chat_id go as query params, body is NewMessageBody
     const body: {
-      user_id: number;
       text: string;
       attachments?: Array<{
         type: 'inline_keyboard';
@@ -45,10 +45,7 @@ export async function sendMaxMessage(
           buttons: MaxButton[][];
         };
       }>;
-    } = {
-      user_id: Number(userId),
-      text,
-    };
+    } = { text };
 
     if (buttons && buttons.length > 0) {
       body.attachments = [
@@ -66,7 +63,8 @@ export async function sendMaxMessage(
       hasButtons: !!buttons?.length,
     });
 
-    const response = await fetch(`${MAX_API_BASE}/messages`, {
+    // Per MAX API docs: POST /messages?user_id={user_id}
+    const response = await fetch(`${MAX_API_BASE}/messages?user_id=${Number(userId)}`, {
       method: 'POST',
       headers: {
         Authorization: token,
