@@ -148,9 +148,17 @@ export async function POST(request: NextRequest) {
 
       console.log(`[check] Dealer ${dealerId} claimed by ${platform}:${platformUserId}`);
 
-      // Return needs_setup to set password
-      console.log('[/api/dealerinterface/check] Returning: needs_setup (claim)');
-      return NextResponse.json({ status: 'needs_setup', dealerId });
+      // Clear any existing session cookie so new dealer can be set up
+      const response = NextResponse.json({ status: 'needs_setup', dealerId });
+      response.cookies.set('dealer_session', '', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 0,
+        path: '/',
+      });
+      console.log('[/api/dealerinterface/check] Returning: needs_setup (claim), cleared session');
+      return response;
     }
 
     // Check for existing session token in cookie
