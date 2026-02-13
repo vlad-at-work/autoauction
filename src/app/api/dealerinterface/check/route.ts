@@ -52,6 +52,15 @@ export async function POST(request: NextRequest) {
       }
     })();
 
+    console.log('[/api/dealerinterface/check] Request:', {
+      platform,
+      platformUserId,
+      chatId,
+      startParamRaw,
+      startParam,
+      bodyKeys: body ? Object.keys(body) : null,
+    });
+
     // Check if this platform user is already a buyer (mutual exclusivity)
     const isBuyer = await isPlatformUserBuyer(prismaPlat, platformUserId);
     if (isBuyer) {
@@ -60,18 +69,35 @@ export async function POST(request: NextRequest) {
 
     // Invite link claiming: startapp="claim_<dealerId>_<token>"
     // IMPORTANT: Process claim BEFORE checking existing session, so users can claim new dealers
+    console.log('[/api/dealerinterface/check] Claim check:', {
+      hasStartParam: !!startParam,
+      startsWithClaim: startParam?.startsWith('claim_'),
+    });
     if (startParam?.startsWith('claim_')) {
+      console.log('[/api/dealerinterface/check] Processing claim:', { startParam });
       const parts = startParam.split('_');
       if (parts.length < 3) {
+        console.log(
+          '[/api/dealerinterface/check] Invalid claim format - not enough parts:',
+          parts.length
+        );
         return NextResponse.json({ error: 'Invalid claim link format' }, { status: 400 });
       }
       const dealerId = parts[1];
       const token = parts.slice(2).join('_'); // Token may contain underscores
+      console.log('[/api/dealerinterface/check] Claim parts:', {
+        dealerId,
+        tokenLength: token.length,
+      });
       if (!dealerId || !token) {
         return NextResponse.json({ error: 'Invalid claim link' }, { status: 400 });
       }
 
       const payload = validateDealerClaimToken(token);
+      console.log('[/api/dealerinterface/check] Claim validation:', {
+        payload,
+        dealerIdMatch: payload?.dealerId === dealerId,
+      });
       if (!payload || payload.dealerId !== dealerId) {
         return NextResponse.json({ error: 'Claim link expired or invalid' }, { status: 400 });
       }
@@ -123,28 +149,43 @@ export async function POST(request: NextRequest) {
       console.log(`[check] Dealer ${dealerId} claimed by ${platform}:${platformUserId}`);
 
       // Return needs_setup to set password
+      console.log('[/api/dealerinterface/check] Returning: needs_setup (claim)');
       return NextResponse.json({ status: 'needs_setup', dealerId });
     }
 
     // Check for existing session token in cookie
     const sessionToken = request.cookies.get('dealer_session')?.value;
+    console.log('[/api/dealerinterface/check] Session check:', { hasSessionToken: !!sessionToken });
     if (sessionToken) {
       const session = validateSessionToken(sessionToken);
+      console.log('[/api/dealerinterface/check] Session validation:', {
+        hasSession: !!session,
+        sessionPlatform: session?.platform,
+        sessionUserId: session?.platformUserId,
+        matches: session?.platform === prismaPlat && session?.platformUserId === platformUserId,
+      });
       if (session && session.platform === prismaPlat && session.platformUserId === platformUserId) {
         // Valid session - dealer is authenticated
+        console.log('[/api/dealerinterface/check] Returning: authenticated');
         return NextResponse.json({ status: 'authenticated' });
       }
     }
 
     // Check if dealer exists with this platform
     const existingDealer = await findDealerByPlatformUserId(prismaPlat, platformUserId);
+    console.log('[/api/dealerinterface/check] Existing dealer check:', {
+      hasExisting: !!existingDealer,
+      hasPassword: !!existingDealer?.passwordHash,
+    });
 
     if (existingDealer) {
       if (existingDealer.passwordHash) {
         // Dealer has password set, needs to login
+        console.log('[/api/dealerinterface/check] Returning: needs_password');
         return NextResponse.json({ status: 'needs_password' });
       } else {
         // Dealer claimed platform but hasn't set password (edge case)
+        console.log('[/api/dealerinterface/check] Returning: needs_setup (existing)');
         return NextResponse.json({ status: 'needs_setup', dealerId: existingDealer.id });
       }
     }
@@ -186,14 +227,17 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      console.log('[/api/dealerinterface/check] Returning: needs_setup (auto-claim)');
       return NextResponse.json({ status: 'needs_setup', dealerId: unclaimedDealers[0].id });
     }
 
     if (unclaimedDealers.length > 1) {
+      console.log('[/api/dealerinterface/check] Returning: needs_invite');
       return NextResponse.json({ status: 'needs_invite' });
     }
 
     // No dealer account available
+    console.log('[/api/dealerinterface/check] Returning: not_dealer');
     return NextResponse.json({ status: 'not_dealer' });
   } catch (error) {
     console.error('[/api/dealerinterface/check] Error:', error);
