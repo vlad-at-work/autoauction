@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
-import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
-import { isPlatformUserDealer } from '@/lib/auth/dealer-auth';
+import { validateWebAppRequest, isPlatformUserDealer } from '@/lib/auth/webapp-validation';
 
 export async function GET(request: Request) {
   try {

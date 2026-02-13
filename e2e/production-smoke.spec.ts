@@ -41,9 +41,9 @@ test.describe('Production Smoke Tests', () => {
     expect(response?.status()).toBeLessThan(500);
   });
 
-  test('dealer interface loads', async ({ page }) => {
+  test('dealer interface is disabled', async ({ page }) => {
     const response = await page.goto(`${PROD_URL}/dealerinterface`);
-    // Should return valid status
-    expect(response?.status()).toBeLessThan(500);
+    // Should return 503 (disabled) or 404 (not found)
+    expect([503, 404]).toContain(response?.status());
   });
 });

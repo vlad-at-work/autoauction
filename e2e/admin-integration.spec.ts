@@ -28,8 +28,9 @@ test.describe('Admin API Integration', () => {
     expect(response.status()).toBe(401);
   });
 
-  test('dealer API requires auth', async ({ request }) => {
+  test('dealer API is disabled', async ({ request }) => {
     const response = await request.get('/api/dealerinterface/my-info');
-    expect(response.status()).toBe(401);
+    // Should return 503 (disabled) or 404 (not found) since dealer auth was removed
+    expect([503, 404]).toContain(response.status());
   });
 });

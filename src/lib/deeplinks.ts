@@ -1,125 +1,15 @@
 /**
- * Deep Links for Telegram and MAX Notifications
+ * Deep Links for Mini-App Navigation
  *
- * Generates platform-specific deep links to open the app and navigate to specific sections
- * Used in notification messages to create clickable buttons that redirect users
+ * This module handles navigation within the buyer mini-app.
+ * Platform-specific bot integration has been removed.
  */
-
-import { getAppBaseUrl } from '@/lib/app-url';
-
-export type NotificationDeepLink = {
-  telegram: string;
-  max: string;
-};
 
 export type NotificationContext =
   | 'inquiry' // Link to specific inquiry
   | 'offer' // Link to specific offer
   | 'transaction' // Link to accepted transaction
   | 'dashboard'; // Link to main dashboard
-
-type TelegramButton = {
-  inline_keyboard: Array<
-    Array<{
-      text: string;
-      web_app: {
-        url: string;
-      };
-    }>
-  >;
-};
-
-type MaxButton = Array<
-  Array<{
-    type: string;
-    text: string;
-  }>
->;
-
-/**
- * Generate deep links for notification messages
- *
- * These links will open the mini-app with specific parameters to navigate
- * directly to the relevant section
- */
-export function generateDeepLinks(
-  context: NotificationContext,
-  resourceId?: string
-): NotificationDeepLink {
-  // For Telegram: use startapp parameter in deep link
-  // Format: https://t.me/<bot>?startapp=<payload>
-  // The startapp parameter is passed to the WebApp in WebApp.initDataUnsafe.tgWebAppStartParam
-  const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME || 'autoauction_bot';
-
-  // For MAX: use startapp parameter similarly
-  // Format: https://max.ru/<bot_name>?startapp=<payload>
-  const maxBotName = process.env.NEXT_PUBLIC_MAX_BOT_NAME || 'AutoAuctionBot';
-
-  // Create payload that will be passed to the app
-  // Format: "context:resourceId" or just "context" if no resource
-  const payload = resourceId ? `${context}:${resourceId}` : context;
-
-  // Telegram deep link
-  const telegramLink = `https://t.me/${telegramBotUsername}?startapp=${payload}`;
-
-  // MAX deep link
-  const maxLink = `https://max.ru/${maxBotName}?startapp=${payload}`;
-
-  return {
-    telegram: telegramLink,
-    max: maxLink,
-  };
-}
-
-/**
- * Generate notification message with inline buttons containing deep links
- *
- * Telegram uses InlineKeyboardMarkup with web_app buttons
- * MAX uses inline buttons with open_app or link buttons
- */
-export function createNotificationButtons(
-  context: NotificationContext,
-  resourceId?: string,
-  buttonLabel = '📱 Открыть приложение'
-): {
-  telegram: TelegramButton;
-  max: MaxButton;
-} {
-  const appUrl = getAppBaseUrl();
-  const payload = resourceId ? `${context}:${resourceId}` : context;
-  const fullAppUrl = `${appUrl}/app?startapp=${payload}`;
-
-  // Telegram inline keyboard with web_app button
-  const telegramButton: TelegramButton = {
-    inline_keyboard: [
-      [
-        {
-          text: buttonLabel,
-          web_app: {
-            url: fullAppUrl,
-          },
-        },
-      ],
-    ],
-  };
-
-  // MAX inline buttons
-  const maxButtons: MaxButton = [
-    [
-      {
-        type: 'open_app',
-        text: buttonLabel,
-        // For MAX, open_app opens the connected mini-app directly
-        // The startapp parameter is handled through the URL in settings
-      },
-    ],
-  ];
-
-  return {
-    telegram: telegramButton,
-    max: maxButtons,
-  };
-}
 
 /**
  * Parse startapp parameter in the mini-app
@@ -153,73 +43,27 @@ export function parseStartParam(param?: string): {
   return { context, resourceId };
 }
 
-type NotificationMessageReturn = {
-  text: string;
-  buttons: ReturnType<typeof createNotificationButtons>;
-};
-
 /**
- * Example notification messages with deep links
+ * Generate a deep link path for internal navigation
+ * Returns the internal app path for the given context
  */
-export function getNotificationMessage(
-  context: NotificationContext,
-  resourceId?: string,
-  data?: Record<string, string>
-): NotificationMessageReturn {
-  const buttons = createNotificationButtons(context, resourceId);
-
-  let text = '';
-
+export function getInternalPath(context: NotificationContext, resourceId?: string): string {
   switch (context) {
     case 'inquiry':
-      text = `📋 У вас есть новое предложение на вашу заявку!
-
-Нажмите кнопку ниже чтобы посмотреть все предложения и выбрать лучшее.`;
-      break;
-
+      return resourceId ? `/app/inquiry/${resourceId}` : '/app/dashboard';
     case 'offer':
-      text = `🎯 ${data?.dealerName || 'Дилер'} отправил вам новое предложение!
-
-Нажмите чтобы посмотреть детали и другие предложения.`;
-      break;
-
+      if (resourceId) {
+        const [inquiryId, offerId] = resourceId.split(':');
+        if (inquiryId && offerId) {
+          return `/app/inquiry/${inquiryId}/offer/${offerId}`;
+        }
+      }
+      return '/app/dashboard';
     case 'transaction':
-      text = `✅ Поздравляем! Вы приняли предложение от дилера.
-
-Откройте приложение чтобы посмотреть детали.`;
-      break;
-
+      return resourceId ? `/app/dashboard?transaction=${resourceId}` : '/app/dashboard';
     case 'dashboard':
-      text = `🏠 Вернитесь в приложение чтобы управлять своими заявками и предложениями.`;
-      break;
-
+      return '/app/dashboard';
     default:
-      text = '📱 Откройте приложение AutoAuction';
+      return '/app/dashboard';
   }
-
-  return { text, buttons };
-}
-
-/**
- * Format notification for sending through bot APIs
- */
-export function formatTelegramNotification(
-  text: string,
-  buttons: ReturnType<typeof createNotificationButtons>
-) {
-  return {
-    text,
-    parse_mode: 'HTML',
-    reply_markup: buttons.telegram,
-  };
-}
-
-export function formatMaxNotification(
-  text: string,
-  buttons: ReturnType<typeof createNotificationButtons>
-) {
-  return {
-    text,
-    attachments: buttons.max,
-  };
 }

@@ -8,10 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DeleteDialog } from '@/components/admin/delete-dialog';
 import { DealerEditForm } from '@/components/admin/dealer-edit-form';
-import { DealerInviteLinks } from '@/components/admin/dealer-invite-links';
 import { RestoreButton } from '@/components/admin/restore-button';
 import { deleteDealer, restoreDealer } from '@/lib/admin/actions';
-import { createDealerClaimToken } from '@/lib/auth/dealer-claim';
 
 type Params = Promise<{ id: string }>;
 
@@ -38,20 +36,6 @@ export default async function DealerDetailPage({ params }: { params: Params }) {
   }
 
   const isDeleted = dealer.deletedAt != null;
-  const claimToken = createDealerClaimToken(dealer.id);
-  // Use ?start= parameter so bot sends welcome message first, then user clicks button to open app
-  // This ensures chat is established before mini-app opens
-  const startParam = `claim_${dealer.id}_${claimToken}`;
-  const telegramBotName = process.env.TG_BOT_NAME_DEALER;
-  const maxBotName = process.env.MAX_BOT_NAME_DEALER;
-
-  const telegramInviteUrl = telegramBotName
-    ? `https://t.me/${telegramBotName}?start=${encodeURIComponent(startParam)}`
-    : null;
-
-  const maxInviteUrl = maxBotName
-    ? `https://max.ru/${maxBotName}?start=${encodeURIComponent(startParam)}`
-    : null;
 
   return (
     <div className="space-y-6">
@@ -117,13 +101,6 @@ export default async function DealerDetailPage({ params }: { params: Params }) {
 
               <span className="text-muted-foreground">Удалён:</span>
               <span>{dealer.deletedAt ? format(dealer.deletedAt, 'dd.MM.yyyy HH:mm') : '-'}</span>
-            </div>
-
-            <div className="pt-4 border-t">
-              <CardTitle className="text-base">Приглашение дилеру</CardTitle>
-              <div className="mt-3">
-                <DealerInviteLinks telegramUrl={telegramInviteUrl} maxUrl={maxInviteUrl} />
-              </div>
             </div>
 
             <div className="pt-4 border-t">

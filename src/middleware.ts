@@ -1,11 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-function unauthorizedDealer() {
-  const response = new NextResponse('Authentication required', { status: 401 });
-  response.headers.set('WWW-Authenticate', 'Basic realm="AutoAuction Dealer", charset="UTF-8"');
-  return response;
-}
-
 function unauthorizedAdmin() {
   const response = new NextResponse('Admin authentication required', { status: 401 });
   response.headers.set('WWW-Authenticate', 'Basic realm="AutoAuction Admin", charset="UTF-8"');
@@ -31,50 +25,6 @@ function checkBasicAuth(request: NextRequest, user: string, pass: string): boole
   }
 }
 
-// Parse dealer credentials from env: DEALER_CREDENTIALS="user1:pass1,user2:pass2"
-// Falls back to single DEALER_BASIC_AUTH_USER/PASS for backwards compatibility
-function checkDealerAuth(request: NextRequest): boolean {
-  const header = request.headers.get('authorization');
-  if (!header) return false;
-
-  const [scheme, encoded] = header.split(' ');
-  if (scheme !== 'Basic' || !encoded) return false;
-
-  let username: string;
-  let password: string;
-
-  try {
-    const decoded = atob(encoded);
-    const idx = decoded.indexOf(':');
-    if (idx === -1) return false;
-    username = decoded.slice(0, idx);
-    password = decoded.slice(idx + 1);
-  } catch {
-    return false;
-  }
-
-  // Check multiple dealers from DEALER_CREDENTIALS
-  const dealerCredentials = process.env.DEALER_CREDENTIALS;
-  if (dealerCredentials) {
-    const dealers = dealerCredentials.split(',');
-    for (const dealer of dealers) {
-      const [user, pass] = dealer.split(':');
-      if (user === username && pass === password) {
-        return true;
-      }
-    }
-  }
-
-  // Fallback to single dealer credentials
-  const dealerUser = process.env.DEALER_BASIC_AUTH_USER;
-  const dealerPass = process.env.DEALER_BASIC_AUTH_PASS;
-  if (dealerUser && dealerPass && username === dealerUser && password === dealerPass) {
-    return true;
-  }
-
-  return false;
-}
-
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isProd = process.env.NODE_ENV === 'production';
@@ -95,26 +45,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Dealer routes
-  if (
-    pathname.startsWith('/dealer') ||
-    pathname.startsWith('/api/dealer') ||
-    pathname.startsWith('/api/offers')
-  ) {
-    // Check for any configured dealer credentials
-    const hasCredentials =
-      process.env.DEALER_CREDENTIALS ||
-      (process.env.DEALER_BASIC_AUTH_USER && process.env.DEALER_BASIC_AUTH_PASS);
-
-    if (!hasCredentials) {
-      return isProd ? unauthorizedDealer() : NextResponse.next();
-    }
-
-    if (!checkDealerAuth(request)) {
-      return unauthorizedDealer();
-    }
-
-    return NextResponse.next();
+  // Dealer interface routes are disabled
+  if (pathname.startsWith('/dealerinterface') || pathname.startsWith('/api/dealerinterface')) {
+    return new NextResponse('Dealer interface is temporarily unavailable', { status: 503 });
   }
 
   return NextResponse.next();
@@ -122,10 +55,9 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/dealer/:path*',
-    '/api/dealer/:path*',
-    '/api/offers/:path*',
     '/admin/:path*',
     '/api/admin/:path*',
+    '/dealerinterface/:path*',
+    '/api/dealerinterface/:path*',
   ],
 };

@@ -1,12 +1,6 @@
 import { Car } from 'lucide-react';
-import Image from 'next/image';
-
-import { getMaxBotUrl, getTelegramBotUrl } from '@/lib/bot-links';
 
 export default function Home() {
-  const maxBotUrl = getMaxBotUrl('inquiry');
-  const tgBotUrl = getTelegramBotUrl('inquiry');
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-zinc-950">
       <main className="flex min-h-screen w-full max-w-2xl flex-col items-center justify-center gap-8 px-6 py-16">
@@ -20,42 +14,6 @@ export default function Home() {
           <p className="max-w-md text-lg text-zinc-600 dark:text-zinc-400">
             Получите лучшие предложения от дилеров Lada за 24 часа. Заполните заявку и дилеры сами
             предложат вам цену.
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-4 w-full max-w-xs">
-          {maxBotUrl && (
-            <a
-              href={maxBotUrl}
-              className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-blue-600 px-6 text-lg font-semibold text-white transition-colors hover:bg-blue-700 active:bg-blue-800"
-            >
-              <Image
-                src="/icons/max-logo.svg"
-                alt="Max"
-                width={24}
-                height={24}
-                className="h-6 w-6"
-              />
-              Открыть в Max
-            </a>
-          )}
-          {tgBotUrl && (
-            <a
-              href={tgBotUrl}
-              className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-sky-500 px-6 text-lg font-semibold text-white transition-colors hover:bg-sky-600 active:bg-sky-700"
-            >
-              <Image
-                src="/icons/telegram-logo.svg"
-                alt="Telegram"
-                width={24}
-                height={24}
-                className="h-6 w-6"
-              />
-              Открыть в Telegram
-            </a>
-          )}
-          <p className="text-center text-sm text-zinc-500 dark:text-zinc-500">
-            Выберите удобный мессенджер
           </p>
         </div>
 
@@ -89,6 +47,11 @@ export default function Home() {
               </p>
             </div>
           </div>
+        </div>
+
+        <div className="text-center text-sm text-zinc-500 dark:text-zinc-500">
+          <p>Приложение временно недоступно для входа.</p>
+          <p>Интерфейс дилера находится на реконструкции.</p>
         </div>
       </main>
     </div>

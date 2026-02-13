@@ -5,8 +5,6 @@ import { revalidatePath } from 'next/cache';
 import type { Platform } from '@prisma/client';
 import { z } from 'zod';
 
-import { notifyBuyer } from '@/lib/notifications';
-
 type ActionResult =
   | { success: true; id?: string; warning?: string }
   | { success: false; error: string; fieldErrors?: Record<string, string> };
@@ -33,6 +31,16 @@ function zodFieldErrors(error: z.ZodError): Record<string, string> {
 function isValidEmail(value: string): boolean {
   // Simple pragmatic check (admin UI has server-side validation as well)
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+// Notifications are temporarily disabled
+async function notifyBuyer(
+  _buyer: { platform: Platform; platformChatId: string | null; platformUserId: string },
+  _text: string
+): Promise<{ success: boolean }> {
+  // Notifications disabled - dealer auth system stripped out
+  console.log('[notifyBuyer] Notifications are temporarily disabled');
+  return { success: true };
 }
 
 // Buyer actions
