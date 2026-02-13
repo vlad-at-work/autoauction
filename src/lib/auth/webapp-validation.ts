@@ -7,12 +7,9 @@
 
 import { createHmac } from 'crypto';
 
-// Token for buyer bot
-const BOT_TOKEN = process.env.MAX_BOT_TOKEN || process.env.TG_BOT_TOKEN || '';
-
 export type ValidationResult =
-  | { valid: true; userId: string; platform: 'max' | 'telegram'; error?: never }
-  | { valid: false; error: string; userId?: never; platform?: never };
+  | { valid: true; userId: string; platform: 'max' | 'telegram'; chatId?: string; error?: never }
+  | { valid: false; error: string; userId?: never; platform?: never; chatId?: never };
 
 /**
  * Parse and validate WebApp initData
@@ -20,10 +17,13 @@ export type ValidationResult =
  *
  * For Telegram: Validates using HMAC-SHA256 of bot token
  * For MAX: Validates using similar method
+ *
+ * @param authHeader - Authorization header value
+ * @param botType - 'customer' or 'dealer' (determines which bot token to use)
  */
 export function validateWebAppRequest(
   authHeader: string | null,
-  _botType: 'customer' | 'dealer' = 'customer'
+  botType: 'customer' | 'dealer' = 'customer'
 ): ValidationResult {
   if (!authHeader) {
     return { valid: false, error: 'Missing authorization header' };
@@ -46,6 +46,16 @@ export function validateWebAppRequest(
 
   if (!initData) {
     return { valid: false, error: 'Missing initData' };
+  }
+
+  // Select correct bot token based on bot type
+  const BOT_TOKEN =
+    botType === 'dealer'
+      ? process.env.MAX_BOT_TOKEN_DEALER || process.env.TG_BOT_TOKEN_DEALER || ''
+      : process.env.MAX_BOT_TOKEN || process.env.TG_BOT_TOKEN || '';
+
+  if (!BOT_TOKEN) {
+    return { valid: false, error: 'Bot token not configured' };
   }
 
   // Parse initData (URL-encoded key=value pairs separated by &)
@@ -97,7 +107,19 @@ export function validateWebAppRequest(
       return { valid: false, error: 'Missing user ID' };
     }
 
-    return { valid: true, userId, platform };
+    // Try to extract chat_id from initData for notifications
+    let chatId: string | undefined;
+    try {
+      const chatJson = params.get('chat');
+      if (chatJson) {
+        const chat = JSON.parse(chatJson);
+        chatId = chat.id?.toString();
+      }
+    } catch {
+      // Chat ID optional, ignore parse errors
+    }
+
+    return { valid: true, userId, platform, chatId };
   } catch {
     return { valid: false, error: 'Invalid user data format' };
   }

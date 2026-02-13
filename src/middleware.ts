@@ -45,19 +45,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Dealer interface routes are disabled
-  if (pathname.startsWith('/dealerinterface') || pathname.startsWith('/api/dealerinterface')) {
-    return new NextResponse('Dealer interface is temporarily unavailable', { status: 503 });
-  }
-
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    '/admin/:path*',
-    '/api/admin/:path*',
-    '/dealerinterface/:path*',
-    '/api/dealerinterface/:path*',
-  ],
+  matcher: ['/admin/:path*', '/api/admin/:path*'],
 };

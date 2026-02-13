@@ -79,6 +79,10 @@ model Dealer {
   // Authentication (bcrypt hash, set by dealer on first login)
   passwordHash     String?
 
+  // Invite token system for dealer claiming
+  inviteToken          String?   @unique
+  inviteTokenExpiresAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   deletedAt DateTime?
@@ -90,6 +94,7 @@ model Dealer {
   @@unique([platform, platformUserId])
   @@index([deletedAt])
   @@index([active])
+  @@index([inviteToken])
 }
 
 // Time-limited password reset codes for dealers

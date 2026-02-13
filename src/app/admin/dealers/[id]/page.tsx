@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { DeleteDialog } from '@/components/admin/delete-dialog';
 import { DealerEditForm } from '@/components/admin/dealer-edit-form';
 import { RestoreButton } from '@/components/admin/restore-button';
+import { DealerInviteSection } from '@/components/admin/dealer-invite-section';
 import { deleteDealer, restoreDealer } from '@/lib/admin/actions';
 
 type Params = Promise<{ id: string }>;
@@ -142,6 +143,12 @@ export default async function DealerDetailPage({ params }: { params: Params }) {
               />
             </CardContent>
           </Card>
+
+          <DealerInviteSection
+            dealerId={dealer.id}
+            initialToken={dealer.inviteToken}
+            initialExpiresAt={dealer.inviteTokenExpiresAt}
+          />
 
           <Card>
             <CardHeader>
