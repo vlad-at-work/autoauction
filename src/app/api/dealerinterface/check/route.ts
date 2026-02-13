@@ -58,10 +58,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ blocked: true });
     }
 
-    // Invite link claiming: startapp="claim:<dealerId>:<token>"
+    // Invite link claiming: startapp="claim_<dealerId>_<token>"
     // IMPORTANT: Process claim BEFORE checking existing session, so users can claim new dealers
-    if (startParam?.startsWith('claim:')) {
-      const [, dealerId, token] = startParam.split(':');
+    if (startParam?.startsWith('claim_')) {
+      const parts = startParam.split('_');
+      if (parts.length < 3) {
+        return NextResponse.json({ error: 'Invalid claim link format' }, { status: 400 });
+      }
+      const dealerId = parts[1];
+      const token = parts.slice(2).join('_'); // Token may contain underscores
       if (!dealerId || !token) {
         return NextResponse.json({ error: 'Invalid claim link' }, { status: 400 });
       }
@@ -116,14 +121,6 @@ export async function POST(request: NextRequest) {
       });
 
       console.log(`[check] Dealer ${dealerId} claimed by ${platform}:${platformUserId}`);
-
-      // Send welcome message to establish chat in user's chat list
-      if ((chatId || platformUserId) && platform === 'max') {
-        const targetChatId = chatId || platformUserId;
-        sendMaxWelcomeMessageToDealer(targetChatId, dealer.name || 'Дилер').catch((err) => {
-          console.error('[/api/dealerinterface/check] Failed to send welcome message:', err);
-        });
-      }
 
       // Return needs_setup to set password
       return NextResponse.json({ status: 'needs_setup', dealerId });
