@@ -138,8 +138,8 @@ async function handleBotStarted(message: MaxMessage, botType: BotType) {
   const userId = user?.user_id;
   const firstName = user?.first_name || user?.name || 'User';
 
-  if (!chatId) {
-    console.warn('[MAX] bot_started: missing chat_id');
+  if (!userId) {
+    console.warn('[MAX] bot_started: missing user_id');
     return;
   }
 
@@ -147,9 +147,9 @@ async function handleBotStarted(message: MaxMessage, botType: BotType) {
 
   // Send welcome message
   if (botType === 'dealer') {
-    await handleDealerStart(chatId, firstName);
+    await handleDealerStart(userId, firstName);
   } else {
-    await handleCustomerStart(chatId, firstName);
+    await handleCustomerStart(userId, firstName);
   }
 }
 
@@ -160,8 +160,8 @@ async function handleMessageCreated(message: MaxMessage, botType: BotType) {
   const text = message.body?.text || '';
   const firstName = user?.first_name || user?.name || 'User';
 
-  if (!chatId) {
-    console.warn('[MAX] message_created: missing chat_id');
+  if (!userId) {
+    console.warn('[MAX] message_created: missing user_id');
     return;
   }
 
@@ -176,19 +176,19 @@ async function handleMessageCreated(message: MaxMessage, botType: BotType) {
     if (botType === 'dealer') {
       if (startParam && startParam.startsWith('claim_')) {
         // Invite link: send welcome with claim button
-        await handleDealerInviteStart(chatId, firstName, startParam);
+        await handleDealerInviteStart(userId, firstName, startParam);
       } else {
         // Regular start
-        await handleDealerStart(chatId, firstName);
+        await handleDealerStart(userId, firstName);
       }
     } else {
-      await handleCustomerStart(chatId, firstName);
+      await handleCustomerStart(userId, firstName);
     }
   } else if (text.toLowerCase().includes('помощь') || text.toLowerCase().includes('help')) {
     if (botType === 'dealer') {
-      await handleDealerHelp(chatId);
+      await handleDealerHelp(userId);
     } else {
-      await handleCustomerHelp(chatId);
+      await handleCustomerHelp(userId);
     }
   }
 }
@@ -206,10 +206,10 @@ async function handleMessageCallback(
   // You can use this to implement button interactions
 }
 
-async function handleCustomerStart(chatId: number, firstName: string) {
+async function handleCustomerStart(userId: number, firstName: string) {
   const maxBotName = getMaxBotName('customer');
   await sendMaxMessage(
-    chatId,
+    userId,
     `👋 Добро пожаловать, ${firstName}!
 
 Это AutoAuction - платформа обратных аукционов для автомобилей.
@@ -236,10 +236,10 @@ async function handleCustomerStart(chatId: number, firstName: string) {
   );
 }
 
-async function handleDealerStart(chatId: number, firstName: string) {
+async function handleDealerStart(userId: number, firstName: string) {
   const maxBotName = getMaxBotName('dealer');
   await sendMaxMessage(
-    chatId,
+    userId,
     `👋 Добро пожаловать, ${firstName}!
 
 Это AutoAuction для дилеров - платформа обратных аукционов.
@@ -266,10 +266,10 @@ async function handleDealerStart(chatId: number, firstName: string) {
   );
 }
 
-async function handleDealerInviteStart(chatId: number, firstName: string, claimParam: string) {
+async function handleDealerInviteStart(userId: number, firstName: string, claimParam: string) {
   const maxBotName = getMaxBotName('dealer');
   await sendMaxMessage(
-    chatId,
+    userId,
     `🎉 Добро пожаловать в AutoAuction, ${firstName}!
 
 Вы получили приглашение стать дилером на нашей платформе обратных аукционов.
@@ -296,9 +296,9 @@ async function handleDealerInviteStart(chatId: number, firstName: string, claimP
   );
 }
 
-async function handleCustomerHelp(chatId: number) {
+async function handleCustomerHelp(userId: number) {
   await sendMaxMessage(
-    chatId,
+    userId,
     `ℹ️ Справка по использованию:
 
 1. Нажмите "Открыть приложение"
@@ -310,9 +310,9 @@ async function handleCustomerHelp(chatId: number) {
   );
 }
 
-async function handleDealerHelp(chatId: number) {
+async function handleDealerHelp(userId: number) {
   await sendMaxMessage(
-    chatId,
+    userId,
     `ℹ️ Справка для дилеров:
 
 1. Нажмите "Панель дилера"
@@ -326,10 +326,10 @@ async function handleDealerHelp(chatId: number) {
 
 /**
  * Helper to send message to MAX with optional attachments
- * Uses correct API format: chat_id in URL params
+ * Uses correct API format: user_id in URL params (per MAX API docs)
  */
 async function sendMaxMessage(
-  chatId: number,
+  userId: number,
   text: string,
   attachments?: Array<Record<string, unknown>>,
   botType: BotType = 'customer'
@@ -343,7 +343,7 @@ async function sendMaxMessage(
     }
 
     const url = new URL(`${MAX_API_BASE}/messages`);
-    url.searchParams.set('chat_id', String(chatId));
+    url.searchParams.set('user_id', String(userId));
 
     const body: Record<string, unknown> = { text };
     if (attachments && attachments.length > 0) {
