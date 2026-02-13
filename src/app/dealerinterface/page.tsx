@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
+
 type AuthStatus = 'loading' | 'not_found' | 'needs_setup' | 'authenticated' | 'error';
 
 export default function DealerEntry() {
@@ -11,35 +13,21 @@ export default function DealerEntry() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function checkAuth() {
+    let cancelled = false;
+
+    async function checkAuth(initData: string, platform: 'max' | 'telegram') {
       try {
-        // Get initData from Telegram WebApp
-        const telegram = (window as unknown as { Telegram?: { WebApp?: { initData: string } } })
-          .Telegram?.WebApp;
-
-        if (!telegram) {
-          setError('Please open via MAX bot');
-          setStatus('error');
-          return;
-        }
-
-        const initData = telegram.initData;
-
-        if (!initData) {
-          setError('Invalid initialization data');
-          setStatus('error');
-          return;
-        }
-
-        console.warn('[Dealer Entry] Checking auth...');
+        console.warn('[Dealer Entry] Checking auth...', { platform });
 
         const response = await fetch('/api/dealer/auth/check', {
           method: 'POST',
           headers: {
-            Authorization: `Bearer max:dealer:${initData}`,
+            Authorization: `Bearer ${platform}:dealer:${initData}`,
             'Content-Type': 'application/json',
           },
         });
+
+        if (cancelled) return;
 
         const data = await response.json();
 
@@ -62,12 +50,41 @@ export default function DealerEntry() {
         }
       } catch (err) {
         console.error('[Dealer Entry] Error:', err);
-        setError('Connection error');
-        setStatus('error');
+        if (!cancelled) {
+          setError('Connection error');
+          setStatus('error');
+        }
       }
     }
 
-    checkAuth();
+    // Poll for WebApp bridge to load (MAX or Telegram)
+    const tryLoad = (attempt = 0) => {
+      if (cancelled) return;
+
+      const webApp = getWebApp();
+      const platform = detectPlatform();
+      const initData = webApp?.initData;
+
+      console.warn('[Dealer Entry] Attempt', attempt, { platform, hasInitData: !!initData });
+
+      if (webApp && platform && initData) {
+        checkAuth(initData, platform);
+        return;
+      }
+
+      if (attempt < 40) {
+        window.setTimeout(() => tryLoad(attempt + 1), 50);
+      } else {
+        setError('WebApp not loaded. Please open via MAX or Telegram bot.');
+        setStatus('error');
+      }
+    };
+
+    tryLoad();
+
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   if (status === 'loading') {

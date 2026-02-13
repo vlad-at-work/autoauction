@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
+
 export default function DealerSetup() {
   const router = useRouter();
   const [password, setPassword] = useState('');
@@ -10,22 +12,45 @@ export default function DealerSetup() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [startParam, setStartParam] = useState<string | null>(null);
+  const [platform, setPlatform] = useState<'max' | 'telegram' | null>(null);
 
   useEffect(() => {
-    // Get start_param from Telegram WebApp
-    const telegram = (
-      window as unknown as {
-        Telegram?: { WebApp?: { initDataUnsafe?: { start_param?: string }; initData: string } };
-      }
-    ).Telegram?.WebApp;
+    // Poll for WebApp bridge to load and extract start_param
+    let cancelled = false;
 
-    if (telegram) {
-      const param = telegram.initDataUnsafe?.start_param;
-      console.warn('[Dealer Setup] Start param:', param);
-      if (param) {
-        setStartParam(param);
+    const tryLoad = (attempt = 0) => {
+      if (cancelled) return;
+
+      const webApp = getWebApp();
+      const detectedPlatform = detectPlatform();
+
+      if (webApp && detectedPlatform) {
+        setPlatform(detectedPlatform);
+
+        // Extract start_param (MAX) or tgWebAppStartParam (Telegram)
+        const initDataUnsafe = webApp.initDataUnsafe as Record<string, unknown> | undefined;
+        const param =
+          (initDataUnsafe?.start_param as string | undefined) ||
+          (initDataUnsafe?.tgWebAppStartParam as string | undefined);
+
+        console.warn('[Dealer Setup] Start param:', param, 'Platform:', detectedPlatform);
+
+        if (param) {
+          setStartParam(param);
+        }
+        return;
       }
-    }
+
+      if (attempt < 40) {
+        window.setTimeout(() => tryLoad(attempt + 1), 50);
+      }
+    };
+
+    tryLoad();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -45,22 +70,25 @@ export default function DealerSetup() {
     setLoading(true);
 
     try {
-      const telegram = (window as unknown as { Telegram?: { WebApp?: { initData: string } } })
-        .Telegram?.WebApp;
-      const initData = telegram?.initData;
+      const webApp = getWebApp();
+      const initData = webApp?.initData;
+      const currentPlatform = platform || detectPlatform();
 
-      if (!initData) {
+      if (!initData || !currentPlatform) {
         setError('Invalid initialization data');
         setLoading(false);
         return;
       }
 
-      console.warn('[Dealer Setup] Submitting...', { hasStartParam: !!startParam });
+      console.warn('[Dealer Setup] Submitting...', {
+        hasStartParam: !!startParam,
+        platform: currentPlatform,
+      });
 
       const response = await fetch('/api/dealer/auth/setup', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer max:dealer:${initData}`,
+          Authorization: `Bearer ${currentPlatform}:dealer:${initData}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ password, startParam }),
