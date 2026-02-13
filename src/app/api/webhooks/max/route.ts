@@ -18,14 +18,28 @@ import { sendMaxMessage } from '@/lib/notifications/max';
 import { prisma } from '@/lib/db';
 import { isInviteTokenValid } from '@/lib/auth/dealer-invite';
 
-const MAX_BOT_NAME = process.env.MAX_BOT_NAME || process.env.NEXT_PUBLIC_MAX_BOT_NAME || 'AutoAuctionBot';
-const MAX_BOT_NAME_DEALER = process.env.MAX_BOT_NAME_DEALER || process.env.NEXT_PUBLIC_MAX_BOT_NAME_DEALER || 'AutoAuctionDealerBot';
+const MAX_BOT_NAME =
+  process.env.MAX_BOT_NAME || process.env.NEXT_PUBLIC_MAX_BOT_NAME || 'AutoAuctionBot';
+const MAX_BOT_NAME_DEALER =
+  process.env.MAX_BOT_NAME_DEALER ||
+  process.env.NEXT_PUBLIC_MAX_BOT_NAME_DEALER ||
+  'AutoAuctionDealerBot';
 
 type BotType = 'customer' | 'dealer';
 
 type MaxWebhookUpdate = {
   update_type: 'message_created' | 'bot_started' | 'message_callback';
   timestamp: number;
+  // For bot_started events
+  user?: {
+    user_id: number;
+    first_name?: string;
+    last_name?: string;
+    name?: string;
+  };
+  // For bot_started events (parameter from invite link)
+  start_param?: string;
+  // For message_created events
   message?: {
     sender?: {
       user_id: number;
@@ -58,16 +72,26 @@ export async function POST(request: Request) {
 
     const update = (await request.json()) as MaxWebhookUpdate;
 
+    // Extract userId from the right field based on update_type
+    const userId =
+      update.update_type === 'bot_started' ? update.user?.user_id : update.message?.sender?.user_id;
+
     console.warn('[MAX Webhook]', {
       update_type: update.update_type,
       botType,
-      userId: update.message?.sender?.user_id,
+      userId,
       timestamp: update.timestamp,
     });
 
     // Handle different update types
     switch (update.update_type) {
       case 'bot_started':
+        // bot_started has user at root level and optional start_param
+        if (update.user) {
+          await handleBotStarted(update.user, update.start_param, botType);
+        }
+        break;
+
       case 'message_created':
         if (update.message) {
           await handleMessage(update.message, botType);
@@ -94,10 +118,36 @@ export async function POST(request: Request) {
   }
 }
 
-async function handleMessage(
-  message: NonNullable<MaxWebhookUpdate['message']>,
+/**
+ * Handle bot_started event (user clicks Start button or opens bot)
+ * This is sent when user first interacts with the bot
+ */
+async function handleBotStarted(
+  user: NonNullable<MaxWebhookUpdate['user']>,
+  startParam: string | undefined,
   botType: BotType
 ) {
+  const userId = user.user_id;
+  const firstName = user.first_name || user.name || 'User';
+
+  if (!userId) {
+    console.warn('[MAX Webhook] Missing user_id in bot_started');
+    return;
+  }
+
+  console.warn(`[MAX Webhook] Bot started by ${userId} (${botType})`, {
+    startParam,
+    firstName,
+  });
+
+  if (botType === 'dealer') {
+    await handleDealerStart(userId, firstName, startParam);
+  } else {
+    await handleBuyerStart(userId, firstName);
+  }
+}
+
+async function handleMessage(message: NonNullable<MaxWebhookUpdate['message']>, botType: BotType) {
   const userId = message.sender?.user_id;
   const text = message.body?.text || '';
   const firstName = message.sender?.first_name || message.sender?.name || 'User';

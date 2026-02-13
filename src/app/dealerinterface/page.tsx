@@ -14,9 +14,8 @@ export default function DealerEntry() {
     async function checkAuth() {
       try {
         // Get initData from Telegram WebApp
-        const telegram = (
-          window as unknown as { Telegram?: { WebApp?: { initData: string } } }
-        ).Telegram?.WebApp;
+        const telegram = (window as unknown as { Telegram?: { WebApp?: { initData: string } } })
+          .Telegram?.WebApp;
 
         if (!telegram) {
           setError('Please open via MAX bot');
@@ -50,10 +49,10 @@ export default function DealerEntry() {
           setStatus('not_found');
         } else if (data.status === 'needs_setup') {
           console.warn('[Dealer Entry] Redirecting to setup...');
-          router.push('/dealer/setup');
+          router.push('/dealerinterface/setup');
         } else if (data.status === 'authenticated') {
           console.warn('[Dealer Entry] Redirecting to inquiries...');
-          router.push('/dealer/inquiries');
+          router.push('/dealerinterface/inquiries');
         } else if (data.error) {
           setError(data.error);
           setStatus('error');

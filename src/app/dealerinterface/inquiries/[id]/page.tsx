@@ -5,8 +5,8 @@ import { notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { prisma } from '@/lib/db';
 import { parseBasicAuthHeader } from '@/lib/auth/basic';
-import { OfferForm } from '@/app/dealer/inquiries/[id]/offer-form';
-import { OfferCard } from '@/app/dealer/inquiries/[id]/offer-card';
+import { OfferForm } from '@/app/dealerinterface/inquiries/[id]/offer-form';
+import { OfferCard } from '@/app/dealerinterface/inquiries/[id]/offer-card';
 import {
   getShortId,
   getIdColorClass,
@@ -303,7 +303,7 @@ export default async function DealerInquiryPage({ params }: { params: Promise<{ 
           )}
 
           <Link
-            href="/dealer/inquiries"
+            href="/dealerinterface/inquiries"
             className="text-primary text-sm underline underline-offset-4"
           >
             Назад к списку

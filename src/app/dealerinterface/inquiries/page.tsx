@@ -155,7 +155,7 @@ export default async function DealerInquiriesPage() {
                 return (
                   <li key={inquiry.id}>
                     <Link
-                      href={`/dealer/inquiries/${inquiry.id}`}
+                      href={`/dealerinterface/inquiries/${inquiry.id}`}
                       className="hover:bg-muted/40 flex flex-col gap-1 rounded-lg border px-4 py-3 transition-colors"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -253,7 +253,7 @@ export default async function DealerInquiriesPage() {
                 return (
                   <li key={inquiry.id}>
                     <Link
-                      href={`/dealer/inquiries/${inquiry.id}`}
+                      href={`/dealerinterface/inquiries/${inquiry.id}`}
                       className="hover:bg-muted/40 flex flex-col gap-1 rounded-lg border px-4 py-3 opacity-70 transition-colors"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">

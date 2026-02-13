@@ -45,9 +45,8 @@ export default function DealerSetup() {
     setLoading(true);
 
     try {
-      const telegram = (
-        window as unknown as { Telegram?: { WebApp?: { initData: string } } }
-      ).Telegram?.WebApp;
+      const telegram = (window as unknown as { Telegram?: { WebApp?: { initData: string } } })
+        .Telegram?.WebApp;
       const initData = telegram?.initData;
 
       if (!initData) {
@@ -71,7 +70,7 @@ export default function DealerSetup() {
 
       if (response.ok) {
         console.warn('[Dealer Setup] Success, redirecting...');
-        router.push('/dealer/inquiries');
+        router.push('/dealerinterface/inquiries');
       } else {
         console.error('[Dealer Setup] Failed:', data);
         setError(data.error || 'Setup failed');
