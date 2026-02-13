@@ -58,6 +58,77 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ blocked: true });
     }
 
+    // Invite link claiming: startapp="claim:<dealerId>:<token>"
+    // IMPORTANT: Process claim BEFORE checking existing session, so users can claim new dealers
+    if (startParam?.startsWith('claim:')) {
+      const [, dealerId, token] = startParam.split(':');
+      if (!dealerId || !token) {
+        return NextResponse.json({ error: 'Invalid claim link' }, { status: 400 });
+      }
+
+      const payload = validateDealerClaimToken(token);
+      if (!payload || payload.dealerId !== dealerId) {
+        return NextResponse.json({ error: 'Claim link expired or invalid' }, { status: 400 });
+      }
+
+      const dealer = await prisma.dealer.findUnique({
+        where: { id: dealerId },
+        select: {
+          id: true,
+          name: true,
+          active: true,
+          platform: true,
+          platformUserId: true,
+          passwordHash: true,
+        },
+      });
+
+      if (!dealer) {
+        return NextResponse.json({ error: 'Dealer not found' }, { status: 404 });
+      }
+
+      if (!dealer.active) {
+        return NextResponse.json({ error: 'Dealer is inactive' }, { status: 403 });
+      }
+
+      // Check if dealer already claimed by someone else
+      if (dealer.platform && dealer.platformUserId) {
+        if (dealer.platform !== prismaPlat || dealer.platformUserId !== platformUserId) {
+          return NextResponse.json({ error: 'Dealer already claimed' }, { status: 409 });
+        }
+        // Already claimed by this user - continue to setup or authenticated
+      }
+
+      // Check if this platform user already bound to a DIFFERENT dealer
+      const existingDealerForUser = await findDealerByPlatformUserId(prismaPlat, platformUserId);
+      if (existingDealerForUser && existingDealerForUser.id !== dealerId) {
+        return NextResponse.json({ error: 'Account already bound to a dealer' }, { status: 409 });
+      }
+
+      // Bind dealer to this platform user
+      await prisma.dealer.update({
+        where: { id: dealerId },
+        data: {
+          platform: prismaPlat,
+          platformUserId: platformUserId,
+          platformChatId: chatId ?? platformUserId,
+        },
+      });
+
+      console.log(`[check] Dealer ${dealerId} claimed by ${platform}:${platformUserId}`);
+
+      // Send welcome message to establish chat in user's chat list
+      if ((chatId || platformUserId) && platform === 'max') {
+        const targetChatId = chatId || platformUserId;
+        sendMaxWelcomeMessageToDealer(targetChatId, dealer.name || 'Дилер').catch((err) => {
+          console.error('[/api/dealerinterface/check] Failed to send welcome message:', err);
+        });
+      }
+
+      // Return needs_setup to set password
+      return NextResponse.json({ status: 'needs_setup', dealerId });
+    }
+
     // Check for existing session token in cookie
     const sessionToken = request.cookies.get('dealer_session')?.value;
     if (sessionToken) {
@@ -79,80 +150,6 @@ export async function POST(request: NextRequest) {
         // Dealer claimed platform but hasn't set password (edge case)
         return NextResponse.json({ status: 'needs_setup', dealerId: existingDealer.id });
       }
-    }
-
-    // Invite link claiming: startapp="claim:<dealerId>:<token>"
-    if (startParam?.startsWith('claim:')) {
-      const [, dealerId, token] = startParam.split(':');
-      if (!dealerId || !token) {
-        return NextResponse.json({ error: 'Invalid claim link' }, { status: 400 });
-      }
-
-      const payload = validateDealerClaimToken(token);
-      if (!payload || payload.dealerId !== dealerId) {
-        return NextResponse.json({ error: 'Claim link expired or invalid' }, { status: 400 });
-      }
-
-      const dealer = await prisma.dealer.findUnique({
-        where: { id: dealerId },
-        select: {
-          id: true,
-          active: true,
-          deletedAt: true,
-          platform: true,
-          platformUserId: true,
-          passwordHash: true,
-          name: true,
-        },
-      });
-
-      if (!dealer || dealer.deletedAt) {
-        return NextResponse.json({ error: 'Dealer not found' }, { status: 404 });
-      }
-
-      if (!dealer.active) {
-        return NextResponse.json({ error: 'Dealer is inactive' }, { status: 403 });
-      }
-
-      if (dealer.platform || dealer.platformUserId) {
-        return NextResponse.json({ error: 'Dealer already claimed' }, { status: 409 });
-      }
-
-      try {
-        await prisma.dealer.update({
-          where: { id: dealerId },
-          data: {
-            platform: prismaPlat,
-            platformUserId,
-            platformChatId: chatId || platformUserId,
-          },
-        });
-      } catch (error) {
-        if (
-          typeof error === 'object' &&
-          error &&
-          'code' in error &&
-          (error as { code?: string }).code === 'P2002'
-        ) {
-          return NextResponse.json({ error: 'Account already bound to a dealer' }, { status: 409 });
-        }
-        throw error;
-      }
-
-      // Send welcome message to establish chat in user's chat list
-      if (chatId || platformUserId) {
-        const targetChatId = chatId || platformUserId;
-
-        // Fire and forget - don't block response on this
-        if (platform === 'max') {
-          sendMaxWelcomeMessageToDealer(targetChatId, dealer.name).catch((err) => {
-            console.error('[/api/dealerinterface/check] Failed to send welcome message:', err);
-          });
-        }
-        // Telegram welcome message can be added here if needed
-      }
-
-      return NextResponse.json({ status: 'needs_setup', dealerId });
     }
 
     // Fallback: allow auto-claim only when there is exactly ONE unclaimed dealer
