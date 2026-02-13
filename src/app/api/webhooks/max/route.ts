@@ -5,6 +5,14 @@
  * Routes events to appropriate handlers for both customer and dealer bots
  *
  * Query param: ?bot=dealer or ?bot=customer (defaults to customer)
+ *
+ * MAX Webhook Format (from docs):
+ * {
+ *   "update_type": "message_created" | "bot_started" | "message_callback",
+ *   "timestamp": 1234567890,
+ *   "message": { ... },
+ *   "user_locale": "ru"
+ * }
  */
 
 import { NextResponse } from 'next/server';
@@ -17,33 +25,46 @@ const MAX_API_BASE = 'https://platform-api.max.ru';
 
 type BotType = 'customer' | 'dealer';
 
-type MaxChat = { chat_id?: string | number };
-type MaxUser = { user_id?: number; first_name?: string };
+// MAX API User structure
+type MaxUser = {
+  user_id: number;
+  name?: string;
+  first_name?: string;
+  last_name?: string;
+};
 
-type MaxMessage = {
-  chat?: MaxChat;
-  from?: MaxUser;
+// MAX API Recipient (chat)
+type MaxRecipient = {
+  chat_id: number;
+  chat_type: 'dialog' | 'chat' | 'channel';
+};
+
+// MAX API Message body
+type MaxMessageBody = {
   text?: string;
+  format?: 'plain' | 'markdown' | 'html';
+  attachments?: unknown[];
 };
 
-type MaxCallback = {
-  from?: MaxUser;
-  data?: string;
-  message?: { chat?: MaxChat };
+// MAX API Message structure
+type MaxMessage = {
+  sender?: MaxUser;
+  recipient?: MaxRecipient;
+  timestamp: number;
+  body?: MaxMessageBody;
 };
 
-type MaxEvent = {
-  from?: MaxUser;
-  type?: string;
-};
-
+// MAX API Webhook Update
 type MaxWebhookUpdate = {
-  type?: string;
-  object?: {
+  update_type: 'message_created' | 'bot_started' | 'message_callback' | string;
+  timestamp: number;
+  message?: MaxMessage;
+  callback?: {
+    user: MaxUser;
+    payload: string;
     message?: MaxMessage;
-    callback?: MaxCallback;
-    event?: MaxEvent;
   };
+  user_locale?: string;
 };
 
 function getMaxToken(botType: BotType = 'customer'): string | undefined {
@@ -68,48 +89,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
 
-    const rawBody = await request.json();
-    console.warn('[MAX] Raw webhook payload:', JSON.stringify(rawBody).substring(0, 500));
+    const update = (await request.json()) as MaxWebhookUpdate;
 
-    const update = rawBody as MaxWebhookUpdate;
-
-    // Validate MAX event structure
-    if (!update.type || !update.object) {
-      console.warn(
-        '[MAX] Invalid webhook format - type:',
-        update.type,
-        'has object:',
-        !!update.object
-      );
-      return NextResponse.json({ ok: true });
-    }
-
-    // Log incoming event
-    console.warn('[MAX] Received event:', {
-      type: update.type,
+    console.warn('[MAX] Webhook received:', {
+      update_type: update.update_type,
       botType,
-      userId: update.object.message?.from?.user_id || update.object.callback?.from?.user_id,
+      timestamp: update.timestamp,
     });
 
-    // Route to appropriate handler
-    switch (update.type) {
-      case 'message_new':
-        if (update.object.message) {
-          await handleMaxMessageNew(update.object.message, botType);
+    // Handle different update types
+    switch (update.update_type) {
+      case 'bot_started':
+        // User clicked /start or opened chat with bot for the first time
+        if (update.message?.sender) {
+          await handleBotStarted(update.message, botType);
         }
         break;
+
+      case 'message_created':
+        // New message received
+        if (update.message) {
+          await handleMessageCreated(update.message, botType);
+        }
+        break;
+
       case 'message_callback':
-        if (update.object.callback) {
-          await handleMaxMessageCallback(update.object.callback, botType);
+        // Callback from inline keyboard
+        if (update.callback) {
+          await handleMessageCallback(update.callback, botType);
         }
         break;
-      case 'message_event':
-        if (update.object.event) {
-          await handleMaxMessageEvent(update.object.event, botType);
-        }
-        break;
+
       default:
-        console.warn(`[MAX] Unknown event type: ${update.type}`);
+        console.warn(`[MAX] Unknown update_type: ${update.update_type}`);
     }
 
     // Must respond quickly with 200 OK (MAX timeout is 2-3 seconds)
@@ -120,50 +132,81 @@ export async function POST(request: Request) {
   }
 }
 
-async function handleMaxMessageNew(message: MaxMessage, botType: BotType) {
-  try {
-    const chatId = message.chat?.chat_id;
-    const userId = message.from?.user_id;
-    const text = message.text || '';
-    const firstName = message.from?.first_name || 'User';
+async function handleBotStarted(message: MaxMessage, botType: BotType) {
+  const chatId = message.recipient?.chat_id;
+  const user = message.sender;
+  const userId = user?.user_id;
+  const firstName = user?.first_name || user?.name || 'User';
 
-    if (chatId == null) {
-      console.warn('[MAX] Message missing chat_id');
-      return;
-    }
+  if (!chatId) {
+    console.warn('[MAX] bot_started: missing chat_id');
+    return;
+  }
 
-    console.warn(
-      `[MAX] Message from ${userId} (chat: ${chatId}, bot: ${botType}): "${text.substring(0, 50)}"`
-    );
+  console.warn(`[MAX] Bot started by ${userId} (chat: ${chatId}, bot: ${botType})`);
 
-    // Handle /start command (with or without parameters)
-    if (text.startsWith('/start')) {
-      const startParam = text.substring(6).trim(); // Extract parameter after /start
-
-      if (botType === 'dealer') {
-        if (startParam && startParam.startsWith('claim_')) {
-          // Invite link: send welcome with claim button
-          await handleDealerInviteStart(chatId, firstName, startParam);
-        } else {
-          // Regular start
-          await handleDealerStart(chatId, firstName);
-        }
-      } else {
-        await handleCustomerStart(chatId, firstName);
-      }
-    } else if (text.toLowerCase().includes('помощь') || text.toLowerCase().includes('help')) {
-      if (botType === 'dealer') {
-        await handleDealerHelp(chatId);
-      } else {
-        await handleCustomerHelp(chatId);
-      }
-    }
-  } catch (err) {
-    console.error('[MAX] Failed to handle message:', err);
+  // Send welcome message
+  if (botType === 'dealer') {
+    await handleDealerStart(chatId, firstName);
+  } else {
+    await handleCustomerStart(chatId, firstName);
   }
 }
 
-async function handleCustomerStart(chatId: string | number, firstName: string) {
+async function handleMessageCreated(message: MaxMessage, botType: BotType) {
+  const chatId = message.recipient?.chat_id;
+  const user = message.sender;
+  const userId = user?.user_id;
+  const text = message.body?.text || '';
+  const firstName = user?.first_name || user?.name || 'User';
+
+  if (!chatId) {
+    console.warn('[MAX] message_created: missing chat_id');
+    return;
+  }
+
+  console.warn(
+    `[MAX] Message from ${userId} (chat: ${chatId}, bot: ${botType}): "${text.substring(0, 50)}"`
+  );
+
+  // Handle /start command (with or without parameters)
+  if (text.startsWith('/start')) {
+    const startParam = text.substring(6).trim(); // Extract parameter after /start
+
+    if (botType === 'dealer') {
+      if (startParam && startParam.startsWith('claim_')) {
+        // Invite link: send welcome with claim button
+        await handleDealerInviteStart(chatId, firstName, startParam);
+      } else {
+        // Regular start
+        await handleDealerStart(chatId, firstName);
+      }
+    } else {
+      await handleCustomerStart(chatId, firstName);
+    }
+  } else if (text.toLowerCase().includes('помощь') || text.toLowerCase().includes('help')) {
+    if (botType === 'dealer') {
+      await handleDealerHelp(chatId);
+    } else {
+      await handleCustomerHelp(chatId);
+    }
+  }
+}
+
+async function handleMessageCallback(
+  callback: { user: MaxUser; payload: string; message?: MaxMessage },
+  botType: BotType
+) {
+  const userId = callback.user.user_id;
+  const payload = callback.payload;
+
+  console.warn(`[MAX] Callback from ${userId} (bot: ${botType}): ${payload}`);
+
+  // Handle specific callbacks based on payload
+  // You can use this to implement button interactions
+}
+
+async function handleCustomerStart(chatId: number, firstName: string) {
   const maxBotName = getMaxBotName('customer');
   await sendMaxMessage(
     chatId,
@@ -179,9 +222,10 @@ async function handleCustomerStart(chatId: string | number, firstName: string) {
           buttons: [
             [
               {
-                type: 'link',
+                type: 'open_app',
                 text: '📱 Открыть приложение',
-                url: `https://max.ru/${maxBotName}?startapp=dashboard`,
+                app_name: maxBotName,
+                payload: 'dashboard',
               },
             ],
           ],
@@ -192,7 +236,7 @@ async function handleCustomerStart(chatId: string | number, firstName: string) {
   );
 }
 
-async function handleDealerStart(chatId: string | number, firstName: string) {
+async function handleDealerStart(chatId: number, firstName: string) {
   const maxBotName = getMaxBotName('dealer');
   await sendMaxMessage(
     chatId,
@@ -208,9 +252,10 @@ async function handleDealerStart(chatId: string | number, firstName: string) {
           buttons: [
             [
               {
-                type: 'link',
+                type: 'open_app',
                 text: '📱 Панель дилера',
-                url: `https://max.ru/${maxBotName}?startapp=dashboard`,
+                app_name: maxBotName,
+                payload: 'dashboard',
               },
             ],
           ],
@@ -221,11 +266,7 @@ async function handleDealerStart(chatId: string | number, firstName: string) {
   );
 }
 
-async function handleDealerInviteStart(
-  chatId: string | number,
-  firstName: string,
-  claimParam: string
-) {
+async function handleDealerInviteStart(chatId: number, firstName: string, claimParam: string) {
   const maxBotName = getMaxBotName('dealer');
   await sendMaxMessage(
     chatId,
@@ -241,9 +282,10 @@ async function handleDealerInviteStart(
           buttons: [
             [
               {
-                type: 'link',
+                type: 'open_app',
                 text: '🚀 Активировать учетную запись',
-                url: `https://max.ru/${maxBotName}?startapp=${claimParam}`,
+                app_name: maxBotName,
+                payload: claimParam,
               },
             ],
           ],
@@ -254,7 +296,7 @@ async function handleDealerInviteStart(
   );
 }
 
-async function handleCustomerHelp(chatId: string | number) {
+async function handleCustomerHelp(chatId: number) {
   await sendMaxMessage(
     chatId,
     `ℹ️ Справка по использованию:
@@ -268,7 +310,7 @@ async function handleCustomerHelp(chatId: string | number) {
   );
 }
 
-async function handleDealerHelp(chatId: string | number) {
+async function handleDealerHelp(chatId: number) {
   await sendMaxMessage(
     chatId,
     `ℹ️ Справка для дилеров:
@@ -282,39 +324,12 @@ async function handleDealerHelp(chatId: string | number) {
   );
 }
 
-async function handleMaxMessageCallback(callback: MaxCallback, botType: BotType) {
-  try {
-    const userId = callback.from?.user_id;
-    const data = callback.data;
-
-    console.warn(`[MAX] Callback from ${userId} (bot: ${botType}): ${data}`);
-
-    // Handle specific callbacks based on data
-    // You can use this to implement button interactions
-  } catch (err) {
-    console.error('[MAX] Failed to handle callback:', err);
-  }
-}
-
-async function handleMaxMessageEvent(event: MaxEvent, botType: BotType) {
-  try {
-    const userId = event.from?.user_id;
-    const type = event.type;
-
-    console.warn(`[MAX] Event from ${userId} (bot: ${botType}): ${type}`);
-
-    // Handle mini-app open, etc.
-  } catch (err) {
-    console.error('[MAX] Failed to handle event:', err);
-  }
-}
-
 /**
  * Helper to send message to MAX with optional attachments
  * Uses correct API format: chat_id in URL params
  */
 async function sendMaxMessage(
-  chatId: string | number,
+  chatId: number,
   text: string,
   attachments?: Array<Record<string, unknown>>,
   botType: BotType = 'customer'
