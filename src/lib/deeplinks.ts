@@ -128,7 +128,7 @@ export function createNotificationButtons(
  *
  * Usage in your React/Next component:
  * const startParam = Telegram.WebApp.initDataUnsafe.tgWebAppStartParam
- *                 || WebApp.initDataUnsafe?.startapp;
+ *                 || WebApp.initDataUnsafe?.start_param;
  * const { context, resourceId } = parseStartParam(startParam);
  */
 export function parseStartParam(param?: string): {

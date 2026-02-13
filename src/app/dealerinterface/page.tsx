@@ -33,11 +33,11 @@ export default function DealerInterfaceHomePage() {
 
         // Deep link / invite params:
         // Telegram: tgWebAppStartParam
-        // MAX: startapp
+        // MAX: start_param (in initDataUnsafe) or startapp (in URL)
         // Also read URL query (web_app buttons)
         let startParam =
           (initDataUnsafe?.tgWebAppStartParam as string | undefined) ||
-          (initDataUnsafe?.startapp as string | undefined);
+          (initDataUnsafe?.start_param as string | undefined);
         if (!startParam && typeof window !== 'undefined') {
           const params = new URLSearchParams(window.location.search);
           startParam = params.get('startapp') || undefined;
