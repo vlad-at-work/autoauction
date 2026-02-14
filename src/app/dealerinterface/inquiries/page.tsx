@@ -1,152 +1,152 @@
-import Link from 'next/link';
-import { headers } from 'next/headers';
+'use client';
 
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+
+import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { prisma } from '@/lib/db';
-import { parseBasicAuthHeader } from '@/lib/auth/basic';
 import { getShortId, getIdColorClass, formatPrice } from '@/lib/inquiry-utils';
 
-export default async function DealerInquiriesPage() {
-  const headerList = await headers();
-  const auth = parseBasicAuthHeader(headerList.get('authorization'));
+type Inquiry = {
+  id: string;
+  model: string;
+  submodel: string;
+  transmission: string;
+  color: string;
+  createdAt: string;
+  expiresAt: string;
+  offers: Array<{
+    id: string;
+    price: number;
+    dealerId: string;
+    createdAt: string;
+  }>;
+  transactions: Array<{
+    id: string;
+    dealerId: string;
+  }>;
+  _count: {
+    offers: number;
+    transactions: number;
+  };
+};
 
-  // Require authentication - reject without credentials
-  if (!auth) {
+export default function DealerInquiriesPage() {
+  const [inquiries, setInquiries] = useState<Inquiry[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [dealerId, setDealerId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadInquiries() {
+      try {
+        const webApp = getWebApp();
+        const platform = detectPlatform();
+        const initData = webApp?.initData;
+
+        if (!initData || !platform) {
+          setError('Please open via MAX or Telegram bot');
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch('/api/dealer/inquiries', {
+          headers: {
+            Authorization: `Bearer ${platform}:dealer:${initData}`,
+          },
+        });
+
+        if (cancelled) return;
+
+        if (response.status === 401 || response.status === 403) {
+          setError('Authentication failed. Please login again.');
+          setLoading(false);
+          return;
+        }
+
+        if (!response.ok) {
+          const data = await response.json();
+          setError(data.error || 'Failed to load inquiries');
+          setLoading(false);
+          return;
+        }
+
+        const data = await response.json();
+        setInquiries(data.inquiries);
+        if (data.inquiries.length > 0 && data.inquiries[0].offers.length > 0) {
+          setDealerId(data.inquiries[0].offers[0].dealerId);
+        }
+        setLoading(false);
+      } catch (err) {
+        console.error('Load inquiries error:', err);
+        if (!cancelled) {
+          setError('Connection error');
+          setLoading(false);
+        }
+      }
+    }
+
+    loadInquiries();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (loading) {
     return (
-      <div className="flex min-h-screen w-full flex-col items-center justify-center px-4">
-        <div className="w-full max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-          <h1 className="mb-2 text-xl font-semibold text-red-900">Доступ запрещен</h1>
-          <p className="mb-4 text-sm text-red-800">
-            Требуется аутентификация. Пожалуйста, используйте правильные учетные данные.
-          </p>
-          <p className="text-xs text-red-700">
-            Это портал для дилеров. Используйте ваше имя пользователя и пароль.
-          </p>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="text-xl font-semibold">Loading...</div>
+          <div className="mt-2 text-sm text-gray-500">Fetching inquiries</div>
         </div>
       </div>
     );
   }
 
-  const dealer = await prisma.dealer.findFirst({
-    where: { username: auth.username, deletedAt: null },
-    select: { id: true, active: true, name: true, subName: true },
-  });
-
-  if (!dealer) {
+  if (error) {
     return (
-      <div className="flex min-h-screen w-full flex-col items-center justify-center px-4">
-        <div className="w-full max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-          <h1 className="mb-2 text-xl font-semibold text-red-900">Дилер не зарегистрирован</h1>
-          <p className="mb-4 text-sm text-red-800">
-            Ваш логин не найден в базе. Попросите администратора создать дилера в /admin/dealers.
-          </p>
-          <p className="text-xs text-red-700">
-            Логин: <span className="font-mono">{auth.username}</span>
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!dealer.active) {
-    return (
-      <div className="flex min-h-screen w-full flex-col items-center justify-center px-4">
-        <div className="w-full max-w-md rounded-lg border border-orange-200 bg-orange-50 p-6 text-center">
-          <h1 className="mb-2 text-xl font-semibold text-orange-900">Дилер неактивен</h1>
-          <p className="text-sm text-orange-800">
-            Доступ временно ограничен. Обратитесь к администратору.
-          </p>
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="w-full max-w-md rounded-lg bg-red-50 p-6 text-center">
+          <h1 className="mb-2 text-xl font-semibold text-red-900">Error</h1>
+          <p className="text-red-700">{error}</p>
         </div>
       </div>
     );
   }
 
   const now = new Date();
-
-  const [activeInquiries, previousInquiries] = await Promise.all([
-    prisma.inquiry.findMany({
-      where: { expiresAt: { gt: now }, deletedAt: null },
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        model: true,
-        submodel: true,
-        transmission: true,
-        color: true,
-        createdAt: true,
-        expiresAt: true,
-        offers: {
-          where: { deletedAt: null },
-          select: {
-            id: true,
-            price: true,
-            dealerId: true,
-            createdAt: true,
-            transaction: { select: { id: true } },
-          },
-          orderBy: { createdAt: 'desc' },
-        },
-        transactions: {
-          select: { id: true, dealerId: true },
-        },
-      },
-    }),
-    prisma.inquiry.findMany({
-      where: { expiresAt: { lte: now }, deletedAt: null },
-      take: 25,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        model: true,
-        submodel: true,
-        transmission: true,
-        color: true,
-        createdAt: true,
-        expiresAt: true,
-        offers: {
-          where: { deletedAt: null },
-          select: {
-            id: true,
-            price: true,
-            dealerId: true,
-            createdAt: true,
-            transaction: { select: { id: true } },
-          },
-          orderBy: { createdAt: 'desc' },
-        },
-        transactions: {
-          select: { id: true, dealerId: true },
-        },
-      },
-    }),
-  ]);
+  const activeInquiries = inquiries?.filter((i) => new Date(i.expiresAt) > now) || [];
+  const previousInquiries = inquiries?.filter((i) => new Date(i.expiresAt) <= now) || [];
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-10">
       <Card>
         <CardHeader>
-          <CardTitle>Заявки (активные 24 часа)</CardTitle>
+          <CardTitle>Active Inquiries (24 hours)</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {activeInquiries.length === 0 ? (
-            <p className="text-muted-foreground text-sm">Пока нет активных заявок.</p>
+            <p className="text-muted-foreground text-sm">No active inquiries.</p>
           ) : (
             <ul className="flex flex-col gap-2">
               {activeInquiries.map((inquiry) => {
-                const myOffers = dealer
-                  ? inquiry.offers.filter((o) => o.dealerId === dealer.id)
+                const myOffers = dealerId
+                  ? inquiry.offers.filter((o) => o.dealerId === dealerId)
                   : [];
                 const latestMyOffer = myOffers[0];
-                const totalOfferCount = inquiry.offers.length;
-                const acceptedCount = inquiry.transactions.length;
-                const myTransaction = dealer
-                  ? inquiry.transactions.find((t) => t.dealerId === dealer.id)
-                  : null;
+                const totalOfferCount = inquiry._count.offers;
+                const acceptedCount = inquiry._count.transactions;
+                const myTransaction = inquiry.transactions.find((t) => t.dealerId === dealerId);
 
                 const hoursLeft = Math.max(
                   0,
-                  Math.ceil((inquiry.expiresAt.getTime() - now.getTime()) / (60 * 60 * 1000))
+                  Math.ceil(
+                    (new Date(inquiry.expiresAt).getTime() - now.getTime()) / (60 * 60 * 1000)
+                  )
                 );
 
                 const colorClass = getIdColorClass(inquiry.id);
@@ -169,21 +169,21 @@ export default async function DealerInquiriesPage() {
                             {inquiry.model} • {inquiry.submodel}
                           </span>
                         </div>
-                        <div className="text-muted-foreground text-xs">Осталось: ~{hoursLeft}ч</div>
+                        <div className="text-muted-foreground text-xs">~{hoursLeft}h left</div>
                       </div>
                       <div className="text-muted-foreground text-sm">
                         {inquiry.transmission} • {inquiry.color}
                       </div>
                       <div className="flex flex-wrap items-center gap-2 text-sm">
                         {totalOfferCount > 0 && (
-                          <Badge variant="secondary">{totalOfferCount} предл.</Badge>
+                          <Badge variant="secondary">{totalOfferCount} offers</Badge>
                         )}
                         {acceptedCount > 0 && (
                           <Badge
                             variant="outline"
                             className="border-green-200 bg-green-50 text-green-700"
                           >
-                            {acceptedCount} принято
+                            {acceptedCount} accepted
                           </Badge>
                         )}
                       </div>
@@ -193,7 +193,7 @@ export default async function DealerInquiriesPage() {
                             variant="outline"
                             className="border-green-200 bg-green-50 text-green-700"
                           >
-                            ✓ Ваше предложение принято
+                            ✓ Your offer accepted
                           </Badge>
                           {latestMyOffer && (
                             <span className="text-muted-foreground">
@@ -204,19 +204,14 @@ export default async function DealerInquiriesPage() {
                       ) : latestMyOffer ? (
                         <div className="mt-1 flex items-center gap-2 text-sm">
                           <span>
-                            Ваше предложение:{' '}
+                            Your offer:{' '}
                             <span className="font-medium">{formatPrice(latestMyOffer.price)}</span>
                           </span>
-                          {myOffers.length > 1 && (
-                            <span className="text-muted-foreground">
-                              (+{myOffers.length - 1} ещё)
-                            </span>
-                          )}
                           <Badge
                             variant="outline"
                             className="border-blue-200 bg-blue-50 text-blue-700"
                           >
-                            ⏳ В ожидании
+                            ⏳ Pending
                           </Badge>
                         </div>
                       ) : null}
@@ -231,21 +226,19 @@ export default async function DealerInquiriesPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Прошлые заявки</CardTitle>
+          <CardTitle>Previous Inquiries</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {previousInquiries.length === 0 ? (
-            <p className="text-muted-foreground text-sm">Пока нет прошлых заявок.</p>
+            <p className="text-muted-foreground text-sm">No previous inquiries.</p>
           ) : (
             <ul className="flex flex-col gap-2">
               {previousInquiries.map((inquiry) => {
-                const myOffers = dealer
-                  ? inquiry.offers.filter((o) => o.dealerId === dealer.id)
+                const myOffers = dealerId
+                  ? inquiry.offers.filter((o) => o.dealerId === dealerId)
                   : [];
                 const latestMyOffer = myOffers[0];
-                const myTransaction = dealer
-                  ? inquiry.transactions.find((t) => t.dealerId === dealer.id)
-                  : null;
+                const myTransaction = inquiry.transactions.find((t) => t.dealerId === dealerId);
 
                 const colorClass = getIdColorClass(inquiry.id);
                 const shortId = getShortId(inquiry.id);
@@ -267,7 +260,7 @@ export default async function DealerInquiriesPage() {
                             {inquiry.model} • {inquiry.submodel}
                           </span>
                         </div>
-                        <Badge variant="secondary">Истекла</Badge>
+                        <Badge variant="secondary">Expired</Badge>
                       </div>
                       <div className="text-muted-foreground text-sm">
                         {inquiry.transmission} • {inquiry.color}
@@ -278,7 +271,7 @@ export default async function DealerInquiriesPage() {
                             variant="outline"
                             className="border-green-200 bg-green-50 text-green-700"
                           >
-                            ✓ Ваше предложение принято
+                            ✓ Accepted
                           </Badge>
                           {latestMyOffer && (
                             <span className="text-muted-foreground">
@@ -289,10 +282,10 @@ export default async function DealerInquiriesPage() {
                       ) : latestMyOffer ? (
                         <div className="flex items-center gap-2 text-sm">
                           <span>
-                            Ваше предложение:{' '}
+                            Offer:{' '}
                             <span className="font-medium">{formatPrice(latestMyOffer.price)}</span>
                           </span>
-                          <Badge variant="secondary">Без ответа</Badge>
+                          <Badge variant="secondary">No response</Badge>
                         </div>
                       ) : null}
                     </Link>

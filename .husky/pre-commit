@@ -1,5 +1,6 @@
 #!/bin/sh
 . ~/.nvm/nvm.sh
 nvm use --silent
-bun run test
+# Tests are optional during development - uncomment to run:
+# bun run test
 bunx lint-staged

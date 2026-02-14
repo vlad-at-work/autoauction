@@ -1,43 +1,41 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 
-export default function DealerSetup() {
+function SetupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [startParam, setStartParam] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [platform, setPlatform] = useState<'max' | 'telegram' | null>(null);
 
   useEffect(() => {
-    // Poll for WebApp bridge to load and extract start_param
-    let cancelled = false;
+    // Get token from URL or initData
+    const urlToken = searchParams.get('token');
 
     const tryLoad = (attempt = 0) => {
-      if (cancelled) return;
-
       const webApp = getWebApp();
       const detectedPlatform = detectPlatform();
 
       if (webApp && detectedPlatform) {
         setPlatform(detectedPlatform);
 
-        // Extract start_param (MAX) or tgWebAppStartParam (Telegram)
+        // Get start_param from initData as fallback
         const initDataUnsafe = webApp.initDataUnsafe as Record<string, unknown> | undefined;
-        const param =
+        const initToken =
           (initDataUnsafe?.start_param as string | undefined) ||
           (initDataUnsafe?.tgWebAppStartParam as string | undefined);
 
-        console.warn('[Dealer Setup] Start param:', param, 'Platform:', detectedPlatform);
+        const finalToken = urlToken || initToken;
 
-        if (param) {
-          setStartParam(param);
-        }
+        console.warn('[Dealer Setup] Token:', finalToken);
+        setToken(finalToken || null);
         return;
       }
 
@@ -47,11 +45,7 @@ export default function DealerSetup() {
     };
 
     tryLoad();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -80,8 +74,8 @@ export default function DealerSetup() {
         return;
       }
 
-      console.warn('[Dealer Setup] Submitting...', {
-        hasStartParam: !!startParam,
+      console.warn('[Dealer Setup] Submitting setup...', {
+        hasToken: !!token,
         platform: currentPlatform,
       });
 
@@ -91,13 +85,13 @@ export default function DealerSetup() {
           Authorization: `Bearer ${currentPlatform}:dealer:${initData}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ password, startParam }),
+        body: JSON.stringify({ password, startParam: token }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        console.warn('[Dealer Setup] Success, redirecting...');
+        console.warn('[Dealer Setup] Success, redirecting to inquiries');
         router.push('/dealerinterface/inquiries');
       } else {
         console.error('[Dealer Setup] Failed:', data);
@@ -120,7 +114,11 @@ export default function DealerSetup() {
               <span className="text-3xl">🔑</span>
             </div>
             <h1 className="mb-2 text-2xl font-bold text-gray-900">Set Your Password</h1>
-            <p className="text-sm text-gray-600">Create a password to secure your dealer account</p>
+            <p className="text-sm text-gray-600">
+              {token
+                ? 'Create a password to activate your dealer account'
+                : 'Create a password to secure your account'}
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -167,5 +165,21 @@ export default function DealerSetup() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DealerSetup() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <div className="text-2xl font-semibold text-gray-700">Loading...</div>
+          </div>
+        </div>
+      }
+    >
+      <SetupForm />
+    </Suspense>
   );
 }

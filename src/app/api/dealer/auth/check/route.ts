@@ -1,10 +1,5 @@
 /**
- * Check dealer authentication status
- *
- * Called when dealer mini-app opens to determine routing:
- * - not_found: No dealer record for this platform user
- * - needs_setup: Dealer exists but no password set
- * - authenticated: Dealer is ready to use
+ * Check dealer auth - MAXIMUM LOGGING VERSION
  */
 
 import { NextResponse } from 'next/server';
@@ -12,23 +7,28 @@ import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { prisma } from '@/lib/db';
 
 export async function POST(request: Request) {
+  console.warn('[=== CHECK START ===]');
+  console.warn('[CHECK] Timestamp:', new Date().toISOString());
+  console.warn('[CHECK] Headers:', JSON.stringify(Object.fromEntries(request.headers.entries())));
+
   try {
     const authHeader = request.headers.get('Authorization');
+    console.warn('[CHECK] Auth header present:', !!authHeader);
+    console.warn('[CHECK] Auth header first 100 chars:', authHeader?.substring(0, 100));
+
     const validation = validateWebAppRequest(authHeader, 'dealer');
+    console.warn('[CHECK] Validation result:', JSON.stringify(validation));
 
     if (!validation.valid) {
-      console.error('[/api/dealer/auth/check] Invalid WebApp data:', validation.error);
+      console.warn('[CHECK] ERROR: Invalid WebApp data:', validation.error);
       return NextResponse.json({ error: validation.error }, { status: 401 });
     }
 
     const platformEnum = validation.platform === 'max' ? 'MAX' : 'TELEGRAM';
+    console.warn('[CHECK] platformEnum:', platformEnum);
+    console.warn('[CHECK] userId:', validation.userId);
 
-    console.warn('[/api/dealer/auth/check]', {
-      platform: platformEnum,
-      userId: validation.userId,
-    });
-
-    // Find dealer by platform user ID
+    console.warn('[CHECK] Querying database...');
     const dealer = await prisma.dealer.findFirst({
       where: {
         platform: platformEnum,
@@ -43,19 +43,22 @@ export async function POST(request: Request) {
         passwordHash: true,
       },
     });
+    console.warn('[CHECK] DB result:', dealer ? `Found dealer ${dealer.id}` : 'NOT FOUND');
 
     if (!dealer) {
-      console.warn('[/api/dealer/auth/check] Dealer not found');
+      console.warn('[CHECK] Returning: not_found');
+      console.warn('[=== CHECK END ===]');
       return NextResponse.json({ status: 'not_found' });
     }
 
     if (!dealer.active) {
-      console.warn('[/api/dealer/auth/check] Dealer inactive');
+      console.warn('[CHECK] ERROR: Dealer inactive');
       return NextResponse.json({ error: 'Dealer account is inactive' }, { status: 403 });
     }
 
     if (!dealer.passwordHash) {
-      console.warn('[/api/dealer/auth/check] Needs password setup');
+      console.warn('[CHECK] Returning: needs_setup');
+      console.warn('[=== CHECK END ===]');
       return NextResponse.json({
         status: 'needs_setup',
         dealerId: dealer.id,
@@ -63,7 +66,8 @@ export async function POST(request: Request) {
       });
     }
 
-    console.warn('[/api/dealer/auth/check] Authenticated');
+    console.warn('[CHECK] Returning: authenticated');
+    console.warn('[=== CHECK END ===]');
     return NextResponse.json({
       status: 'authenticated',
       dealer: {
@@ -73,7 +77,9 @@ export async function POST(request: Request) {
       },
     });
   } catch (err) {
-    console.error('[/api/dealer/auth/check] Error:', err);
+    console.error('[CHECK] CRITICAL ERROR:', err);
+    console.error('[CHECK] Stack:', (err as Error).stack);
+    console.warn('[=== CHECK END (ERROR) ===]');
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }
