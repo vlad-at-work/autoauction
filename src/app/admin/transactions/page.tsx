@@ -174,7 +174,9 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Транзакции</h1>
         <Button asChild variant="outline" size="sm">
-          <Link href="/admin">На дашборд</Link>
+          <Link href="/admin" prefetch={false}>
+            На дашборд
+          </Link>
         </Button>
       </div>
 

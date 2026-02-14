@@ -116,7 +116,9 @@ export default async function OffersPage({ searchParams }: { searchParams: Searc
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Предложения</h1>
         <Button asChild variant="outline" size="sm">
-          <Link href="/admin/inquiries">Перейти к заявкам</Link>
+          <Link href="/admin/inquiries" prefetch={false}>
+            Перейти к заявкам
+          </Link>
         </Button>
       </div>
 

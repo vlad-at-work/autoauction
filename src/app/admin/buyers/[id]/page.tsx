@@ -38,7 +38,7 @@ export default async function BuyerDetailPage({ params }: { params: Params }) {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button asChild variant="ghost" size="sm">
-          <Link href="/admin/buyers">
+          <Link href="/admin/buyers" prefetch={false}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Назад
           </Link>

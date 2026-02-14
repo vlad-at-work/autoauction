@@ -48,7 +48,7 @@ export default async function TransactionDetailPage({ params }: { params: Params
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button asChild variant="ghost" size="sm">
-          <Link href="/admin/transactions">
+          <Link href="/admin/transactions" prefetch={false}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Назад
           </Link>
@@ -85,7 +85,11 @@ export default async function TransactionDetailPage({ params }: { params: Params
               <span>{tx.buyerEmail || '-'}</span>
 
               <span className="text-muted-foreground">Дилер:</span>
-              <Link href={`/admin/dealers/${tx.dealerId}`} className="text-primary hover:underline">
+              <Link
+                href={`/admin/dealers/${tx.dealerId}`}
+                prefetch={false}
+                className="text-primary hover:underline"
+              >
                 {dealerLabel}
               </Link>
 
@@ -106,7 +110,11 @@ export default async function TransactionDetailPage({ params }: { params: Params
               <span className="font-medium">{offerPrice.toLocaleString('ru-RU')} ₽</span>
 
               <span className="text-muted-foreground">Offer ID:</span>
-              <Link href={`/admin/offers/${tx.offerId}`} className="text-primary hover:underline">
+              <Link
+                href={`/admin/offers/${tx.offerId}`}
+                prefetch={false}
+                className="text-primary hover:underline"
+              >
                 {tx.offerId}
               </Link>
 

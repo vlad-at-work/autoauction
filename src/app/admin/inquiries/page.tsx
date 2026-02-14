@@ -110,24 +110,32 @@ export default async function InquiriesPage({ searchParams }: { searchParams: Se
         <h1 className="text-2xl font-bold">Заявки</h1>
         <div className="flex items-center gap-2">
           <Badge variant={!statusFilter ? 'default' : 'outline'} className="cursor-pointer" asChild>
-            <Link href="/admin/inquiries">Все</Link>
+            <Link href="/admin/inquiries" prefetch={false}>
+              Все
+            </Link>
           </Badge>
           <Badge
             variant={statusFilter === 'active' ? 'default' : 'outline'}
             className="cursor-pointer"
             asChild
           >
-            <Link href="/admin/inquiries?status=active">Активные</Link>
+            <Link href="/admin/inquiries?status=active" prefetch={false}>
+              Активные
+            </Link>
           </Badge>
           <Badge
             variant={statusFilter === 'expired' ? 'default' : 'outline'}
             className="cursor-pointer"
             asChild
           >
-            <Link href="/admin/inquiries?status=expired">Истекшие</Link>
+            <Link href="/admin/inquiries?status=expired" prefetch={false}>
+              Истекшие
+            </Link>
           </Badge>
           <Button asChild variant="outline" size="sm">
-            <Link href="/admin/inquiries/new">+ Создать</Link>
+            <Link href="/admin/inquiries/new" prefetch={false}>
+              + Создать
+            </Link>
           </Button>
         </div>
       </div>

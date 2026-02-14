@@ -98,7 +98,9 @@ export default async function BuyersPage({ searchParams }: { searchParams: Searc
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Покупатели</h1>
         <Button asChild variant="outline" size="sm">
-          <Link href="/admin/buyers/new">+ Добавить</Link>
+          <Link href="/admin/buyers/new" prefetch={false}>
+            + Добавить
+          </Link>
         </Button>
       </div>
 
