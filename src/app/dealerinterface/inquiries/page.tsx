@@ -48,7 +48,7 @@ export default function DealerInquiriesPage() {
         const initData = webApp?.initData;
 
         if (!initData || !platform) {
-          setError('Please open via MAX or Telegram bot');
+          setError('Откройте через бота MAX или Telegram');
           setLoading(false);
           return;
         }
@@ -62,14 +62,14 @@ export default function DealerInquiriesPage() {
         if (cancelled) return;
 
         if (response.status === 401 || response.status === 403) {
-          setError('Authentication failed. Please login again.');
+          setError('Ошибка авторизации. Войдите снова.');
           setLoading(false);
           return;
         }
 
         if (!response.ok) {
           const data = await response.json();
-          setError(data.error || 'Failed to load inquiries');
+          setError(data.error || 'Не удалось загрузить заявки');
           setLoading(false);
           return;
         }
@@ -83,7 +83,7 @@ export default function DealerInquiriesPage() {
       } catch (err) {
         console.error('Load inquiries error:', err);
         if (!cancelled) {
-          setError('Connection error');
+          setError('Ошибка соединения');
           setLoading(false);
         }
       }
@@ -100,8 +100,8 @@ export default function DealerInquiriesPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="text-xl font-semibold">Loading...</div>
-          <div className="mt-2 text-sm text-gray-500">Fetching inquiries</div>
+          <div className="text-xl font-semibold">Загрузка...</div>
+          <div className="mt-2 text-sm text-gray-500">Загрузка заявок</div>
         </div>
       </div>
     );
@@ -111,7 +111,7 @@ export default function DealerInquiriesPage() {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="w-full max-w-md rounded-lg bg-red-50 p-6 text-center">
-          <h1 className="mb-2 text-xl font-semibold text-red-900">Error</h1>
+          <h1 className="mb-2 text-xl font-semibold text-red-900">Ошибка</h1>
           <p className="text-red-700">{error}</p>
         </div>
       </div>
@@ -126,11 +126,11 @@ export default function DealerInquiriesPage() {
     <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-10">
       <Card>
         <CardHeader>
-          <CardTitle>Active Inquiries (24 hours)</CardTitle>
+          <CardTitle>Активные заявки (24 часа)</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {activeInquiries.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No active inquiries.</p>
+            <p className="text-muted-foreground text-sm">Нет активных заявок.</p>
           ) : (
             <ul className="flex flex-col gap-2">
               {activeInquiries.map((inquiry) => {
@@ -169,21 +169,21 @@ export default function DealerInquiriesPage() {
                             {inquiry.model} • {inquiry.submodel}
                           </span>
                         </div>
-                        <div className="text-muted-foreground text-xs">~{hoursLeft}h left</div>
+                        <div className="text-muted-foreground text-xs">~{hoursLeft}ч осталось</div>
                       </div>
                       <div className="text-muted-foreground text-sm">
                         {inquiry.transmission} • {inquiry.color}
                       </div>
                       <div className="flex flex-wrap items-center gap-2 text-sm">
                         {totalOfferCount > 0 && (
-                          <Badge variant="secondary">{totalOfferCount} offers</Badge>
+                          <Badge variant="secondary">{totalOfferCount} предложений</Badge>
                         )}
                         {acceptedCount > 0 && (
                           <Badge
                             variant="outline"
                             className="border-green-200 bg-green-50 text-green-700"
                           >
-                            {acceptedCount} accepted
+                            {acceptedCount} принято
                           </Badge>
                         )}
                       </div>
@@ -193,7 +193,7 @@ export default function DealerInquiriesPage() {
                             variant="outline"
                             className="border-green-200 bg-green-50 text-green-700"
                           >
-                            ✓ Your offer accepted
+                            ✓ Ваше предложение принято
                           </Badge>
                           {latestMyOffer && (
                             <span className="text-muted-foreground">
@@ -204,14 +204,14 @@ export default function DealerInquiriesPage() {
                       ) : latestMyOffer ? (
                         <div className="mt-1 flex items-center gap-2 text-sm">
                           <span>
-                            Your offer:{' '}
+                            Ваше предложение:{' '}
                             <span className="font-medium">{formatPrice(latestMyOffer.price)}</span>
                           </span>
                           <Badge
                             variant="outline"
                             className="border-blue-200 bg-blue-50 text-blue-700"
                           >
-                            ⏳ Pending
+                            ⏳ Ожидает
                           </Badge>
                         </div>
                       ) : null}
@@ -226,11 +226,11 @@ export default function DealerInquiriesPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Previous Inquiries</CardTitle>
+          <CardTitle>Предыдущие заявки</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {previousInquiries.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No previous inquiries.</p>
+            <p className="text-muted-foreground text-sm">Нет предыдущих заявок.</p>
           ) : (
             <ul className="flex flex-col gap-2">
               {previousInquiries.map((inquiry) => {
@@ -260,7 +260,7 @@ export default function DealerInquiriesPage() {
                             {inquiry.model} • {inquiry.submodel}
                           </span>
                         </div>
-                        <Badge variant="secondary">Expired</Badge>
+                        <Badge variant="secondary">Истекла</Badge>
                       </div>
                       <div className="text-muted-foreground text-sm">
                         {inquiry.transmission} • {inquiry.color}
@@ -271,7 +271,7 @@ export default function DealerInquiriesPage() {
                             variant="outline"
                             className="border-green-200 bg-green-50 text-green-700"
                           >
-                            ✓ Accepted
+                            ✓ Принято
                           </Badge>
                           {latestMyOffer && (
                             <span className="text-muted-foreground">
@@ -282,10 +282,10 @@ export default function DealerInquiriesPage() {
                       ) : latestMyOffer ? (
                         <div className="flex items-center gap-2 text-sm">
                           <span>
-                            Offer:{' '}
+                            Предложение:{' '}
                             <span className="font-medium">{formatPrice(latestMyOffer.price)}</span>
                           </span>
-                          <Badge variant="secondary">No response</Badge>
+                          <Badge variant="secondary">Без ответа</Badge>
                         </div>
                       ) : null}
                     </Link>

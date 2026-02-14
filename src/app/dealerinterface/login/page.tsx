@@ -46,7 +46,7 @@ function LoginForm() {
     setError(null);
 
     if (!password) {
-      setError('Password required');
+      setError('Введите пароль');
       return;
     }
 
@@ -58,7 +58,7 @@ function LoginForm() {
       const platform = detectPlatform();
 
       if (!initData || !platform) {
-        setError('Invalid initialization data');
+        setError('Ошибка инициализации');
         setLoading(false);
         return;
       }
@@ -77,11 +77,11 @@ function LoginForm() {
       if (response.ok) {
         router.push('/dealerinterface/inquiries');
       } else {
-        setError(data.error || 'Login failed');
+        setError(data.error || 'Ошибка входа');
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError('Connection error');
+      setError('Ошибка соединения');
     } finally {
       setLoading(false);
     }
@@ -95,19 +95,19 @@ function LoginForm() {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
               <span className="text-3xl">🔒</span>
             </div>
-            <h1 className="mb-2 text-2xl font-bold text-gray-900">Dealer Login</h1>
-            <p className="text-sm text-gray-600">Enter your password to continue</p>
+            <h1 className="mb-2 text-2xl font-bold text-gray-900">Вход для дилера</h1>
+            <p className="text-sm text-gray-600">Введите пароль для продолжения</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">Password</label>
+              <label className="mb-2 block text-sm font-medium text-gray-700">Пароль</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Your password"
+                placeholder="Ваш пароль"
                 required
               />
             </div>
@@ -123,7 +123,7 @@ function LoginForm() {
               disabled={loading}
               className="w-full rounded-lg bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:bg-gray-400"
             >
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? 'Вход...' : 'Войти'}
             </button>
           </form>
         </div>
@@ -138,7 +138,7 @@ export default function DealerLogin() {
       fallback={
         <div className="flex min-h-screen items-center justify-center bg-gray-50">
           <div className="text-center">
-            <div className="text-2xl font-semibold text-gray-700">Loading...</div>
+            <div className="text-2xl font-semibold text-gray-700">Загрузка...</div>
           </div>
         </div>
       }
