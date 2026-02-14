@@ -10,6 +10,7 @@ function SetupForm() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
@@ -26,6 +27,7 @@ function SetupForm() {
           (initDataUnsafe?.start_param as string | undefined) ||
           (initDataUnsafe?.tgWebAppStartParam as string | undefined);
 
+        // Support both old format (setup_xxx) and new format (6-digit code)
         const finalToken = urlToken || initToken;
         if (finalToken) {
           setToken(finalToken);
@@ -80,15 +82,21 @@ function SetupForm() {
       const data = await response.json();
 
       if (response.ok) {
-        router.push('/dealerinterface/inquiries');
+        // Show success state before redirect
+        setSuccess(true);
+        // Delay redirect slightly to show checkmark
+        window.setTimeout(() => {
+          router.push('/dealerinterface/inquiries');
+        }, 800);
       } else {
         setError(data.error || 'Ошибка активации');
+        setLoading(false);
       }
     } catch {
       setError('Ошибка соединения');
-    } finally {
       setLoading(false);
     }
+    // Note: loading stays true during success state until redirect
   }
 
   return (
@@ -138,10 +146,28 @@ function SetupForm() {
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full rounded-lg bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:bg-gray-400"
+              disabled={loading || success}
+              className={`w-full rounded-lg py-3 font-semibold text-white transition disabled:bg-gray-400 ${
+                success ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'
+              }`}
             >
-              {loading ? 'Сохранение...' : 'Продолжить'}
+              {success ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  Готово
+                </span>
+              ) : loading ? (
+                'Сохранение...'
+              ) : (
+                'Продолжить'
+              )}
             </button>
           </form>
         </div>

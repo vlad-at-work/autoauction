@@ -30,25 +30,35 @@ export async function POST(request: Request) {
     const platformEnum = validation.platform === 'max' ? 'MAX' : 'TELEGRAM';
     let dealer;
 
-    if (startParam?.startsWith('setup_')) {
-      const parts = startParam.split('_');
-      const dealerId = parts[1];
-      const token = parts.slice(2).join('_');
+    if (startParam) {
+      // Support both old format (setup_dealerId_token) and new format (6-digit code)
+      let token: string;
 
+      if (startParam.startsWith('setup_')) {
+        // Old format: setup_dealerId_token
+        const parts = startParam.split('_');
+        token = parts.slice(2).join('_');
+      } else if (/^\d{6}$/.test(startParam)) {
+        // New format: 6-digit code
+        token = startParam;
+      } else {
+        return NextResponse.json({ error: 'Неверный формат кода' }, { status: 400 });
+      }
+
+      // Look up dealer by invite token directly
       dealer = await prisma.dealer.findFirst({
         where: {
-          id: dealerId,
           inviteToken: token,
           deletedAt: null,
         },
       });
 
       if (!dealer) {
-        return NextResponse.json({ error: 'Неверная ссылка приглашения' }, { status: 400 });
+        return NextResponse.json({ error: 'Неверный код приглашения' }, { status: 400 });
       }
 
       if (!isInviteTokenValid(dealer.inviteTokenExpiresAt)) {
-        return NextResponse.json({ error: 'Срок действия ссылки истек' }, { status: 400 });
+        return NextResponse.json({ error: 'Срок действия кода истек' }, { status: 400 });
       }
 
       if (dealer.platform && dealer.platformUserId && dealer.platformUserId !== validation.userId) {
@@ -59,7 +69,7 @@ export async function POST(request: Request) {
       }
 
       await prisma.dealer.update({
-        where: { id: dealerId },
+        where: { id: dealer.id },
         data: {
           platform: platformEnum,
           platformUserId: validation.userId,
@@ -69,7 +79,14 @@ export async function POST(request: Request) {
         },
       });
 
-      console.warn('[SETUP] Dealer claimed:', dealerId, 'by user:', validation.userId);
+      console.warn(
+        '[SETUP] Dealer claimed:',
+        dealer.id,
+        'by user:',
+        validation.userId,
+        'with token:',
+        token
+      );
     } else {
       dealer = await prisma.dealer.findFirst({
         where: {

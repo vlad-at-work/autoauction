@@ -4,6 +4,7 @@
  * POST /api/admin/dealers/[id]/invite
  *
  * Generates a new invite token for the dealer and returns the invite URL
+ * The link opens mini-app directly with the token for seamless activation
  */
 
 import { NextResponse } from 'next/server';
@@ -31,7 +32,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Dealer not found' }, { status: 404 });
     }
 
-    // Generate new invite token
+    // Generate new invite token (6 digits, no dash)
     const { token, expiresAt } = createInviteTokenData();
 
     // Update dealer with new invite token (clears any old one)
@@ -43,10 +44,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       },
     });
 
-    // Construct invite URL
-    const inviteUrl = `https://max.ru/${MAX_BOT_NAME_DEALER}?start=setup_${dealerId}_${token}`;
+    // Construct invite URL that opens mini-app directly with the token
+    // Format: https://max.ru/BOT_NAME?startapp=TOKEN
+    const inviteUrl = `https://max.ru/${MAX_BOT_NAME_DEALER}?startapp=${token}`;
 
-    console.warn(`[Admin] Generated invite link for dealer ${dealer.name} (${dealerId})`);
+    console.warn(`[Admin] Generated invite link for dealer ${dealer.name} (${dealerId}): ${token}`);
 
     return NextResponse.json({
       ok: true,

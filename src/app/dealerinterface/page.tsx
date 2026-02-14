@@ -34,7 +34,8 @@ function DealerEntryContent() {
 
           const finalStartParam = urlStartParam || initStartParam;
 
-          if (finalStartParam?.startsWith('setup_')) {
+          // Support both old format (setup_xxx) and new format (6-digit code)
+          if (finalStartParam?.startsWith('setup_') || /^\d{6}$/.test(finalStartParam || '')) {
             router.push(`/dealerinterface/setup?token=${finalStartParam}`);
             return;
           }
@@ -97,10 +98,11 @@ function DealerEntryContent() {
 
   const handleActivate = () => {
     const code = inviteCode.trim();
-    if (code.startsWith('setup_')) {
+    // Support both old format (setup_xxx) and new format (6-digit code)
+    if (code.startsWith('setup_') || /^\d{6}$/.test(code)) {
       router.push(`/dealerinterface/setup?token=${code}`);
     } else if (code) {
-      setError('Введите полный код, начинающийся с &quot;setup_&quot;');
+      setError('Введите 6-значный код или полный код, начинающийся с &quot;setup_&quot;');
     }
   };
 
@@ -145,7 +147,7 @@ function DealerEntryContent() {
         <div className="space-y-4">
           <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
             <p className="text-sm text-blue-900">
-              Введите код, полученный от администратора (начинается с &quot;setup_&quot;):
+              Введите 6-значный код, полученный от администратора:
             </p>
           </div>
 
@@ -155,8 +157,9 @@ function DealerEntryContent() {
               type="text"
               value={inviteCode}
               onChange={(e) => setInviteCode(e.target.value)}
-              placeholder="setup_xxx_xxx"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 font-mono text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="123456"
+              maxLength={20}
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 font-mono text-sm text-center tracking-widest focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 

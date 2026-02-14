@@ -8,7 +8,7 @@ const DIGITS = '0123456789';
 
 /**
  * Generate a short, numeric invite token
- * Format: 123-456 (6 digits)
+ * Format: 123456 (6 digits, no dash)
  * ~1 million combinations = secure enough for time-limited invites
  */
 export function generateInviteToken(): string {
@@ -17,7 +17,7 @@ export function generateInviteToken(): string {
   for (let i = 0; i < 6; i++) {
     token += DIGITS[bytes[i] % DIGITS.length];
   }
-  return token.slice(0, 3) + '-' + token.slice(3);
+  return token;
 }
 
 /**
