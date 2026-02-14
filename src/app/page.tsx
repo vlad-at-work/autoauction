@@ -1,6 +1,11 @@
 import { Car } from 'lucide-react';
 
+import { getMaxBotUrl, getTelegramBotUrl } from '@/lib/bot-links';
+
 export default function Home() {
+  const maxBotUrl = getMaxBotUrl('inquiry');
+  const tgBotUrl = getTelegramBotUrl('inquiry');
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-zinc-950">
       <main className="flex min-h-screen w-full max-w-2xl flex-col items-center justify-center gap-8 px-6 py-16">
@@ -14,6 +19,24 @@ export default function Home() {
           <p className="max-w-md text-lg text-zinc-600 dark:text-zinc-400">
             Получите лучшие предложения от дилеров Lada за 24 часа. Заполните заявку и дилеры сами
             предложат вам цену.
+          </p>
+        </div>
+
+        <div className="flex w-full max-w-xs flex-col gap-4">
+          <a
+            href={maxBotUrl}
+            className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-blue-600 px-6 text-lg font-semibold text-white transition-colors hover:bg-blue-700 active:bg-blue-800"
+          >
+            Открыть в Max
+          </a>
+          <a
+            href={tgBotUrl}
+            className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-sky-500 px-6 text-lg font-semibold text-white transition-colors hover:bg-sky-600 active:bg-sky-700"
+          >
+            Открыть в Telegram
+          </a>
+          <p className="text-center text-sm text-zinc-500 dark:text-zinc-500">
+            Выберите удобный мессенджер
           </p>
         </div>
 
@@ -47,11 +70,6 @@ export default function Home() {
               </p>
             </div>
           </div>
-        </div>
-
-        <div className="text-center text-sm text-zinc-500 dark:text-zinc-500">
-          <p>Приложение временно недоступно для входа.</p>
-          <p>Интерфейс дилера находится на реконструкции.</p>
         </div>
       </main>
     </div>

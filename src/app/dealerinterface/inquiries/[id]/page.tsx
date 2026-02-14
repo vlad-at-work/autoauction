@@ -127,17 +127,22 @@ export default function DealerInquiryPage() {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-4">
-        <div className="w-full max-w-md rounded-lg bg-red-50 p-6 text-center">
-          <h1 className="mb-2 text-xl font-semibold text-red-900">Ошибка</h1>
-          <p className="text-red-700">{error}</p>
+      <div className="flex min-h-screen flex-col">
+        {/* Back button at top */}
+        <div className="border-b bg-white px-4 py-3">
           <Link
             href="/dealerinterface/inquiries"
-            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border bg-white px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+            className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900"
           >
             <ArrowLeft className="size-4" />
             Назад к заявкам
           </Link>
+        </div>
+        <div className="flex flex-1 items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-lg bg-red-50 p-6 text-center">
+            <h1 className="mb-2 text-xl font-semibold text-red-900">Ошибка</h1>
+            <p className="text-red-700">{error}</p>
+          </div>
         </div>
       </div>
     );
@@ -162,123 +167,105 @@ export default function DealerInquiryPage() {
   const dealerIndexMap = new Map(otherDealerIds.map((dId, i) => [dId, i]));
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-10">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <span
-              className={`rounded px-2 py-1 text-sm font-mono font-medium ${colorClass.bg} ${colorClass.text} border ${colorClass.border}`}
-            >
-              {shortId}
-            </span>
-            <CardTitle>
-              {inquiry.model} • {inquiry.submodel}
-            </CardTitle>
-          </div>
-          <div className="text-muted-foreground text-sm">
-            {isExpired ? (
-              <span className="text-orange-600">Заявка истекла</span>
-            ) : (
-              <span>Осталось: ~{hoursLeft}ч</span>
-            )}
-            {' · '}
-            {inquiry.transactionCount} принято
-          </div>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div className="text-sm">
-            <div>
-              <span className="font-medium">Коробка:</span> {inquiry.transmission}
+    <div className="flex min-h-screen flex-col">
+      {/* Back button at top */}
+      <div className="border-b bg-white px-4 py-3">
+        <Link
+          href="/dealerinterface/inquiries"
+          className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+        >
+          <ArrowLeft className="size-4" />
+          Назад к заявкам
+        </Link>
+      </div>
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <span
+                className={`rounded px-2 py-1 text-sm font-mono font-medium ${colorClass.bg} ${colorClass.text} border ${colorClass.border}`}
+              >
+                {shortId}
+              </span>
+              <CardTitle>
+                {inquiry.model} • {inquiry.submodel}
+              </CardTitle>
             </div>
-            <div>
-              <span className="font-medium">Цвет:</span> {inquiry.color}
+            <div className="text-muted-foreground text-sm">
+              {isExpired ? (
+                <span className="text-orange-600">Заявка истекла</span>
+              ) : (
+                <span>Осталось: ~{hoursLeft}ч</span>
+              )}
+              {' · '}
+              {inquiry.transactionCount} принято
             </div>
-            {inquiry.comment && (
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <div className="text-sm">
               <div>
-                <span className="font-medium">Комментарий:</span> {inquiry.comment}
+                <span className="font-medium">Коробка:</span> {inquiry.transmission}
               </div>
-            )}
-          </div>
+              <div>
+                <span className="font-medium">Цвет:</span> {inquiry.color}
+              </div>
+              {inquiry.comment && (
+                <div>
+                  <span className="font-medium">Комментарий:</span> {inquiry.comment}
+                </div>
+              )}
+            </div>
 
-          {/* My transaction status */}
-          {myTransaction && (
-            <Card className="border-green-200 bg-green-50">
-              <CardHeader>
-                <CardTitle className="text-lg text-green-900">Ваше предложение принято!</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <p className="text-green-800">
-                  У вас есть контактная информация покупателя. Свяжитесь с ним как можно скорее.
-                </p>
-                <div className="mt-3 rounded border border-green-200 bg-white p-3">
-                  <div>
-                    <span className="font-medium">Имя:</span> {myTransaction.buyerName}
-                  </div>
-                  <div>
-                    <span className="font-medium">Телефон:</span>{' '}
-                    <a href={`tel:${myTransaction.buyerPhone}`} className="text-blue-600 underline">
-                      {myTransaction.buyerPhone}
-                    </a>
-                  </div>
-                  {myTransaction.buyerEmail && (
+            {/* My transaction status */}
+            {myTransaction && (
+              <Card className="border-green-200 bg-green-50">
+                <CardHeader>
+                  <CardTitle className="text-lg text-green-900">
+                    Ваше предложение принято!
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <p className="text-green-800">
+                    У вас есть контактная информация покупателя. Свяжитесь с ним как можно скорее.
+                  </p>
+                  <div className="mt-3 rounded border border-green-200 bg-white p-3">
                     <div>
-                      <span className="font-medium">Эл. почта:</span>{' '}
+                      <span className="font-medium">Имя:</span> {myTransaction.buyerName}
+                    </div>
+                    <div>
+                      <span className="font-medium">Телефон:</span>{' '}
                       <a
-                        href={`mailto:${myTransaction.buyerEmail}`}
+                        href={`tel:${myTransaction.buyerPhone}`}
                         className="text-blue-600 underline"
                       >
-                        {myTransaction.buyerEmail}
+                        {myTransaction.buyerPhone}
                       </a>
                     </div>
-                  )}
-                  <div className="text-muted-foreground mt-2 text-xs">
-                    Принято: {new Date(myTransaction.acceptedAt).toLocaleString('ru-RU')}
+                    {myTransaction.buyerEmail && (
+                      <div>
+                        <span className="font-medium">Эл. почта:</span>{' '}
+                        <a
+                          href={`mailto:${myTransaction.buyerEmail}`}
+                          className="text-blue-600 underline"
+                        >
+                          {myTransaction.buyerEmail}
+                        </a>
+                      </div>
+                    )}
+                    <div className="text-muted-foreground mt-2 text-xs">
+                      Принято: {new Date(myTransaction.acceptedAt).toLocaleString('ru-RU')}
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                </CardContent>
+              </Card>
+            )}
 
-          {/* My offers section */}
-          {myOffers.length > 0 && (
-            <div className="flex flex-col gap-3">
-              <div className="text-sm font-medium">Ваши предложения ({myOffers.length})</div>
-              <div className="flex flex-col gap-2">
-                {myOffers.map((offer, index) => (
-                  <OfferCard
-                    key={offer.id}
-                    offer={{
-                      ...offer,
-                      createdAt: new Date(offer.createdAt),
-                      transaction: offer.transaction
-                        ? {
-                            ...offer.transaction,
-                            acceptedAt: new Date(offer.transaction.acceptedAt),
-                          }
-                        : null,
-                    }}
-                    dealerName={null}
-                    isMyOffer={true}
-                    isFirstOffer={index === 0}
-                    formatPrice={formatPrice}
-                    formatRelativeTime={formatRelativeTime}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Competing offers section (anonymized) */}
-          {otherOffers.length > 0 && (
-            <div className="flex flex-col gap-3">
-              <div className="text-sm font-medium">
-                Предложения конкурентов ({otherOffers.length})
-              </div>
-              <div className="flex flex-col gap-2">
-                {otherOffers.map((offer) => {
-                  const dealerIndex = dealerIndexMap.get(offer.dealerId) ?? 0;
-                  const anonName = anonymizeDealerName(dealerIndex);
-                  return (
+            {/* My offers section */}
+            {myOffers.length > 0 && (
+              <div className="flex flex-col gap-3">
+                <div className="text-sm font-medium">Ваши предложения ({myOffers.length})</div>
+                <div className="flex flex-col gap-2">
+                  {myOffers.map((offer, index) => (
                     <OfferCard
                       key={offer.id}
                       offer={{
@@ -291,66 +278,93 @@ export default function DealerInquiryPage() {
                             }
                           : null,
                       }}
-                      dealerName={anonName}
-                      isMyOffer={false}
-                      isFirstOffer={false}
+                      dealerName={null}
+                      isMyOffer={true}
+                      isFirstOffer={index === 0}
                       formatPrice={formatPrice}
                       formatRelativeTime={formatRelativeTime}
                     />
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* New offer form */}
-          {!myTransaction && (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <div className="text-sm font-medium">
-                  {myOffers.length === 0 ? 'Сделать предложение' : 'Новое предложение'}
+                  ))}
                 </div>
-                {!isExpired && myOffers.length > 0 && (
-                  <span className="text-muted-foreground text-xs">
-                    Осталось попыток: {remainingOffers}
-                  </span>
+              </div>
+            )}
+
+            {/* Competing offers section (anonymized) */}
+            {otherOffers.length > 0 && (
+              <div className="flex flex-col gap-3">
+                <div className="text-sm font-medium">
+                  Предложения конкурентов ({otherOffers.length})
+                </div>
+                <div className="flex flex-col gap-2">
+                  {otherOffers.map((offer) => {
+                    const dealerIndex = dealerIndexMap.get(offer.dealerId) ?? 0;
+                    const anonName = anonymizeDealerName(dealerIndex);
+                    return (
+                      <OfferCard
+                        key={offer.id}
+                        offer={{
+                          ...offer,
+                          createdAt: new Date(offer.createdAt),
+                          transaction: offer.transaction
+                            ? {
+                                ...offer.transaction,
+                                acceptedAt: new Date(offer.transaction.acceptedAt),
+                              }
+                            : null,
+                        }}
+                        dealerName={anonName}
+                        isMyOffer={false}
+                        isFirstOffer={false}
+                        formatPrice={formatPrice}
+                        formatRelativeTime={formatRelativeTime}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* New offer form */}
+            {!myTransaction && (
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-medium">
+                    {myOffers.length === 0 ? 'Сделать предложение' : 'Новое предложение'}
+                  </div>
+                  {!isExpired && myOffers.length > 0 && (
+                    <span className="text-muted-foreground text-xs">
+                      Осталось попыток: {remainingOffers}
+                    </span>
+                  )}
+                </div>
+                {isExpired ? (
+                  <Card className="border-gray-300 bg-gray-50">
+                    <CardContent className="py-4 text-sm text-gray-600">
+                      Заявка истекла — предложения больше не принимаются.
+                    </CardContent>
+                  </Card>
+                ) : !canMakeOffer ? (
+                  <Card className="border-orange-200 bg-orange-50">
+                    <CardContent className="py-4 text-sm text-orange-700">
+                      Вы достигли лимита предложений ({MAX_OFFERS_PER_DEALER}). Дождитесь решения
+                      покупателя.
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <OfferForm
+                    inquiryId={inquiry.id}
+                    defaultPrice={myOffers[0]?.price}
+                    defaultComment=""
+                    disabled={false}
+                    offerNumber={myOffers.length + 1}
+                    onOfferSubmitted={loadInquiry}
+                  />
                 )}
               </div>
-              {isExpired ? (
-                <Card className="border-gray-300 bg-gray-50">
-                  <CardContent className="py-4 text-sm text-gray-600">
-                    Заявка истекла — предложения больше не принимаются.
-                  </CardContent>
-                </Card>
-              ) : !canMakeOffer ? (
-                <Card className="border-orange-200 bg-orange-50">
-                  <CardContent className="py-4 text-sm text-orange-700">
-                    Вы достигли лимита предложений ({MAX_OFFERS_PER_DEALER}). Дождитесь решения
-                    покупателя.
-                  </CardContent>
-                </Card>
-              ) : (
-                <OfferForm
-                  inquiryId={inquiry.id}
-                  defaultPrice={myOffers[0]?.price}
-                  defaultComment=""
-                  disabled={false}
-                  offerNumber={myOffers.length + 1}
-                  onOfferSubmitted={loadInquiry}
-                />
-              )}
-            </div>
-          )}
-
-          <Link
-            href="/dealerinterface/inquiries"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border bg-white px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-          >
-            <ArrowLeft className="size-4" />
-            Назад к заявкам
-          </Link>
-        </CardContent>
-      </Card>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

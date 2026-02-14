@@ -2,8 +2,7 @@
 
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { AlertCircle, ArrowLeft, Check, Loader2 } from 'lucide-react';
-import Link from 'next/link';
+import { AlertCircle, Check, Loader2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -12,7 +11,7 @@ import { PageTransition } from '@/components/page-transition';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TopBar } from '@/components/ui/top-bar';
+import { TopBarWithBack } from '@/components/ui/top-bar';
 import { detectPlatform, getWebApp } from '@/app/app/webapp-ready';
 import { formatPrice } from '@/lib/inquiry-utils';
 
@@ -241,7 +240,7 @@ export default function OfferDetailPage() {
   return (
     <PageTransition>
       <div className="min-h-screen w-full">
-        <TopBar />
+        <TopBarWithBack backHref={`/app/inquiry/${inquiryId}`} backText="Назад к заявке" />
         <div className="mx-auto max-w-2xl px-4 py-6">
           {/* Acceptance limits banner */}
           <div className="mb-4 flex items-center justify-between rounded-lg border bg-zinc-50 px-4 py-3">
@@ -374,15 +373,6 @@ export default function OfferDetailPage() {
               )}
             </CardContent>
           </Card>
-
-          <div className="mt-6">
-            <Button asChild variant="outline" className="w-full">
-              <Link href={`/app/inquiry/${inquiryId}`}>
-                <ArrowLeft className="mr-2 size-4" />
-                Назад к заявке
-              </Link>
-            </Button>
-          </div>
         </div>
       </div>
     </PageTransition>
