@@ -35,7 +35,15 @@ export async function POST(request: Request) {
         ?.first_name as string) ||
       'User';
 
-    console.warn('[WEBHOOK]', { type: updateType, bot: botType, userId, hasParam: !!startPayload });
+    console.warn('[WEBHOOK]', {
+      type: updateType,
+      bot: botType,
+      userId,
+      hasParam: !!startPayload,
+      startPayload,
+      start_param: (update as Record<string, unknown>).start_param,
+      fullUpdate: JSON.stringify(update).slice(0, 500),
+    });
 
     if (
       updateType === 'bot_started' ||
@@ -48,6 +56,12 @@ export async function POST(request: Request) {
 
       const param =
         startPayload || (messageText.startsWith('/start') ? messageText.substring(7).trim() : '');
+
+      console.warn('[WEBHOOK] Param check:', {
+        param: param || '(empty)',
+        startsWithSetup: param?.startsWith('setup_'),
+        botType,
+      });
 
       if (botType === 'dealer' && param?.startsWith('setup_')) {
         await handleDealerInvite(Number(userId), firstName, param);
