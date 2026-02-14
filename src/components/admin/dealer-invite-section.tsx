@@ -15,21 +15,24 @@ type Props = {
 export function DealerInviteSection({ dealerId, initialToken, initialExpiresAt }: Props) {
   const [inviteToken, setInviteToken] = useState(initialToken);
   const [inviteExpiresAt, setInviteExpiresAt] = useState(initialExpiresAt);
-  const [inviteUrl, setInviteUrl] = useState<string | null>(null);
+  const [maxInviteUrl, setMaxInviteUrl] = useState<string | null>(null);
+  const [tgInviteUrl, setTgInviteUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copiedMax, setCopiedMax] = useState(false);
+  const [copiedTg, setCopiedTg] = useState(false);
 
   const MAX_BOT_NAME_DEALER = process.env.NEXT_PUBLIC_MAX_BOT_NAME_DEALER || 'id5010035001_1_bot';
 
   // Construct URL from existing token (uses ?start= to open chat, not mini-app)
-  const currentInviteUrl =
+  const currentMaxUrl =
     inviteToken && inviteExpiresAt && new Date(inviteExpiresAt) > new Date()
-      ? inviteUrl || `https://max.ru/${MAX_BOT_NAME_DEALER}?start=${inviteToken}`
+      ? maxInviteUrl || `https://max.ru/${MAX_BOT_NAME_DEALER}?start=${inviteToken}`
       : null;
 
   async function handleGenerateInvite() {
     setLoading(true);
-    setCopied(false);
+    setCopiedMax(false);
+    setCopiedTg(false);
 
     try {
       const response = await fetch(`/api/admin/dealers/${dealerId}/invite`, {
@@ -41,7 +44,8 @@ export function DealerInviteSection({ dealerId, initialToken, initialExpiresAt }
       if (response.ok) {
         setInviteToken(data.inviteToken);
         setInviteExpiresAt(new Date(data.inviteTokenExpiresAt));
-        setInviteUrl(data.inviteUrl);
+        setMaxInviteUrl(data.maxInviteUrl);
+        setTgInviteUrl(data.tgInviteUrl);
       } else {
         alert(`Error: ${data.error}`);
       }
@@ -52,21 +56,29 @@ export function DealerInviteSection({ dealerId, initialToken, initialExpiresAt }
     }
   }
 
-  async function handleCopyLink() {
-    if (currentInviteUrl) {
-      await navigator.clipboard.writeText(currentInviteUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+  async function handleCopyMax() {
+    if (currentMaxUrl) {
+      await navigator.clipboard.writeText(currentMaxUrl);
+      setCopiedMax(true);
+      setTimeout(() => setCopiedMax(false), 2000);
+    }
+  }
+
+  async function handleCopyTg() {
+    if (tgInviteUrl) {
+      await navigator.clipboard.writeText(tgInviteUrl);
+      setCopiedTg(true);
+      setTimeout(() => setCopiedTg(false), 2000);
     }
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Invite Link (MAX)</CardTitle>
+        <CardTitle>Invite Links</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {currentInviteUrl ? (
+        {currentMaxUrl ? (
           <>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -81,42 +93,61 @@ export function DealerInviteSection({ dealerId, initialToken, initialExpiresAt }
               </div>
             </div>
 
+            {/* MAX Link */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Invite URL:</label>
+              <label className="text-sm font-medium">MAX:</label>
               <div className="flex gap-2">
                 <input
                   type="text"
                   readOnly
-                  value={currentInviteUrl}
+                  value={currentMaxUrl}
                   className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
                 />
-                <Button onClick={handleCopyLink} variant="outline" size="sm">
-                  {copied ? '✓ Copied' : 'Copy'}
+                <Button onClick={handleCopyMax} variant="outline" size="sm">
+                  {copiedMax ? '✓ Copied' : 'Copy'}
                 </Button>
               </div>
             </div>
 
+            {/* Telegram Link */}
+            {tgInviteUrl && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Telegram:</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={tgInviteUrl}
+                    className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
+                  />
+                  <Button onClick={handleCopyTg} variant="outline" size="sm">
+                    {copiedTg ? '✓ Copied' : 'Copy'}
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <Button onClick={handleGenerateInvite} disabled={loading} variant="secondary" size="sm">
-              Regenerate Link
+              Regenerate Links
             </Button>
           </>
         ) : (
           <>
             <p className="text-sm text-muted-foreground">
               No active invite link. Generate one to allow this dealer to claim their account via
-              MAX.
+              MAX or Telegram.
             </p>
             <Button onClick={handleGenerateInvite} disabled={loading}>
-              {loading ? 'Generating...' : 'Generate Invite Link'}
+              {loading ? 'Generating...' : 'Generate Invite Links'}
             </Button>
           </>
         )}
 
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
           <p className="text-xs text-blue-900">
-            <strong>How it works:</strong> Send this link to the dealer. When they open it on MAX, a
-            chat with the bot will be created and they&apos;ll receive a button to activate their
-            account in the mini-app.
+            <strong>How it works:</strong> Send either link to the dealer. When they open it, a chat
+            with the bot will be created and they&apos;ll receive a button to activate their account
+            in the mini-app.
           </p>
         </div>
       </CardContent>

@@ -45,9 +45,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       },
     });
 
-    // Construct invite URL that opens a CHAT with the bot (not mini-app directly)
-    // ?start= creates a chat; the webhook then sends a welcome + open_app button
-    const inviteUrl = `https://max.ru/${MAX_BOT_NAME_DEALER}?start=${token}`;
+    // Construct invite URLs for both platforms
+    // MAX: https://max.ru/BOT_NAME?start=TOKEN (opens chat, not mini-app directly)
+    const maxInviteUrl = `https://max.ru/${MAX_BOT_NAME_DEALER}?start=${token}`;
+
+    // Telegram: https://t.me/BOT_NAME?start=TOKEN
+    const tgBotName = process.env.TG_BOT_NAME_DEALER;
+    const tgInviteUrl = tgBotName ? `https://t.me/${tgBotName}?start=${token}` : null;
 
     console.warn(`[Admin] Generated invite link for dealer ${dealer.name} (${dealerId}): ${token}`);
 
@@ -55,7 +59,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       ok: true,
       inviteToken: token,
       inviteTokenExpiresAt: expiresAt,
-      inviteUrl,
+      inviteUrl: maxInviteUrl, // backward compat
+      maxInviteUrl,
+      tgInviteUrl,
     });
   } catch (err) {
     console.error('[Admin] Generate invite error:', err);
