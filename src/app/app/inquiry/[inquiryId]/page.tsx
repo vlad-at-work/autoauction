@@ -243,27 +243,11 @@ function DealerOfferCard({
 
   return (
     <Card className={isAccepted ? 'border-green-200 bg-green-50' : 'border-gray-100 bg-white'}>
-      <div className="flex items-center gap-4 p-4">
-        {/* Left: Price */}
-        <div className="flex-shrink-0 min-w-[100px]">
-          <div className="text-xl font-bold text-gray-900">{formatPrice(latestOffer.price)}</div>
-          <div className="text-xs text-gray-400 mt-0.5">
-            {formatRelativeTime(new Date(latestOffer.createdAt))}
-          </div>
-        </div>
+      <div className="p-4">
+        {/* Top row: Price and Button */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-2xl font-bold text-gray-900">{formatPrice(latestOffer.price)}</div>
 
-        {/* Middle: Dealer Name */}
-        <div className="flex-1 min-w-0">
-          <div className="text-base font-semibold text-gray-900 truncate">
-            {dealerGroup.dealerName}
-          </div>
-          {latestOffer.comment && (
-            <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{latestOffer.comment}</p>
-          )}
-        </div>
-
-        {/* Right: Action Button */}
-        <div className="flex-shrink-0">
           {isAccepted ? (
             <div className="inline-flex items-center px-4 py-2 rounded-md bg-green-600 text-white text-sm font-medium">
               <Check className="mr-1 size-4" />
@@ -275,9 +259,7 @@ function DealerOfferCard({
               size="sm"
               className="bg-green-600 hover:bg-green-700 text-white font-medium px-4"
             >
-              <Link href={`/app/inquiry/${inquiryId}/offer/${latestOffer.id}`}>
-                Выбрать победителем
-              </Link>
+              <Link href={`/app/inquiry/${inquiryId}/offer/${latestOffer.id}`}>Выбрать</Link>
             </Button>
           ) : (
             <div className="inline-flex items-center px-3 py-1.5 rounded-md bg-gray-100 text-gray-500 text-sm">
@@ -285,6 +267,22 @@ function DealerOfferCard({
             </div>
           )}
         </div>
+
+        {/* Middle: Dealer Name and time */}
+        <div className="mt-2 flex items-center gap-2 text-sm">
+          <span className="font-medium text-gray-900">{dealerGroup.dealerName}</span>
+          <span className="text-gray-400">·</span>
+          <span className="text-gray-500">
+            {formatRelativeTime(new Date(latestOffer.createdAt))}
+          </span>
+        </div>
+
+        {/* Bottom: Comment if exists */}
+        {latestOffer.comment && (
+          <p className="mt-2 text-sm text-gray-600 bg-gray-50 rounded-md px-3 py-2">
+            {latestOffer.comment}
+          </p>
+        )}
       </div>
     </Card>
   );
