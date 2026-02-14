@@ -25,7 +25,8 @@ export async function POST(request: Request) {
     const userId =
       (update.user as Record<string, unknown>)?.user_id ||
       ((update.message as Record<string, unknown>)?.sender as Record<string, unknown>)?.user_id;
-    const startPayload = (update.start_payload || update.start_param) as string;
+    // MAX bot_started events put the ?start= param in update.payload (not start_payload)
+    const startPayload = (update.payload || update.start_payload || update.start_param) as string;
     const messageText =
       (((update.message as Record<string, unknown>)?.body as Record<string, unknown>)
         ?.text as string) || '';
