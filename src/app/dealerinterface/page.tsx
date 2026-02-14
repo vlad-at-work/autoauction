@@ -41,9 +41,9 @@ function DealerEntryContent() {
 
           const finalStartParam = urlStartParam || initStartParam;
 
-          // Support both old format (setup_xxx) and new format (6-digit code)
-          if (finalStartParam?.startsWith('setup_') || /^\d{6}$/.test(finalStartParam || '')) {
-            router.push(`/dealerinterface/setup?token=${finalStartParam}`);
+          // Validate 6-digit invite code before redirecting
+          if (/^\d{6}$/.test(finalStartParam || '')) {
+            validateAndRedirect(finalStartParam!);
             return;
           }
 
@@ -58,6 +58,32 @@ function DealerEntryContent() {
         } else {
           setError('Откройте через бота MAX или Telegram');
           setStatus('error');
+        }
+      };
+
+      const validateAndRedirect = async (code: string) => {
+        try {
+          const response = await fetch('/api/dealer/invite/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code }),
+          });
+
+          if (cancelled) return;
+
+          const data = await response.json();
+
+          if (response.ok && data.valid) {
+            router.push(`/dealerinterface/setup?token=${code}`);
+          } else {
+            setError(data.error || 'Неверный код приглашения');
+            setStatus('error');
+          }
+        } catch {
+          if (!cancelled) {
+            setError('Ошибка проверки кода');
+            setStatus('error');
+          }
         }
       };
 
