@@ -35,7 +35,13 @@ export async function POST(request: Request) {
         ?.first_name as string) ||
       'User';
 
-    console.warn('[MAX Webhook]', updateType, botType, userId ? `user:${userId}` : 'no-user');
+    console.warn(
+      '[MAX Webhook]',
+      updateType,
+      botType,
+      userId ? `user:${userId}` : 'no-user',
+      startPayload ? `param:${startPayload}` : 'no-param'
+    );
 
     if (
       updateType === 'bot_started' ||
@@ -111,11 +117,11 @@ async function handleDealerInvite(userId: number, firstName: string, param: stri
 
   await sendMaxMessage(
     userId,
-    `Добро пожаловать, ${dealer.name || firstName}!\n\nНажмите кнопку ниже для активации аккаунта.`,
+    `Добро пожаловать, ${dealer.name || firstName}!\n\nВаш код активации: ${token}\n\nНажмите кнопку ниже, чтобы открыть приложение.`,
     [
       {
         type: 'open_app',
-        text: 'Активировать аккаунт',
+        text: 'Открыть панель дилера',
         app_name: MAX_MINI_APP_NAME,
         payload: token,
       },
