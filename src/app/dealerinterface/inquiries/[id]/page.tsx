@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -132,9 +133,10 @@ export default function DealerInquiryPage() {
           <p className="text-red-700">{error}</p>
           <Link
             href="/dealerinterface/inquiries"
-            className="text-primary mt-4 inline-block text-sm underline underline-offset-4"
+            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border bg-white px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
           >
-            Назад к списку
+            <ArrowLeft className="size-4" />
+            Назад к заявкам
           </Link>
         </div>
       </div>
@@ -342,9 +344,10 @@ export default function DealerInquiryPage() {
 
           <Link
             href="/dealerinterface/inquiries"
-            className="text-primary text-sm underline underline-offset-4"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border bg-white px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
           >
-            Назад к списку
+            <ArrowLeft className="size-4" />
+            Назад к заявкам
           </Link>
         </CardContent>
       </Card>
