@@ -54,14 +54,14 @@ export async function POST(request: Request) {
       } else if (botType === 'dealer') {
         await sendMaxMessage(
           Number(userId),
-          `👋 Добро пожаловать в панель дилера, ${firstName}!\n\nОткройте мини-приложение из меню ниже.`,
+          `👋 Добро пожАловать в панель дилера, ${firstName}!\n\nОткройте мини-приложение из меню ниже.`,
           [],
           'dealer'
         );
       } else {
         await sendMaxMessage(
           Number(userId),
-          `👋 Добро пожаловать в AutoAuction, ${firstName}!\n\nОткройте мини-приложение для создания заявок.`,
+          `👋 Добро пожАловать в AutoAuction, ${firstName}!\n\nОткройте мини-приложение для создания заявок.`,
           [],
           'customer'
         );

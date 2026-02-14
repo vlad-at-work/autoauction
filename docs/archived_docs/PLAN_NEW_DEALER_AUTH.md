@@ -117,7 +117,7 @@ if (update.update_type === 'bot_started' && update.start_payload?.startsWith('au
   // Send welcome with mini-app button
   await sendMaxMessage(
     userId,
-    `👋 Добро пожаловать, ${dealer.name}!\n\n` +
+    `👋 Добро пож1ловать, ${dealer.name}!\n\n` +
       `Нажмите кнопку ниже, чтобы активировать аккаунт дилера:`,
     [
       {
