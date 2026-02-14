@@ -227,7 +227,15 @@ async function handleDealerInvite(userId: number, firstName: string, param: stri
     return;
   }
 
-  const messageText = `👋 Welcome, ${dealer.name || 'Dealer'}!\n\nOpen the mini-app below and paste this code to activate:\n\n\`${param}\``;
+  // Include the invite code prominently so user can copy-paste it
+  const messageText = `👋 Welcome, ${dealer.name || 'Dealer'}!
+
+Your invite code:
+\`${param}\`
+
+1️⃣ Copy the code above
+2️⃣ Open the mini-app below  
+3️⃣ Paste the code to activate`;
   console.warn('[INVITE] Sending welcome message...');
   console.warn('[INVITE] Message text:', messageText);
 
