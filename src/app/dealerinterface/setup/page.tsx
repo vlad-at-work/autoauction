@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 
 function SetupForm() {
@@ -13,10 +12,8 @@ function SetupForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [platform, setPlatform] = useState<'max' | 'telegram' | null>(null);
 
   useEffect(() => {
-    // Get token from URL or initData
     const urlToken = searchParams.get('token');
 
     const tryLoad = (attempt = 0) => {
@@ -24,18 +21,15 @@ function SetupForm() {
       const detectedPlatform = detectPlatform();
 
       if (webApp && detectedPlatform) {
-        setPlatform(detectedPlatform);
-
-        // Get start_param from initData as fallback
         const initDataUnsafe = webApp.initDataUnsafe as Record<string, unknown> | undefined;
         const initToken =
           (initDataUnsafe?.start_param as string | undefined) ||
           (initDataUnsafe?.tgWebAppStartParam as string | undefined);
 
         const finalToken = urlToken || initToken;
-
-        console.warn('[Dealer Setup] Token:', finalToken);
-        setToken(finalToken || null);
+        if (finalToken) {
+          setToken(finalToken);
+        }
         return;
       }
 
@@ -52,12 +46,12 @@ function SetupForm() {
     setError(null);
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError('Пароли не совпадают');
       return;
     }
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters');
+      setError('Минимум 8 символов');
       return;
     }
 
@@ -66,18 +60,13 @@ function SetupForm() {
     try {
       const webApp = getWebApp();
       const initData = webApp?.initData;
-      const currentPlatform = platform || detectPlatform();
+      const currentPlatform = detectPlatform();
 
       if (!initData || !currentPlatform) {
-        setError('Invalid initialization data');
+        setError('Ошибка инициализации');
         setLoading(false);
         return;
       }
-
-      console.warn('[Dealer Setup] Submitting setup...', {
-        hasToken: !!token,
-        platform: currentPlatform,
-      });
 
       const response = await fetch('/api/dealer/auth/setup', {
         method: 'POST',
@@ -91,15 +80,12 @@ function SetupForm() {
       const data = await response.json();
 
       if (response.ok) {
-        console.warn('[Dealer Setup] Success, redirecting to inquiries');
         router.push('/dealerinterface/inquiries');
       } else {
-        console.error('[Dealer Setup] Failed:', data);
-        setError(data.error || 'Setup failed');
+        setError(data.error || 'Ошибка активации');
       }
-    } catch (err) {
-      console.error('[Dealer Setup] Error:', err);
-      setError('Connection error');
+    } catch {
+      setError('Ошибка соединения');
     } finally {
       setLoading(false);
     }
@@ -113,37 +99,33 @@ function SetupForm() {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
               <span className="text-3xl">🔑</span>
             </div>
-            <h1 className="mb-2 text-2xl font-bold text-gray-900">Set Your Password</h1>
-            <p className="text-sm text-gray-600">
-              {token
-                ? 'Create a password to activate your dealer account'
-                : 'Create a password to secure your account'}
-            </p>
+            <h1 className="mb-2 text-2xl font-bold text-gray-900">Установка пароля</h1>
+            <p className="text-sm text-gray-600">Создайте пароль для защиты аккаунта</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">Password</label>
+              <label className="mb-2 block text-sm font-medium text-gray-700">Пароль</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Minimum 8 characters"
+                placeholder="Минимум 8 символов"
                 required
               />
             </div>
 
             <div>
               <label className="mb-2 block text-sm font-medium text-gray-700">
-                Confirm Password
+                Подтвердите пароль
               </label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Re-enter password"
+                placeholder="Повторите пароль"
                 required
               />
             </div>
@@ -159,7 +141,7 @@ function SetupForm() {
               disabled={loading}
               className="w-full rounded-lg bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:bg-gray-400"
             >
-              {loading ? 'Setting up...' : 'Continue'}
+              {loading ? 'Сохранение...' : 'Продолжить'}
             </button>
           </form>
         </div>
@@ -174,7 +156,7 @@ export default function DealerSetup() {
       fallback={
         <div className="flex min-h-screen items-center justify-center bg-gray-50">
           <div className="text-center">
-            <div className="text-2xl font-semibold text-gray-700">Loading...</div>
+            <div className="text-2xl font-semibold text-gray-700">Загрузка...</div>
           </div>
         </div>
       }

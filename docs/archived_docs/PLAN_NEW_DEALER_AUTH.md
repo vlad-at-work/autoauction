@@ -17,15 +17,17 @@ Based on MAX platform constraints (from `max_research.txt`) and lessons learned 
 ## MAX Platform Constraints (Critical)
 
 ### The "First Message" Problem
+
 - Bot **CANNOT** send welcome message until user sends first message
 - Chat starts in `suspended` state
 - `bot_started` webhook fires when user sends `/start` command
 - Payload (`start` param) delivered WITH the first message
 
 ### Flow Imposed by MAX
+
 ```
-User clicks invite link → Chat opens (suspended) → User types /start → 
-Bot receives bot_started + payload → Bot sends welcome message → 
+User clicks invite link → Chat opens (suspended) → User types /start →
+Bot receives bot_started + payload → Bot sends welcome message →
 User clicks mini-app button → WebApp opens with initData
 ```
 
@@ -38,12 +40,14 @@ We CANNOT change this flow. We MUST work within it.
 ### Step 1: Admin Creates Dealer
 
 Admin creates dealer in admin panel:
+
 - Username (unique, required)
 - Name, phone, email (required)
 - Description
 - No platform data stored yet
 
 Database state:
+
 ```sql
 INSERT INTO dealers (id, username, name, ..., platform, platformUserId, platformChatId, passwordHash)
 VALUES ('dealer_123', 'VladDealerio', ..., NULL, NULL, NULL, NULL)
@@ -96,32 +100,42 @@ Webhook handler responds with welcome message:
 // /api/webhooks/max/route.ts
 if (update.update_type === 'bot_started' && update.start_payload?.startsWith('auth_')) {
   const [_, dealerId, token] = update.start_payload.split('_');
-  
+
   // Validate token exists and not expired
   const dealer = await prisma.dealer.findUnique({
-    where: { id: dealerId, inviteToken: token, inviteTokenExpiresAt: { gt: new Date() } }
+    where: { id: dealerId, inviteToken: token, inviteTokenExpiresAt: { gt: new Date() } },
   });
-  
+
   if (!dealer) {
-    await sendMaxMessage(userId, 'Ссылка устарела или недействительна. Обратитесь к администратору.');
+    await sendMaxMessage(
+      userId,
+      'Ссылка устарела или недействительна. Обратитесь к администратору.'
+    );
     return;
   }
-  
+
   // Send welcome with mini-app button
-  await sendMaxMessage(userId, 
+  await sendMaxMessage(
+    userId,
     `👋 Добро пожаловать, ${dealer.name}!\n\n` +
-    `Нажмите кнопку ниже, чтобы активировать аккаунт дилера:`,
-    [{
-      type: 'inline_keyboard',
-      payload: {
-        buttons: [[{
-          type: 'open_app',
-          text: '🚀 Активировать аккаунт',
-          app_name: BOT_NAME,
-          payload: `setup_${dealerId}_${token}`  // Pass token again for validation
-        }]]
-      }
-    }]
+      `Нажмите кнопку ниже, чтобы активировать аккаунт дилера:`,
+    [
+      {
+        type: 'inline_keyboard',
+        payload: {
+          buttons: [
+            [
+              {
+                type: 'open_app',
+                text: '🚀 Активировать аккаунт',
+                app_name: BOT_NAME,
+                payload: `setup_${dealerId}_${token}`, // Pass token again for validation
+              },
+            ],
+          ],
+        },
+      },
+    ]
   );
 }
 ```
@@ -137,12 +151,12 @@ if (update.update_type === 'bot_started' && update.start_payload?.startsWith('au
 const { dealerId, token } = parseStartParam(startParam);
 
 const dealer = await prisma.dealer.findUnique({
-  where: { 
-    id: dealerId, 
+  where: {
+    id: dealerId,
     inviteToken: token,
     inviteTokenExpiresAt: { gt: new Date() },
-    deletedAt: null
-  }
+    deletedAt: null,
+  },
 });
 
 if (!dealer) {
@@ -159,13 +173,13 @@ if (dealer.platform && dealer.platformUserId) {
   if (dealer.passwordHash) {
     return { status: 'needs_login' };
   }
-  return { status: 'needs_password' };  // Started but didn't finish
+  return { status: 'needs_password' }; // Started but didn't finish
 }
 
 // Fresh claim - return dealer info for display
-return { 
-  status: 'needs_setup', 
-  dealer: { id: dealer.id, name: dealer.name, username: dealer.username }
+return {
+  status: 'needs_setup',
+  dealer: { id: dealer.id, name: dealer.name, username: dealer.username },
 };
 ```
 
@@ -185,12 +199,12 @@ if (!validation.valid) return 401;
 
 // 2. Validate token
 const dealer = await prisma.dealer.findUnique({
-  where: { 
-    id: dealerId, 
+  where: {
+    id: dealerId,
     inviteToken: token,
     inviteTokenExpiresAt: { gt: new Date() },
-    deletedAt: null
-  }
+    deletedAt: null,
+  },
 });
 if (!dealer) return { error: 'Invalid or expired link' };
 
@@ -210,24 +224,25 @@ await prisma.dealer.update({
     platformUserId: validation.userId,
     platformChatId: validation.chatId || validation.userId,
     passwordHash: passwordHash,
-    inviteToken: null,  // Invalidate token
-    inviteTokenExpiresAt: null
-  }
+    inviteToken: null, // Invalidate token
+    inviteTokenExpiresAt: null,
+  },
 });
 
 // 6. Create session
 const sessionToken = createSessionToken(dealerId, validation.platform, validation.userId);
 
-return { 
-  success: true, 
+return {
+  success: true,
   sessionToken,
-  redirectTo: '/dealerinterface/dashboard'
+  redirectTo: '/dealerinterface/dashboard',
 };
 ```
 
 ### Step 8: Subsequent Logins
 
 Dealer returns to bot:
+
 1. User opens bot chat (already `active` state from previous interaction)
 2. User clicks "Open Dealer Panel" button (pinned message or types /start)
 3. Mini-app opens with `initData`
@@ -242,9 +257,9 @@ const dealer = await prisma.dealer.findUnique({
   where: {
     platform_platformUserId: {
       platform: validation.platform,
-      platformUserId: validation.userId
-    }
-  }
+      platformUserId: validation.userId,
+    },
+  },
 });
 
 if (!dealer || dealer.deletedAt) {
@@ -264,37 +279,41 @@ return { status: 'authenticated', sessionToken };
 
 ## Key Differences from Previous (Broken) Implementation
 
-| Aspect | Old (Broken) | New (Proposed) |
-|--------|-------------|----------------|
-| Session validation | Checked cookie only, no DB lookup | DB lookup on every request |
-| Dealer deletion | Ghost sessions persisted | Immediate cutoff (DB lookup fails) |
-| Claim flow | Auto-claim with fallback | Explicit password-before-claim |
-| Token expiry | None | 7 days, then nullified |
-| Race condition | Handled (rejected) | Accepted (first wins) |
-| Welcome message | Failed (chat.denied) | Works (waits for /start) |
+| Aspect             | Old (Broken)                      | New (Proposed)                     |
+| ------------------ | --------------------------------- | ---------------------------------- |
+| Session validation | Checked cookie only, no DB lookup | DB lookup on every request         |
+| Dealer deletion    | Ghost sessions persisted          | Immediate cutoff (DB lookup fails) |
+| Claim flow         | Auto-claim with fallback          | Explicit password-before-claim     |
+| Token expiry       | None                              | 7 days, then nullified             |
+| Race condition     | Handled (rejected)                | Accepted (first wins)              |
+| Welcome message    | Failed (chat.denied)              | Works (waits for /start)           |
 
 ---
 
 ## Security Considerations
 
 ### Session Management
+
 - Session tokens are short-lived (24 hours)
 - Each API call validates against DB
 - If dealer is deleted, all sessions immediately invalid
 - Password reset invalidates all existing sessions
 
 ### Token Security
+
 - Invite tokens are single-use (nullified after claim)
 - Tokens expire after 7 days
 - Tokens are 256-bit random values (URL-safe base64)
 - Failed attempts don't reveal if dealer exists
 
 ### Race Conditions
+
 - If two people click same link simultaneously: first to submit password wins
 - Second person gets "already claimed" error
 - This is acceptable behavior per requirements
 
 ### MAX Platform Limitations
+
 - Bot cannot proactively message users
 - Welcome only sent after user sends /start
 - Payload only delivered with first message
@@ -422,26 +441,31 @@ GET  /api/dealerinterface/my-info
 ## Implementation Phases
 
 ### Phase 1: Foundation
+
 - Database migration (invite_token columns)
 - Webhook handler for `bot_started`
 - Token generation in admin
 
 ### Phase 2: Claim Flow
+
 - Setup check endpoint
 - Claim endpoint with password
 - Setup page frontend
 
 ### Phase 3: Login Flow
+
 - Check endpoint
 - Login endpoint
 - Login page frontend
 
 ### Phase 4: Protected Routes
+
 - Session middleware
 - Inquiries API
 - Dashboard page
 
 ### Phase 5: Polish
+
 - Error handling
 - Rate limiting
 - Admin UI improvements

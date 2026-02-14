@@ -1,11 +1,5 @@
 /**
  * Get active inquiries for authenticated dealer
- *
- * Returns list of inquiries with:
- * - Basic inquiry data
- * - Dealer's offers on each inquiry
- * - Dealer's transactions (accepted offers)
- * - Total counts
  */
 
 import { NextResponse } from 'next/server';
@@ -18,7 +12,6 @@ export async function GET(request: Request) {
     const validation = validateWebAppRequest(authHeader, 'dealer');
 
     if (!validation.valid) {
-      console.error('[/api/dealer/inquiries] Invalid WebApp data:', validation.error);
       return NextResponse.json({ error: validation.error }, { status: 401 });
     }
 
@@ -38,16 +31,13 @@ export async function GET(request: Request) {
     });
 
     if (!dealer) {
-      console.warn('[/api/dealer/inquiries] Dealer not found');
-      return NextResponse.json({ error: 'Dealer not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Дилер не найден' }, { status: 404 });
     }
 
     if (!dealer.passwordHash) {
-      console.warn('[/api/dealer/inquiries] Dealer not set up');
-      return NextResponse.json({ error: 'Complete setup first' }, { status: 403 });
+      return NextResponse.json({ error: 'Завершите настройку аккаунта' }, { status: 403 });
     }
 
-    // Get active inquiries (not expired, not deleted)
     const inquiries = await prisma.inquiry.findMany({
       where: {
         deletedAt: null,
@@ -93,14 +83,12 @@ export async function GET(request: Request) {
         },
       },
       orderBy: { createdAt: 'desc' },
-      take: 100, // Limit to recent 100 inquiries
+      take: 100,
     });
-
-    console.warn(`[/api/dealer/inquiries] Returning ${inquiries.length} inquiries`);
 
     return NextResponse.json({ inquiries });
   } catch (err) {
-    console.error('[/api/dealer/inquiries] Error:', err);
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+    console.error('[INQUIRIES] Error:', err);
+    return NextResponse.json({ error: 'Внутренняя ошибка' }, { status: 500 });
   }
 }

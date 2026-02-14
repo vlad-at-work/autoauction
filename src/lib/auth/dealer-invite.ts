@@ -4,17 +4,20 @@
 
 import { randomBytes } from 'crypto';
 
+const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
 /**
- * Generate a URL-safe invite token
- * Format: base64url(randomBytes(32)) = 43 chars
- * 256 bits of entropy = cryptographically secure
+ * Generate a short, readable invite token
+ * Format: XXX-XXX (7 chars, e.g., "ABC-123")
+ * ~36^6 = 2 billion combinations = secure enough for invite links
  */
 export function generateInviteToken(): string {
-  return randomBytes(32)
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
+  const bytes = randomBytes(6);
+  let token = '';
+  for (let i = 0; i < 6; i++) {
+    token += CHARS[bytes[i] % CHARS.length];
+  }
+  return token.slice(0, 3) + '-' + token.slice(3);
 }
 
 /**
