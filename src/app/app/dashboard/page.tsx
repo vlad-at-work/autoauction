@@ -103,19 +103,25 @@ export default function DashboardPage() {
     );
   }
 
+  const hasInquiriesLeft = (limits?.remaining ?? 0) > 0;
+
   return (
     <PageTransition>
       <div className="min-h-screen w-full">
-        <TopBar />
+        <TopBar disableNewInquiry={!hasInquiriesLeft} />
         <div className="mx-auto max-w-2xl px-4 py-6">
           {/* Inquiry limits banner */}
           {limits && (
             <div className="mb-4 flex items-center justify-between rounded-lg border bg-zinc-50 px-5 py-4">
               <div className="text-base">
-                <span className="text-muted-foreground">Заявок осталось: </span>
-                <span className="font-medium">
-                  {limits.remaining} из {limits.max}
-                </span>
+                {limits.remaining > 0 ? (
+                  <span>
+                    <span className="font-medium">{limits.remaining} заявки</span>
+                    <span className="text-muted-foreground"> осталось</span>
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">Заявки закончились</span>
+                )}
               </div>
               {limits.remaining === 0 && limits.resetsAt && daysUntilReset != null && (
                 <Badge variant="outline" className="text-sm">

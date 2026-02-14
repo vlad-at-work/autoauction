@@ -35,7 +35,9 @@ export function parseStartParam(param?: string): {
   const sep = sepIndex > 0 ? param[sepIndex] : ':';
   const parts = param.split(sep);
   const context = parts[0] as NotificationContext;
-  const resourceId = parts[1] || null;
+  // For offer context, resourceId includes both inquiryId and offerId (e.g., "inquiryId_offerId")
+  // For other contexts, resourceId is just the ID
+  const resourceId = parts.slice(1).join(sep) || null;
 
   // Validate context
   const validContexts: NotificationContext[] = [

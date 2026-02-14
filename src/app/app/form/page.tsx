@@ -202,13 +202,13 @@ function MiniAppInquiryFormPageInner() {
         </CardHeader>
 
         <CardContent className="flex flex-col gap-6">
-          {submitState.status === 'error' && (
-            <div className="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-base text-destructive">
-              {submitState.message}
-            </div>
-          )}
-
           <form className="flex flex-col gap-6" onSubmit={form.handleSubmit(onSubmit)}>
+            {/* Error message - moved inside form and made sticky */}
+            {submitState.status === 'error' && (
+              <div className="sticky top-0 z-10 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-base text-destructive shadow-sm">
+                {submitState.message}
+              </div>
+            )}
             <input type="hidden" {...form.register('platform')} />
             <input type="hidden" {...form.register('platformUserId')} />
             <input type="hidden" {...form.register('platformChatId')} />

@@ -56,12 +56,11 @@ export async function notifyBuyerOfNewOffer(
   carModel: string,
   carSubmodel: string,
   price: number,
-  isFirstOffer: boolean,
+  _isFirstOffer: boolean,
   dealerName?: string
 ): Promise<NotifyResult> {
-  const dealerText = dealerName ? ` от ${dealerName}` : '';
-  const firstOfferText = isFirstOffer ? 'Первое предложение!' : 'Новое предложение!';
-  const text = `${firstOfferText}${dealerText}\n\n🚗 ${carModel} ${carSubmodel}\n💰 ${price.toLocaleString('ru-RU')} ₽`;
+  const dealerDisplayName = dealerName || 'Дилер';
+  const text = `Предложение от ${dealerDisplayName} на ${carModel} ${carSubmodel}\n\n💰 ${price.toLocaleString('ru-RU')} ₽`;
   const payload = `offer_${inquiryId}_${offerId}`;
 
   if (buyer.platform === 'MAX') {

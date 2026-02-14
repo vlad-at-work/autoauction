@@ -131,14 +131,11 @@ export async function POST(request: Request) {
       // Check if user has reached their monthly inquiry limit
       if (buyerWithLimit.inquiriesUsedThisMonth >= MAX_INQUIRIES_PER_MONTH) {
         const resetDate = new Date(buyerWithLimit.inquiryLimitResetAt);
-        const daysUntilReset = Math.ceil(
-          (resetDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000)
-        );
 
         return {
           success: false,
           error: 'INQUIRY_LIMIT_REACHED',
-          message: `Вы исчерпали лимит заявок (${MAX_INQUIRIES_PER_MONTH} в месяц). Новая заявка будет доступна через ${daysUntilReset} дн.`,
+          message: `Лимит заявок: ${MAX_INQUIRIES_PER_MONTH} в 15 дней`,
           remainingInquiries: 0,
           nextInquiryAt: resetDate.toISOString(),
         };

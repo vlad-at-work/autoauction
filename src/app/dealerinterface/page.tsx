@@ -56,7 +56,7 @@ function DealerEntryContent() {
 
           // Validate 6-digit invite code before redirecting
           if (/^\d{6}$/.test(finalStartParam || '')) {
-            validateAndRedirect(finalStartParam!);
+            validateAndRedirect(finalStartParam!, initData, platform);
             return;
           }
 
@@ -74,7 +74,11 @@ function DealerEntryContent() {
         }
       };
 
-      const validateAndRedirect = async (code: string) => {
+      const validateAndRedirect = async (
+        code: string,
+        initData: string | null | undefined,
+        platform: 'max' | 'telegram'
+      ) => {
         try {
           const response = await fetch('/api/dealer/invite/validate', {
             method: 'POST',
@@ -89,6 +93,30 @@ function DealerEntryContent() {
           if (response.ok && data.valid) {
             router.push(`/dealerinterface/setup?token=${code}`);
           } else {
+            // Code invalid - check if user is already registered
+            if (initData) {
+              const authResponse = await fetch('/api/dealer/auth/check', {
+                method: 'POST',
+                headers: {
+                  Authorization: `Bearer ${platform}:dealer:${initData}`,
+                  'Content-Type': 'application/json',
+                },
+              });
+
+              if (!cancelled) {
+                const authData = await authResponse.json();
+                if (authData.status === 'authenticated') {
+                  // Already registered - redirect to inquiries
+                  router.push('/dealerinterface/inquiries');
+                  return;
+                } else if (authData.status === 'needs_setup') {
+                  // Needs password setup
+                  router.push('/dealerinterface/setup');
+                  return;
+                }
+              }
+            }
+            // Not registered and code invalid
             setError(data.error || 'Неверный код приглашения');
             setStatus('error');
           }
