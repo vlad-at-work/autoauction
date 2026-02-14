@@ -41,6 +41,19 @@ function DealerEntryContent() {
 
           const finalStartParam = urlStartParam || initStartParam;
 
+          // Handle notification deep links (inquiry_ID, accepted_ID)
+          if (finalStartParam?.startsWith('inquiry_')) {
+            const inquiryId = finalStartParam.substring(8);
+            router.push(`/dealerinterface/inquiries/${inquiryId}`);
+            return;
+          }
+
+          if (finalStartParam?.startsWith('accepted_')) {
+            const inquiryId = finalStartParam.substring(9);
+            router.push(`/dealerinterface/inquiries/${inquiryId}`);
+            return;
+          }
+
           // Validate 6-digit invite code before redirecting
           if (/^\d{6}$/.test(finalStartParam || '')) {
             validateAndRedirect(finalStartParam!);

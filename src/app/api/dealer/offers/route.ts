@@ -12,6 +12,7 @@
 import { NextResponse } from 'next/server';
 import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { prisma } from '@/lib/db';
+import { notifyBuyerOfNewOffer } from '@/lib/notifications';
 
 const MAX_OFFERS_PER_DEALER = 5;
 
@@ -112,8 +113,38 @@ export async function POST(request: Request) {
 
     console.warn('[/api/dealer/offers] Offer created:', offer.id);
 
-    // TODO: Notify buyer of new offer via MAX/Telegram bot
-    // await notifyBuyerOfNewOffer(inquiry.buyer, inquiry, dealer, offer);
+    // Notify buyer of new offer
+    try {
+      const existingOfferCount = await prisma.offer.count({
+        where: {
+          inquiryId,
+          dealerId: dealer.id,
+          deletedAt: null,
+          id: { not: offer.id },
+        },
+      });
+
+      const result = await notifyBuyerOfNewOffer(
+        {
+          platform: inquiry.buyer.platform,
+          platformChatId: inquiry.buyer.platformChatId,
+          platformUserId: inquiry.buyer.platformUserId,
+        },
+        inquiryId,
+        offer.id,
+        inquiry.model,
+        inquiry.submodel,
+        Math.round(price),
+        existingOfferCount === 0,
+        dealer.name || undefined
+      );
+
+      if (!result.success) {
+        console.error('Failed to send buyer notification:', result.error);
+      }
+    } catch (err) {
+      console.error('Failed to send buyer notification:', err);
+    }
 
     return NextResponse.json({ offer });
   } catch (err) {

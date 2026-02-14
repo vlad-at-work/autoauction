@@ -9,6 +9,7 @@ export type NotificationContext =
   | 'inquiry' // Link to specific inquiry
   | 'offer' // Link to specific offer
   | 'transaction' // Link to accepted transaction
+  | 'accepted' // Link to accepted offer (dealer notification)
   | 'dashboard'; // Link to main dashboard
 
 /**
@@ -29,12 +30,21 @@ export function parseStartParam(param?: string): {
     return { context: null, resourceId: null };
   }
 
-  const parts = param.split(':');
+  // Support both : (legacy) and _ (MAX-compatible) separators
+  const sepIndex = Math.max(param.indexOf('_'), param.indexOf(':'));
+  const sep = sepIndex > 0 ? param[sepIndex] : ':';
+  const parts = param.split(sep);
   const context = parts[0] as NotificationContext;
   const resourceId = parts[1] || null;
 
   // Validate context
-  const validContexts: NotificationContext[] = ['inquiry', 'offer', 'transaction', 'dashboard'];
+  const validContexts: NotificationContext[] = [
+    'inquiry',
+    'offer',
+    'transaction',
+    'accepted',
+    'dashboard',
+  ];
 
   if (!validContexts.includes(context)) {
     return { context: null, resourceId: null };
@@ -53,12 +63,17 @@ export function getInternalPath(context: NotificationContext, resourceId?: strin
       return resourceId ? `/app/inquiry/${resourceId}` : '/app/dashboard';
     case 'offer':
       if (resourceId) {
-        const [inquiryId, offerId] = resourceId.split(':');
+        // Support both : (legacy) and _ (MAX-compatible) separators
+        const [inquiryId, offerId] = resourceId.includes('_')
+          ? resourceId.split('_')
+          : resourceId.split(':');
         if (inquiryId && offerId) {
           return `/app/inquiry/${inquiryId}/offer/${offerId}`;
         }
       }
       return '/app/dashboard';
+    case 'accepted':
+      return resourceId ? `/dealerinterface/inquiries/${resourceId}` : '/dealerinterface/inquiries';
     case 'transaction':
       return resourceId ? `/app/dashboard?transaction=${resourceId}` : '/app/dashboard';
     case 'dashboard':

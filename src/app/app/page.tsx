@@ -87,8 +87,10 @@ export default function MiniAppHomePage() {
               }
 
               if (context === 'offer' && resourceId) {
-                // resourceId format: "inquiryId:offerId"
-                const [inquiryId, offerId] = resourceId.split(':');
+                // resourceId format: "inquiryId_offerId" (MAX-compatible) or "inquiryId:offerId" (legacy)
+                const [inquiryId, offerId] = resourceId.includes('_')
+                  ? resourceId.split('_')
+                  : resourceId.split(':');
                 if (inquiryId && offerId) {
                   console.log('[/app] Navigating to offer:', { inquiryId, offerId });
                   router.replace(`/app/inquiry/${inquiryId}/offer/${offerId}`);
