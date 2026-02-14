@@ -1,10 +1,10 @@
-import Link from 'next/link';
-import { headers } from 'next/headers';
-import { notFound } from 'next/navigation';
+'use client';
 
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+
+import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { prisma } from '@/lib/db';
-import { parseBasicAuthHeader } from '@/lib/auth/basic';
 import { OfferForm } from '@/app/dealerinterface/inquiries/[id]/offer-form';
 import { OfferCard } from '@/app/dealerinterface/inquiries/[id]/offer-card';
 import {
@@ -14,129 +14,150 @@ import {
   anonymizeDealerName,
   formatRelativeTime,
 } from '@/lib/inquiry-utils';
+import { useParams } from 'next/navigation';
 
 const MAX_OFFERS_PER_DEALER = 5;
 
-export default async function DealerInquiryPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const headerList = await headers();
-  const auth = parseBasicAuthHeader(headerList.get('authorization'));
+type Offer = {
+  id: string;
+  price: number;
+  comment?: string | null;
+  dealerId: string;
+  createdAt: string;
+  transaction: { id: string; acceptedAt: string } | null;
+};
 
-  // Require authentication - reject without credentials
-  if (!auth) {
-    return (
-      <div className="flex min-h-screen w-full flex-col items-center justify-center px-4">
-        <div className="w-full max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-          <h1 className="mb-2 text-xl font-semibold text-red-900">Доступ запрещен</h1>
-          <p className="mb-4 text-sm text-red-800">
-            Требуется аутентификация. Пожалуйста, используйте правильные учетные данные.
-          </p>
-          <p className="text-xs text-red-700">
-            Это портал для дилеров. Используйте ваше имя пользователя и пароль.
-          </p>
-        </div>
-      </div>
-    );
-  }
+type Transaction = {
+  id: string;
+  dealerId: string;
+  buyerName: string;
+  buyerEmail: string | null;
+  buyerPhone: string;
+  acceptedAt: string;
+};
 
-  const dealer = await prisma.dealer.findFirst({
-    where: { username: auth.username, deletedAt: null },
-    select: { id: true, active: true },
-  });
+type InquiryData = {
+  inquiry: {
+    id: string;
+    model: string;
+    submodel: string;
+    transmission: string;
+    color: string;
+    comment: string | null;
+    expiresAt: string;
+    transactionCount: number;
+  };
+  myOffers: Offer[];
+  otherOffers: Offer[];
+  myTransaction: Transaction | null;
+  canMakeOffer: boolean;
+  remainingOffers: number;
+  dealerId: string;
+};
 
-  if (!dealer) {
-    return (
-      <div className="flex min-h-screen w-full flex-col items-center justify-center px-4">
-        <div className="w-full max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-          <h1 className="mb-2 text-xl font-semibold text-red-900">Дилер не зарегистрирован</h1>
-          <p className="mb-4 text-sm text-red-800">
-            Ваш логин не найден в базе. Попросите администратора создать дилера в /admin/dealers.
-          </p>
-          <p className="text-xs text-red-700">
-            Логин: <span className="font-mono">{auth.username}</span>
-          </p>
-        </div>
-      </div>
-    );
-  }
+export default function DealerInquiryPage() {
+  const params = useParams<{ id: string }>();
+  const [data, setData] = useState<InquiryData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!dealer.active) {
-    return (
-      <div className="flex min-h-screen w-full flex-col items-center justify-center px-4">
-        <div className="w-full max-w-md rounded-lg border border-orange-200 bg-orange-50 p-6 text-center">
-          <h1 className="mb-2 text-xl font-semibold text-orange-900">Дилер неактивен</h1>
-          <p className="text-sm text-orange-800">
-            Доступ временно ограничен. Обратитесь к администратору.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  async function loadInquiry() {
+    try {
+      const webApp = getWebApp();
+      const platform = detectPlatform();
+      const initData = webApp?.initData;
 
-  const inquiry = await prisma.inquiry.findFirst({
-    where: { id, deletedAt: null },
-    include: {
-      offers: {
-        orderBy: { createdAt: 'desc' },
-        where: { deletedAt: null },
-        select: {
-          id: true,
-          price: true,
-          comment: true,
-          dealerId: true,
-          createdAt: true,
-          transaction: {
-            select: {
-              id: true,
-              acceptedAt: true,
-              // NOTE: Buyer info NOT included here - competitors shouldn't see it
-            },
-          },
+      if (!initData || !platform) {
+        setError('Откройте через бота MAX или Telegram');
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch(`/api/dealer/inquiries/${params.id}`, {
+        headers: {
+          Authorization: `Bearer ${platform}:dealer:${initData}`,
         },
-      },
-      transactions: {
-        // Only this dealer's transaction will be shown with buyer info
-        where: { dealerId: dealer.id },
-        select: {
-          id: true,
-          dealerId: true,
-          buyerName: true,
-          buyerEmail: true,
-          buyerPhone: true,
-          acceptedAt: true,
-        },
-      },
-      _count: {
-        select: { transactions: true },
-      },
-    },
-  });
+      });
 
-  if (!inquiry) notFound();
+      if (response.status === 401 || response.status === 403) {
+        setError('Ошибка авторизации. Войдите снова.');
+        setLoading(false);
+        return;
+      }
+
+      if (response.status === 404) {
+        setError('Заявка не найдена');
+        setLoading(false);
+        return;
+      }
+
+      if (!response.ok) {
+        const json = await response.json();
+        setError(json.error || 'Не удалось загрузить заявку');
+        setLoading(false);
+        return;
+      }
+
+      const json = await response.json();
+      setData(json);
+      setLoading(false);
+    } catch (err) {
+      console.error('Load inquiry error:', err);
+      setError('Ошибка соединения');
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadInquiry();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="text-xl font-semibold">Загрузка...</div>
+          <div className="mt-2 text-sm text-gray-500">Загрузка заявки</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="w-full max-w-md rounded-lg bg-red-50 p-6 text-center">
+          <h1 className="mb-2 text-xl font-semibold text-red-900">Ошибка</h1>
+          <p className="text-red-700">{error}</p>
+          <Link
+            href="/dealerinterface/inquiries"
+            className="text-primary mt-4 inline-block text-sm underline underline-offset-4"
+          >
+            Назад к списку
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  const { inquiry, myOffers, otherOffers, myTransaction, canMakeOffer, remainingOffers } = data;
 
   const now = new Date();
-  const isExpired = inquiry.expiresAt <= now;
+  const isExpired = new Date(inquiry.expiresAt) <= now;
   const colorClass = getIdColorClass(inquiry.id);
   const shortId = getShortId(inquiry.id);
 
-  // Separate my offers from others
-  const myOffers = dealer ? inquiry.offers.filter((o) => o.dealerId === dealer.id) : [];
-  const otherOffers = dealer
-    ? inquiry.offers.filter((o) => o.dealerId !== dealer.id)
-    : inquiry.offers;
-  const myTransaction = dealer ? inquiry.transactions.find((t) => t.dealerId === dealer.id) : null;
+  const hoursLeft = Math.max(
+    0,
+    Math.ceil((new Date(inquiry.expiresAt).getTime() - now.getTime()) / (60 * 60 * 1000))
+  );
 
   // Group other offers by dealer for anonymization
   const otherDealerIds = [...new Set(otherOffers.map((o) => o.dealerId))];
   const dealerIndexMap = new Map(otherDealerIds.map((dId, i) => [dId, i]));
-
-  const hoursLeft = Math.max(
-    0,
-    Math.ceil((inquiry.expiresAt.getTime() - now.getTime()) / (60 * 60 * 1000))
-  );
-
-  const canMakeOffer = !isExpired && !myTransaction && myOffers.length < MAX_OFFERS_PER_DEALER;
-  const remainingOffers = MAX_OFFERS_PER_DEALER - myOffers.length;
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-10">
@@ -159,7 +180,7 @@ export default async function DealerInquiryPage({ params }: { params: Promise<{ 
               <span>Осталось: ~{hoursLeft}ч</span>
             )}
             {' · '}
-            {inquiry._count.transactions} принято
+            {inquiry.transactionCount} принято
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -181,9 +202,7 @@ export default async function DealerInquiryPage({ params }: { params: Promise<{ 
           {myTransaction && (
             <Card className="border-green-200 bg-green-50">
               <CardHeader>
-                <CardTitle className="text-lg text-green-900">
-                  🎉 Ваше предложение принято!
-                </CardTitle>
+                <CardTitle className="text-lg text-green-900">Ваше предложение принято!</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
                 <p className="text-green-800">
@@ -226,7 +245,16 @@ export default async function DealerInquiryPage({ params }: { params: Promise<{ 
                 {myOffers.map((offer, index) => (
                   <OfferCard
                     key={offer.id}
-                    offer={offer}
+                    offer={{
+                      ...offer,
+                      createdAt: new Date(offer.createdAt),
+                      transaction: offer.transaction
+                        ? {
+                            ...offer.transaction,
+                            acceptedAt: new Date(offer.transaction.acceptedAt),
+                          }
+                        : null,
+                    }}
                     dealerName={null}
                     isMyOffer={true}
                     isFirstOffer={index === 0}
@@ -251,7 +279,16 @@ export default async function DealerInquiryPage({ params }: { params: Promise<{ 
                   return (
                     <OfferCard
                       key={offer.id}
-                      offer={offer}
+                      offer={{
+                        ...offer,
+                        createdAt: new Date(offer.createdAt),
+                        transaction: offer.transaction
+                          ? {
+                              ...offer.transaction,
+                              acceptedAt: new Date(offer.transaction.acceptedAt),
+                            }
+                          : null,
+                      }}
                       dealerName={anonName}
                       isMyOffer={false}
                       isFirstOffer={false}
@@ -280,7 +317,7 @@ export default async function DealerInquiryPage({ params }: { params: Promise<{ 
               {isExpired ? (
                 <Card className="border-gray-300 bg-gray-50">
                   <CardContent className="py-4 text-sm text-gray-600">
-                    ⏰ Заявка истекла — предложения больше не принимаются.
+                    Заявка истекла — предложения больше не принимаются.
                   </CardContent>
                 </Card>
               ) : !canMakeOffer ? (
@@ -297,6 +334,7 @@ export default async function DealerInquiryPage({ params }: { params: Promise<{ 
                   defaultComment=""
                   disabled={false}
                   offerNumber={myOffers.length + 1}
+                  onOfferSubmitted={loadInquiry}
                 />
               )}
             </div>

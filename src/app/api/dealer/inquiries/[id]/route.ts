@@ -1,0 +1,113 @@
+/**
+ * Get a single inquiry by ID for authenticated dealer.
+ * Returns inquiry details, the dealer's own offers, anonymized competing offers,
+ * and any transaction (accepted offer) belonging to this dealer.
+ */
+
+import { NextResponse } from 'next/server';
+import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
+import { prisma } from '@/lib/db';
+
+const MAX_OFFERS_PER_DEALER = 5;
+
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+    const authHeader = request.headers.get('Authorization');
+    const validation = validateWebAppRequest(authHeader, 'dealer');
+
+    if (!validation.valid) {
+      return NextResponse.json({ error: validation.error }, { status: 401 });
+    }
+
+    const platformEnum = validation.platform === 'max' ? 'MAX' : 'TELEGRAM';
+
+    const dealer = await prisma.dealer.findFirst({
+      where: {
+        platform: platformEnum,
+        platformUserId: validation.userId,
+        deletedAt: null,
+        active: true,
+      },
+      select: { id: true, passwordHash: true },
+    });
+
+    if (!dealer) {
+      return NextResponse.json({ error: 'Дилер не найден' }, { status: 404 });
+    }
+
+    if (!dealer.passwordHash) {
+      return NextResponse.json({ error: 'Завершите настройку аккаунта' }, { status: 403 });
+    }
+
+    const inquiry = await prisma.inquiry.findFirst({
+      where: { id, deletedAt: null },
+      include: {
+        offers: {
+          where: { deletedAt: null },
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            price: true,
+            comment: true,
+            dealerId: true,
+            createdAt: true,
+            transaction: {
+              select: {
+                id: true,
+                acceptedAt: true,
+              },
+            },
+          },
+        },
+        transactions: {
+          where: { dealerId: dealer.id },
+          select: {
+            id: true,
+            dealerId: true,
+            buyerName: true,
+            buyerEmail: true,
+            buyerPhone: true,
+            acceptedAt: true,
+          },
+        },
+        _count: {
+          select: { transactions: true },
+        },
+      },
+    });
+
+    if (!inquiry) {
+      return NextResponse.json({ error: 'Заявка не найдена' }, { status: 404 });
+    }
+
+    const myOffers = inquiry.offers.filter((o) => o.dealerId === dealer.id);
+    const otherOffers = inquiry.offers.filter((o) => o.dealerId !== dealer.id);
+    const myTransaction = inquiry.transactions.find((t) => t.dealerId === dealer.id) || null;
+
+    const canMakeOffer =
+      inquiry.expiresAt > new Date() && !myTransaction && myOffers.length < MAX_OFFERS_PER_DEALER;
+
+    return NextResponse.json({
+      inquiry: {
+        id: inquiry.id,
+        model: inquiry.model,
+        submodel: inquiry.submodel,
+        transmission: inquiry.transmission,
+        color: inquiry.color,
+        comment: inquiry.comment,
+        expiresAt: inquiry.expiresAt,
+        transactionCount: inquiry._count.transactions,
+      },
+      myOffers,
+      otherOffers,
+      myTransaction,
+      canMakeOffer,
+      remainingOffers: MAX_OFFERS_PER_DEALER - myOffers.length,
+      dealerId: dealer.id,
+    });
+  } catch (err) {
+    console.error('[DEALER INQUIRY DETAIL] Error:', err);
+    return NextResponse.json({ error: 'Внутренняя ошибка' }, { status: 500 });
+  }
+}

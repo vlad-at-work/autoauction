@@ -1,11 +1,11 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
+import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 import { Button } from '@/components/ui/button';
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -29,14 +29,15 @@ export function OfferForm({
   defaultComment,
   disabled,
   offerNumber = 1,
+  onOfferSubmitted,
 }: {
   inquiryId: string;
   defaultPrice?: number;
   defaultComment?: string | null;
   disabled?: boolean;
   offerNumber?: number;
+  onOfferSubmitted?: () => void;
 }) {
-  const router = useRouter();
   const form = useForm<OfferFormValues>({
     resolver: zodResolver(offerFormSchema),
     defaultValues: {
@@ -57,9 +58,22 @@ export function OfferForm({
       form.setError('price', { message: priceError?.message || 'Неверный формат цены' });
       return;
     }
-    const res = await fetch('/api/offers', {
+
+    const webApp = getWebApp();
+    const platform = detectPlatform();
+    const initData = webApp?.initData;
+
+    if (!initData || !platform) {
+      form.setError('price', { message: 'Ошибка авторизации. Откройте через бота.' });
+      return;
+    }
+
+    const res = await fetch('/api/dealer/offers', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${platform}:dealer:${initData}`,
+      },
       body: JSON.stringify({ inquiryId, ...parsed.data }),
     });
 
@@ -71,14 +85,12 @@ export function OfferForm({
       return;
     }
 
-    const remainingText =
-      json.remainingOffers !== undefined && json.remainingOffers > 0
-        ? ` Осталось попыток: ${json.remainingOffers}`
-        : '';
-
-    toast.success(`Предложение #${offerNumber} отправлено!${remainingText}`);
+    toast.success(`Предложение #${offerNumber} отправлено!`);
     form.reset({ price: '', comment: '' });
-    router.refresh();
+
+    if (onOfferSubmitted) {
+      onOfferSubmitted();
+    }
   }
 
   const isFirstOffer = offerNumber === 1;
