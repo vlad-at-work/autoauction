@@ -2,6 +2,11 @@
  * MAX Webhook Handler
  */
 
+// DEBUG: Disable all caching during development
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 import { NextResponse } from 'next/server';
 import { sendMaxMessage } from '@/lib/notifications/max';
 import { prisma } from '@/lib/db';
