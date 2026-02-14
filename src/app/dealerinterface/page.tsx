@@ -4,7 +4,14 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 
-type AuthStatus = 'loading' | 'not_found' | 'needs_setup' | 'authenticated' | 'error';
+type AuthStatus =
+  | 'loading'
+  | 'not_found'
+  | 'needs_setup'
+  | 'authenticated'
+  | 'error'
+  | 'validating'
+  | 'success';
 
 function DealerEntryContent() {
   const router = useRouter();
@@ -96,13 +103,39 @@ function DealerEntryContent() {
     };
   }, [router, searchParams]);
 
-  const handleActivate = () => {
+  const handleActivate = async () => {
     const code = inviteCode.trim();
-    // Support both old format (setup_xxx) and new format (6-digit code)
-    if (code.startsWith('setup_') || /^\d{6}$/.test(code)) {
-      router.push(`/dealerinterface/setup?token=${code}`);
-    } else if (code) {
-      setError('Введите 6-значный код или полный код, начинающийся с &quot;setup_&quot;');
+
+    if (!/^\d{6}$/.test(code)) {
+      setError('Введите 6-значный код');
+      return;
+    }
+
+    setStatus('validating');
+    setError(null);
+
+    try {
+      const response = await fetch('/api/dealer/invite/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.valid) {
+        setStatus('success');
+        // Delay redirect to show success state
+        window.setTimeout(() => {
+          router.push(`/dealerinterface/setup?token=${code}`);
+        }, 800);
+      } else {
+        setError(data.error || 'Неверный код');
+        setStatus('not_found');
+      }
+    } catch {
+      setError('Ошибка проверки кода');
+      setStatus('error');
     }
   };
 
@@ -154,12 +187,14 @@ function DealerEntryContent() {
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">Код приглашения</label>
             <input
-              type="text"
+              type="tel"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={inviteCode}
-              onChange={(e) => setInviteCode(e.target.value)}
+              onChange={(e) => setInviteCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
               placeholder="123456"
-              maxLength={20}
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 font-mono text-sm text-center tracking-widest focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              maxLength={6}
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 font-mono text-2xl text-center tracking-widest focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -171,10 +206,30 @@ function DealerEntryContent() {
 
           <button
             onClick={handleActivate}
-            disabled={!inviteCode.trim()}
-            className="w-full rounded-lg bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:bg-gray-400"
+            disabled={status === 'validating' || status === 'success' || inviteCode.length !== 6}
+            className={`w-full rounded-lg py-3 font-semibold text-white transition disabled:bg-gray-400 ${
+              status === 'success'
+                ? 'bg-green-600 hover:bg-green-700'
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}
           >
-            Активировать аккаунт
+            {status === 'success' ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Готово
+              </span>
+            ) : status === 'validating' ? (
+              'Проверка...'
+            ) : (
+              'Активировать аккаунт'
+            )}
           </button>
 
           <div className="text-xs text-gray-500 text-center">

@@ -116,7 +116,7 @@ async function handleDealerInvite(userId: number, firstName: string, param: stri
   // Send welcome with code (no open_app button until we know the correct mini-app name)
   await sendMaxMessage(
     userId,
-    `Добро пожаловать, ${dealer.name || firstName}!\n\nВаш код активации: ${token}\n\nОткройте мини-приложение из меню бота и введите этот код.`,
+    `Добро пожаловать, ${firstName}!\n\nВаш код активации для ${dealer.name}: ${token}\n\nОткройте мини-приложение из меню бота и введите этот код.`,
     [],
     'dealer'
   );
