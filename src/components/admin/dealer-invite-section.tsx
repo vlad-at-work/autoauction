@@ -19,13 +19,12 @@ export function DealerInviteSection({ dealerId, initialToken, initialExpiresAt }
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const MAX_BOT_NAME_DEALER =
-    process.env.NEXT_PUBLIC_MAX_BOT_NAME_DEALER || 'id5010035001_1_bot';
+  const MAX_BOT_NAME_DEALER = process.env.NEXT_PUBLIC_MAX_BOT_NAME_DEALER || 'id5010035001_1_bot';
 
-  // Construct URL from existing token
+  // Construct URL from existing token (uses ?start= to open chat, not mini-app)
   const currentInviteUrl =
     inviteToken && inviteExpiresAt && new Date(inviteExpiresAt) > new Date()
-      ? inviteUrl || `https://max.ru/${MAX_BOT_NAME_DEALER}?start=setup_${dealerId}_${inviteToken}`
+      ? inviteUrl || `https://max.ru/${MAX_BOT_NAME_DEALER}?start=${inviteToken}`
       : null;
 
   async function handleGenerateInvite() {
@@ -115,8 +114,9 @@ export function DealerInviteSection({ dealerId, initialToken, initialExpiresAt }
 
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
           <p className="text-xs text-blue-900">
-            <strong>How it works:</strong> Send this link to the dealer. When they open it on MAX,
-            they&apos;ll be prompted to set a password and activate their account.
+            <strong>How it works:</strong> Send this link to the dealer. When they open it on MAX, a
+            chat with the bot will be created and they&apos;ll receive a button to activate their
+            account in the mini-app.
           </p>
         </div>
       </CardContent>

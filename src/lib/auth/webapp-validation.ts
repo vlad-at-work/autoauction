@@ -33,10 +33,20 @@ export function validateWebAppRequest(
     return { valid: false, error: 'Missing initData' };
   }
 
-  const BOT_TOKEN =
-    botType === 'dealer'
-      ? process.env.MAX_BOT_TOKEN_DEALER || process.env.TG_BOT_TOKEN_DEALER || ''
-      : process.env.MAX_BOT_TOKEN || process.env.TG_BOT_TOKEN || '';
+  // Select bot token based on platform AND bot type (not OR fallback across platforms)
+  const BOT_TOKEN = (() => {
+    if (platform === 'max') {
+      return botType === 'dealer'
+        ? process.env.MAX_BOT_TOKEN_DEALER || ''
+        : process.env.MAX_BOT_TOKEN || '';
+    }
+    if (platform === 'telegram') {
+      return botType === 'dealer'
+        ? process.env.TG_BOT_TOKEN_DEALER || ''
+        : process.env.TG_BOT_TOKEN || '';
+    }
+    return '';
+  })();
 
   if (!BOT_TOKEN) {
     console.warn('[VALIDATE] Bot token not configured for:', botType);

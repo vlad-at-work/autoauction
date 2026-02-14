@@ -4,7 +4,8 @@
  * POST /api/admin/dealers/[id]/invite
  *
  * Generates a new invite token for the dealer and returns the invite URL
- * The link opens mini-app directly with the token for seamless activation
+ * The link uses ?start= to open a CHAT with the bot (not the mini-app directly)
+ * so the dealer gets a persistent communication channel for notifications
  */
 
 import { NextResponse } from 'next/server';
@@ -44,9 +45,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       },
     });
 
-    // Construct invite URL that opens mini-app directly with the token
-    // Format: https://max.ru/BOT_NAME?startapp=TOKEN
-    const inviteUrl = `https://max.ru/${MAX_BOT_NAME_DEALER}?startapp=${token}`;
+    // Construct invite URL that opens a CHAT with the bot (not mini-app directly)
+    // ?start= creates a chat; the webhook then sends a welcome + open_app button
+    const inviteUrl = `https://max.ru/${MAX_BOT_NAME_DEALER}?start=${token}`;
 
     console.warn(`[Admin] Generated invite link for dealer ${dealer.name} (${dealerId}): ${token}`);
 

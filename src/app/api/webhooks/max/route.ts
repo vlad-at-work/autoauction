@@ -2,10 +2,7 @@
  * MAX Webhook Handler
  */
 
-// DEBUG: Disable all caching during development
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-export const fetchCache = 'force-no-store';
 
 import { NextResponse } from 'next/server';
 import { sendMaxMessage } from '@/lib/notifications/max';
@@ -13,6 +10,9 @@ import { prisma } from '@/lib/db';
 import { isInviteTokenValid } from '@/lib/auth/dealer-invite';
 
 type BotType = 'customer' | 'dealer';
+
+const MAX_MINI_APP_NAME =
+  process.env.MAX_MINI_APP_NAME || process.env.NEXT_PUBLIC_MAX_BOT_NAME_DEALER || '';
 
 export async function POST(request: Request) {
   try {
@@ -35,47 +35,42 @@ export async function POST(request: Request) {
         ?.first_name as string) ||
       'User';
 
-    console.warn('[WEBHOOK]', {
-      type: updateType,
-      bot: botType,
-      userId,
-      hasParam: !!startPayload,
-      startPayload,
-      start_param: (update as Record<string, unknown>).start_param,
-      fullUpdate: JSON.stringify(update).slice(0, 500),
-    });
+    console.warn('[MAX Webhook]', updateType, botType, userId ? `user:${userId}` : 'no-user');
 
     if (
       updateType === 'bot_started' ||
       (updateType === 'message_created' && messageText.startsWith('/start'))
     ) {
       if (!userId) {
-        console.warn('[WEBHOOK] No userId');
         return NextResponse.json({ ok: true });
       }
 
       const param =
         startPayload || (messageText.startsWith('/start') ? messageText.substring(7).trim() : '');
 
-      console.warn('[WEBHOOK] Param check:', {
-        param: param || '(empty)',
-        startsWithSetup: param?.startsWith('setup_'),
-        botType,
-      });
-
-      if (botType === 'dealer' && param?.startsWith('setup_')) {
-        await handleDealerInvite(Number(userId), firstName, param);
+      if (botType === 'dealer' && param) {
+        // Support both old format (setup_xxx) and new format (6-digit code)
+        if (param.startsWith('setup_') || /^\d{6}$/.test(param)) {
+          await handleDealerInvite(Number(userId), firstName, param);
+        } else {
+          await sendMaxMessage(
+            Number(userId),
+            `Добро пожаловать в панель дилера, ${firstName}!\n\nОткройте мини-приложение из меню ниже.`,
+            [],
+            'dealer'
+          );
+        }
       } else if (botType === 'dealer') {
         await sendMaxMessage(
           Number(userId),
-          `👋 Добро пожАловать в панель дилера, ${firstName}!\n\nОткройте мини-приложение из меню ниже.`,
+          `Добро пожаловать в панель дилера, ${firstName}!\n\nОткройте мини-приложение из меню ниже.`,
           [],
           'dealer'
         );
       } else {
         await sendMaxMessage(
           Number(userId),
-          `👋 Добро пожАловать в AutoAuction, ${firstName}!\n\nОткройте мини-приложение для создания заявок.`,
+          `Добро пожаловать в AutoAuction, ${firstName}!\n\nОткройте мини-приложение для создания заявок.`,
           [],
           'customer'
         );
@@ -84,47 +79,47 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error('[WEBHOOK] Error:', err);
+    console.error('[MAX Webhook] Error:', err);
     return NextResponse.json({ ok: true });
   }
 }
 
 async function handleDealerInvite(userId: number, firstName: string, param: string) {
-  console.warn('[INVITE] Processing:', param);
-
-  const parts = param.split('_');
-  if (parts.length < 3) {
-    await sendMaxMessage(userId, '❌ Неверный формат ссылки.', [], 'dealer');
-    return;
+  // Extract token from either format
+  let token: string;
+  if (param.startsWith('setup_')) {
+    const parts = param.split('_');
+    token = parts.slice(2).join('_');
+  } else {
+    token = param; // 6-digit code
   }
 
-  const dealerId = parts[1];
-  const token = parts.slice(2).join('_');
-
   const dealer = await prisma.dealer.findFirst({
-    where: { id: dealerId, inviteToken: token, deletedAt: null },
+    where: { inviteToken: token, deletedAt: null },
     select: { id: true, name: true, inviteTokenExpiresAt: true },
   });
 
   if (!dealer) {
-    await sendMaxMessage(userId, '❌ Ссылка недействительна.', [], 'dealer');
+    await sendMaxMessage(userId, 'Ссылка недействительна.', [], 'dealer');
     return;
   }
 
   if (!isInviteTokenValid(dealer.inviteTokenExpiresAt)) {
-    await sendMaxMessage(userId, '❌ Срок действия ссылки истек.', [], 'dealer');
+    await sendMaxMessage(userId, 'Срок действия ссылки истек.', [], 'dealer');
     return;
   }
 
-  const messageText = `👋 Добро пожаловать, ${dealer.name || 'Дилер'}!
-
-Ваш код активации:
-\`${param}\`
-
-1️⃣ Скопируйте код
-2️⃣ Откройте мини-приложение
-3️⃣ Вставьте код для активации`;
-
-  const result = await sendMaxMessage(userId, messageText, [], 'dealer');
-  console.warn('[INVITE] Sent:', result.success);
+  await sendMaxMessage(
+    userId,
+    `Добро пожаловать, ${dealer.name || firstName}!\n\nНажмите кнопку ниже для активации аккаунта.`,
+    [
+      {
+        type: 'open_app',
+        text: 'Активировать аккаунт',
+        app_name: MAX_MINI_APP_NAME,
+        payload: token,
+      },
+    ],
+    'dealer'
+  );
 }
