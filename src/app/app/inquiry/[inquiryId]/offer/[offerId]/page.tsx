@@ -54,7 +54,7 @@ async function getOfferDetail(
   try {
     const res = await fetch(`/api/inquiries/${inquiryId}`, {
       headers: {
-        Authorization: `Bearer ${platform}:${initData}`,
+        Authorization: `Bearer ${platform}:customer:${initData}`,
       },
     });
     if (!res.ok) return null;
@@ -183,7 +183,7 @@ export default function OfferDetailPage() {
       const response = await fetch('/api/transactions', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${platform}:${initData}`,
+          Authorization: `Bearer ${platform}:customer:${initData}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

@@ -151,7 +151,7 @@ function MiniAppInquiryFormPageInner() {
       const res = await fetch('/api/inquiries', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${platform}:${initData}`,
+          Authorization: `Bearer ${platform}:customer:${initData}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(values),

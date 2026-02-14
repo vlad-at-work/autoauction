@@ -14,7 +14,7 @@ export async function checkBuyerExists(
 
     // Add server-side validation of WebApp initData if provided
     if (initData) {
-      headers.Authorization = `Bearer ${platform}:${initData}`;
+      headers.Authorization = `Bearer ${platform}:customer:${initData}`;
       console.log('[checkBuyerExists] Added auth header with platform:', platform);
     }
 

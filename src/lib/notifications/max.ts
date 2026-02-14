@@ -9,8 +9,8 @@ const MAX_BOT_TOKEN_DEALER = process.env.MAX_BOT_TOKEN_DEALER || '';
 export type MaxButton = {
   type: 'open_app';
   text: string;
-  app_name: string;
-  payload?: string;
+  web_app?: string | null;
+  payload?: string | null;
 };
 
 export async function sendMaxMessage(

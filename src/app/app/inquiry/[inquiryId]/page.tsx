@@ -59,7 +59,7 @@ async function getInquiryDetail(
   try {
     const res = await fetch(`/api/inquiries/${inquiryId}`, {
       headers: {
-        Authorization: `Bearer ${platform}:${initData}`,
+        Authorization: `Bearer ${platform}:customer:${initData}`,
       },
     });
     if (!res.ok) return null;

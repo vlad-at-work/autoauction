@@ -53,7 +53,7 @@ export async function getMyInquiries(
   try {
     const res = await fetch('/api/buyers/me/inquiries', {
       headers: {
-        Authorization: `Bearer ${platform}:${initData}`,
+        Authorization: `Bearer ${platform}:customer:${initData}`,
       },
     });
 
@@ -89,7 +89,7 @@ export async function getInquiryById(
   try {
     const res = await fetch(`/api/inquiries/${inquiryId}`, {
       headers: {
-        Authorization: `Bearer ${platform}:${initData}`,
+        Authorization: `Bearer ${platform}:customer:${initData}`,
       },
     });
 

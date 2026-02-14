@@ -113,11 +113,20 @@ async function handleDealerInvite(userId: number, firstName: string, param: stri
     return;
   }
 
-  // Send welcome with code (no open_app button until we know the correct mini-app name)
+  const botName =
+    process.env.MAX_BOT_NAME_DEALER || process.env.NEXT_PUBLIC_MAX_BOT_NAME_DEALER || '';
+
   await sendMaxMessage(
     userId,
-    `Добро пожаловать, ${firstName}!\n\nВаш код активации для ${dealer.name}: ${token}\n\nОткройте мини-приложение из меню бота и введите этот код.`,
-    [],
+    `Добро пожаловать, ${dealer.name || firstName}!\n\nВаш код активации: ${token}\n\nНажмите кнопку ниже, чтобы открыть приложение.`,
+    [
+      {
+        type: 'open_app',
+        text: 'Открыть панель дилера',
+        web_app: botName,
+        payload: token,
+      },
+    ],
     'dealer'
   );
 }
