@@ -19,7 +19,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="flex min-h-screen bg-background">
       <aside className="hidden w-64 border-r bg-card md:block">
         <div className="flex h-16 items-center border-b px-6">
-          <Link href="/admin" className="text-xl font-bold">
+          <Link href="/admin" prefetch={false} className="text-xl font-bold">
             Админ-панель
           </Link>
         </div>
@@ -29,6 +29,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  prefetch={false}
                   className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
                 >
                   <item.icon className="h-4 w-4" />
@@ -43,7 +44,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-16 items-center gap-3 border-b bg-card px-4 md:hidden">
           <AdminMobileNav items={mobileNavItems} />
-          <Link href="/admin" className="text-base font-bold">
+          <Link href="/admin" prefetch={false} className="text-base font-bold">
             Админ-панель
           </Link>
         </header>
