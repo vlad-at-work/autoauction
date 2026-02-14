@@ -11,9 +11,6 @@ import { isInviteTokenValid } from '@/lib/auth/dealer-invite';
 
 type BotType = 'customer' | 'dealer';
 
-const MAX_MINI_APP_NAME =
-  process.env.MAX_MINI_APP_NAME || process.env.NEXT_PUBLIC_MAX_BOT_NAME_DEALER || '';
-
 export async function POST(request: Request) {
   try {
     const url = new URL(request.url);
@@ -116,17 +113,11 @@ async function handleDealerInvite(userId: number, firstName: string, param: stri
     return;
   }
 
+  // Send welcome with code (no open_app button until we know the correct mini-app name)
   await sendMaxMessage(
     userId,
-    `Добро пожаловать, ${dealer.name || firstName}!\n\nВаш код активации: ${token}\n\nНажмите кнопку ниже, чтобы открыть приложение.`,
-    [
-      {
-        type: 'open_app',
-        text: 'Открыть панель дилера',
-        app_name: MAX_MINI_APP_NAME,
-        payload: token,
-      },
-    ],
+    `Добро пожаловать, ${dealer.name || firstName}!\n\nВаш код активации: ${token}\n\nОткройте мини-приложение из меню бота и введите этот код.`,
+    [],
     'dealer'
   );
 }
