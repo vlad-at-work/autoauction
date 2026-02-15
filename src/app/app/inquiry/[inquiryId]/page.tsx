@@ -150,8 +150,11 @@ export default function InquiryDetailPage() {
         <div className="mx-auto max-w-2xl px-4 py-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">
-                {inquiry.model} {inquiry.submodel !== inquiry.model && inquiry.submodel}
+              <CardTitle className="text-xl leading-tight">
+                <div>{inquiry.model}</div>
+                {inquiry.submodel !== inquiry.model && (
+                  <div className="text-lg text-muted-foreground">{inquiry.submodel}</div>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">

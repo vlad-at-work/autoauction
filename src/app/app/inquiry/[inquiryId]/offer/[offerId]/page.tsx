@@ -295,9 +295,8 @@ export default function OfferDetailPage() {
               <div className="grid gap-4">
                 <div>
                   <div className="text-muted-foreground mb-1 text-sm">Автомобиль</div>
-                  <div className="font-medium">
-                    {inquiry.model} {inquiry.submodel}
-                  </div>
+                  <div className="font-medium">{inquiry.model}</div>
+                  <div className="text-muted-foreground">{inquiry.submodel}</div>
                 </div>
 
                 <div>
