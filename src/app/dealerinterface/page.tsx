@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 
 type AuthStatus =
@@ -208,10 +209,8 @@ function DealerEntryContent() {
 
   if (status === 'loading') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="text-2xl font-semibold text-gray-700">Загрузка...</div>
-        </div>
+      <div className="flex min-h-screen w-full items-center justify-center px-4">
+        <Loader2 className="text-muted-foreground size-12 animate-spin" />
       </div>
     );
   }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 import { useWebApp } from '@/hooks/use-webapp';
@@ -124,10 +124,8 @@ export default function DealerInquiryPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="text-xl font-semibold">Загрузка...</div>
-        </div>
+      <div className="flex min-h-screen w-full items-center justify-center px-4">
+        <Loader2 className="text-muted-foreground size-12 animate-spin" />
       </div>
     );
   }
@@ -213,9 +211,7 @@ export default function DealerInquiryPage() {
             <CardTitle className="text-lg text-green-900">Ваше предложение принято!</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <p className="text-green-800">
-              У вас есть контактная информация покупателя. Свяжитесь с ним как можно скорее.
-            </p>
+            <p className="font-medium text-green-800">Информация покупателя:</p>
             <div className="mt-3 rounded border border-green-200 bg-white p-3">
               <div>
                 <span className="font-medium">Имя:</span> {myTransaction.buyerName}

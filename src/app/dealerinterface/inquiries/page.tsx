@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Loader2 } from 'lucide-react';
 
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getShortId, getIdColorClass, formatPrice } from '@/lib/inquiry-utils';
 
 type Inquiry = {
@@ -98,11 +98,8 @@ export default function DealerInquiriesPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="text-xl font-semibold">Загрузка...</div>
-          <div className="mt-2 text-sm text-gray-500">Загрузка заявок</div>
-        </div>
+      <div className="flex min-h-screen w-full items-center justify-center px-4">
+        <Loader2 className="text-muted-foreground size-12 animate-spin" />
       </div>
     );
   }
@@ -123,12 +120,11 @@ export default function DealerInquiriesPage() {
   const previousInquiries = inquiries?.filter((i) => new Date(i.expiresAt) <= now) || [];
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-10">
-      <Card>
-        <CardHeader>
-          <CardTitle>Активные заявки (24 часа)</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3">
+    <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-6">
+      {/* Active inquiries section */}
+      <div className="flex flex-col gap-3">
+        <div className="text-lg font-bold">Активные заявки (24 часа)</div>
+        <div className="flex flex-col gap-3">
           {activeInquiries.length === 0 ? (
             <p className="text-muted-foreground text-sm">Нет активных заявок.</p>
           ) : (
@@ -221,14 +217,13 @@ export default function DealerInquiriesPage() {
               })}
             </ul>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Предыдущие заявки</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3">
+      {/* Previous inquiries section */}
+      <div className="flex flex-col gap-3">
+        <div className="text-lg font-bold">Предыдущие заявки</div>
+        <div className="flex flex-col gap-3">
           {previousInquiries.length === 0 ? (
             <p className="text-muted-foreground text-sm">Нет предыдущих заявок.</p>
           ) : (
@@ -294,8 +289,8 @@ export default function DealerInquiriesPage() {
               })}
             </ul>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
