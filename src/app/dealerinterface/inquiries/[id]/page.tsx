@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
+import { useWebApp } from '@/hooks/use-webapp';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { OfferForm } from '@/app/dealerinterface/inquiries/[id]/offer-form';
 import { OfferCard } from '@/app/dealerinterface/inquiries/[id]/offer-card';
@@ -15,7 +16,7 @@ import {
   anonymizeDealerName,
   formatRelativeTime,
 } from '@/lib/inquiry-utils';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
 const MAX_OFFERS_PER_DEALER = 5;
 
@@ -58,9 +59,16 @@ type InquiryData = {
 
 export default function DealerInquiryPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
+  const { showBackButton } = useWebApp();
   const [data, setData] = useState<InquiryData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // BackButton navigates to inquiries list
+  useEffect(() => {
+    showBackButton(() => router.push('/dealerinterface/inquiries'));
+  }, [showBackButton, router]);
 
   async function loadInquiry() {
     try {

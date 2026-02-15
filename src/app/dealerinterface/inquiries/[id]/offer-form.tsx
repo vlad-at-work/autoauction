@@ -1,11 +1,13 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
+import { useWebApp } from '@/hooks/use-webapp';
 import { Button } from '@/components/ui/button';
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -38,6 +40,8 @@ export function OfferForm({
   offerNumber?: number;
   onOfferSubmitted?: () => void;
 }) {
+  const { enableClosingConfirmation, disableClosingConfirmation, hapticNotification } = useWebApp();
+
   const form = useForm<OfferFormValues>({
     resolver: zodResolver(offerFormSchema),
     defaultValues: {
@@ -46,6 +50,15 @@ export function OfferForm({
     },
     mode: 'onTouched',
   });
+
+  // Closing confirmation when form is dirty
+  useEffect(() => {
+    if (form.formState.isDirty) {
+      enableClosingConfirmation();
+    } else {
+      disableClosingConfirmation();
+    }
+  }, [form.formState.isDirty, enableClosingConfirmation, disableClosingConfirmation]);
 
   async function onSubmit(values: OfferFormValues) {
     const parsed = offerSchema.safeParse({
@@ -82,9 +95,12 @@ export function OfferForm({
     if (!res.ok) {
       const message = json.error || 'Не удалось сохранить предложение';
       form.setError('price', { type: 'server', message });
+      hapticNotification('error');
       return;
     }
 
+    hapticNotification('success');
+    disableClosingConfirmation();
     toast.success(`Предложение #${offerNumber} отправлено!`);
     form.reset({ price: '', comment: '' });
 

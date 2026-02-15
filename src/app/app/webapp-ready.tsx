@@ -48,6 +48,10 @@ export function WebAppReady() {
       const webApp = getWebApp();
       if (webApp?.ready) {
         webApp.ready();
+        // Expand to full height on Telegram (no-op if already expanded or on MAX)
+        if (webApp.expand && !webApp.isExpanded) {
+          webApp.expand();
+        }
         return;
       }
 

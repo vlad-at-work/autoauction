@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TopBarWithBack } from '@/components/ui/top-bar';
+import { useWebApp } from '@/hooks/use-webapp';
 import { detectPlatform, getWebApp } from '@/app/app/webapp-ready';
 import { formatPrice } from '@/lib/inquiry-utils';
 
@@ -97,12 +98,18 @@ async function getOfferDetail(
 export default function OfferDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { showBackButton, hapticNotification } = useWebApp();
   const [data, setData] = useState<OfferPageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
 
   const inquiryId = params.inquiryId as string;
   const offerId = params.offerId as string;
+
+  // BackButton navigates to inquiry detail
+  useEffect(() => {
+    showBackButton(() => router.push(`/app/inquiry/${inquiryId}`));
+  }, [showBackButton, router, inquiryId]);
 
   const loadData = useCallback(async () => {
     const webApp = getWebApp();
@@ -200,11 +207,13 @@ export default function OfferDetailPage() {
         } else {
           toast.error(result.error || 'Ошибка при принятии предложения');
         }
+        hapticNotification('error');
         // Reload to get fresh state
         await loadData();
         return;
       }
 
+      hapticNotification('success');
       toast.success('Предложение принято! Дилер скоро свяжется с вами.');
 
       // Reload to show updated state
@@ -212,6 +221,7 @@ export default function OfferDetailPage() {
     } catch (error) {
       console.error('Error accepting offer:', error);
       toast.error('Ошибка при принятии предложения');
+      hapticNotification('error');
     } finally {
       setAccepting(false);
     }

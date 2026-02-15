@@ -3,16 +3,27 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
+import { useWebApp } from '@/hooks/use-webapp';
 
 function SetupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { enableClosingConfirmation, disableClosingConfirmation, hapticNotification } = useWebApp();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
+
+  // Closing confirmation when password field has content
+  useEffect(() => {
+    if (password.length > 0 && !success) {
+      enableClosingConfirmation();
+    } else {
+      disableClosingConfirmation();
+    }
+  }, [password, success, enableClosingConfirmation, disableClosingConfirmation]);
 
   useEffect(() => {
     const urlToken = searchParams.get('token');
@@ -49,11 +60,13 @@ function SetupForm() {
 
     if (password !== confirmPassword) {
       setError('Пароли не совпадают');
+      hapticNotification('error');
       return;
     }
 
     if (password.length < 8) {
       setError('Минимум 8 символов');
+      hapticNotification('error');
       return;
     }
 
@@ -82,6 +95,8 @@ function SetupForm() {
       const data = await response.json();
 
       if (response.ok) {
+        hapticNotification('success');
+        disableClosingConfirmation();
         // Show success state before redirect
         setSuccess(true);
         // Delay redirect slightly to show checkmark
@@ -90,10 +105,12 @@ function SetupForm() {
         }, 800);
       } else {
         setError(data.error || 'Ошибка активации');
+        hapticNotification('error');
         setLoading(false);
       }
     } catch {
       setError('Ошибка соединения');
+      hapticNotification('error');
       setLoading(false);
     }
     // Note: loading stays true during success state until redirect

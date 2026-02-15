@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TopBarWithBack } from '@/components/ui/top-bar';
 import { usePolling } from '@/hooks/use-polling';
+import { useWebApp } from '@/hooks/use-webapp';
 import { detectPlatform, getWebApp } from '@/app/app/webapp-ready';
 import { formatPrice, formatRelativeTime } from '@/lib/inquiry-utils';
 
@@ -72,12 +73,18 @@ async function getInquiryDetail(
 export default function InquiryDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { showBackButton } = useWebApp();
   const [platformUserId, setPlatformUserId] = useState<string | null>(null);
   const [platform, setPlatform] = useState<'max' | 'telegram' | null>(null);
   const [initData, setInitData] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
   const inquiryId = params.inquiryId as string;
+
+  // BackButton navigates to dashboard
+  useEffect(() => {
+    showBackButton(() => router.push('/app/dashboard'));
+  }, [showBackButton, router]);
 
   // Initialize platform user
   useEffect(() => {

@@ -19,8 +19,23 @@ declare global {
     user?: WebAppUser;
     chat?: WebAppChat;
     start_param?: string;
+    tgWebAppStartParam?: string;
     auth_date?: number;
     hash?: string;
+  }
+
+  interface WebAppBackButton {
+    isVisible: boolean;
+    show(): void;
+    hide(): void;
+    onClick(callback: () => void): void;
+    offClick(callback: () => void): void;
+  }
+
+  interface WebAppHapticFeedback {
+    impactOccurred(style: 'light' | 'medium' | 'heavy' | 'soft' | 'rigid'): void;
+    notificationOccurred(type: 'error' | 'success' | 'warning'): void;
+    selectionChanged(): void;
   }
 
   interface WebAppBridge {
@@ -31,6 +46,16 @@ declare global {
     ready?: () => void;
     close?: () => void;
     requestContact?: () => void;
+    BackButton?: WebAppBackButton;
+    HapticFeedback?: WebAppHapticFeedback;
+    enableClosingConfirmation?: () => void;
+    disableClosingConfirmation?: () => void;
+    expand?: () => void;
+    isExpanded?: boolean;
+    setHeaderColor?: (color: string) => void;
+    setBackgroundColor?: (color: string) => void;
+    colorScheme?: 'light' | 'dark';
+    themeParams?: Record<string, string>;
   }
 
   // Telegram uses window.Telegram.WebApp

@@ -8,6 +8,7 @@ import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
+import { useWebApp } from '@/hooks/use-webapp';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,6 +44,12 @@ type SubmitState =
 
 function MiniAppInquiryFormPageInner() {
   const router = useRouter();
+  const {
+    showBackButton,
+    enableClosingConfirmation,
+    disableClosingConfirmation,
+    hapticNotification,
+  } = useWebApp();
 
   const [submitState, setSubmitState] = useState<SubmitState>({ status: 'idle' });
   const [randomSuffix] = useState(() => Math.floor(Math.random() * 10000));
@@ -122,6 +129,25 @@ function MiniAppInquiryFormPageInner() {
     };
   }, [form]);
 
+  // BackButton navigates to dashboard
+  useEffect(() => {
+    showBackButton(() => router.push('/app/dashboard'));
+  }, [showBackButton, router]);
+
+  // Closing confirmation when form is dirty
+  useEffect(() => {
+    if (form.formState.isDirty && submitState.status !== 'success') {
+      enableClosingConfirmation();
+    } else {
+      disableClosingConfirmation();
+    }
+  }, [
+    form.formState.isDirty,
+    submitState.status,
+    enableClosingConfirmation,
+    disableClosingConfirmation,
+  ]);
+
   const submodels = useMemo(() => {
     if (!watchedModel) return [];
     return MODEL_SUBMODELS[watchedModel] ?? [];
@@ -165,21 +191,26 @@ function MiniAppInquiryFormPageInner() {
             ? json.error
             : 'Не удалось отправить заявку';
         setSubmitState({ status: 'error', message });
+        hapticNotification('error');
         return;
       }
 
       if (typeof json !== 'object' || !json || !('id' in json) || typeof json.id !== 'string') {
         setSubmitState({ status: 'error', message: 'Некорректный ответ сервера' });
+        hapticNotification('error');
         return;
       }
 
       setSubmitState({ status: 'success', inquiryId: json.id });
+      hapticNotification('success');
+      disableClosingConfirmation();
       router.push('/app/dashboard');
     } catch (err) {
       setSubmitState({
         status: 'error',
         message: err instanceof Error ? err.message : 'Не удалось отправить заявку',
       });
+      hapticNotification('error');
     }
   }
 
