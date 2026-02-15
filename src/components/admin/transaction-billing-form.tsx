@@ -91,7 +91,7 @@ export function TransactionBillingForm({
 
       <FieldGroup>
         <Field orientation="vertical" data-invalid={!!fieldErrors?.amount}>
-          <FieldLabel>Сумма (₽)</FieldLabel>
+          <FieldLabel>Сумма</FieldLabel>
           <FieldContent>
             <Input
               value={nextAmount}

@@ -117,13 +117,13 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
       key: 'offerPrice',
       label: 'Цена',
       render: (t: TransactionWithRelations) =>
-        t.offerPrice == null ? '-' : `${t.offerPrice.toLocaleString('ru-RU')} ₽`,
+        t.offerPrice == null ? '-' : `${t.offerPrice.toLocaleString('ru-RU')}`,
     },
     {
       key: 'amount',
       label: 'Сумма',
       render: (t: TransactionWithRelations) =>
-        t.amount == null ? '-' : `${t.amount.toLocaleString('ru-RU')} ₽`,
+        t.amount == null ? '-' : `${t.amount.toLocaleString('ru-RU')}`,
     },
     {
       key: 'status',

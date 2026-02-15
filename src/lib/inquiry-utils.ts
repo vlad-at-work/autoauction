@@ -15,9 +15,12 @@ export function getShortId(id: string): string {
  */
 export function getIdColorClass(id: string): { bg: string; text: string; border: string } {
   // Use first 6 chars to generate a hash
-  const hash = id.slice(0, 6).split('').reduce((acc, char) => {
-    return char.charCodeAt(0) + ((acc << 5) - acc);
-  }, 0);
+  const hash = id
+    .slice(0, 6)
+    .split('')
+    .reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 5) - acc);
+    }, 0);
 
   // Define color palette (tailwind classes)
   const colors = [
@@ -47,9 +50,12 @@ export function getIdColorClass(id: string): { bg: string; text: string; border:
  * Generate a hex color from inquiry ID for inline styles
  */
 export function getIdHexColor(id: string): string {
-  const hash = id.slice(0, 6).split('').reduce((acc, char) => {
-    return char.charCodeAt(0) + ((acc << 5) - acc);
-  }, 0);
+  const hash = id
+    .slice(0, 6)
+    .split('')
+    .reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 5) - acc);
+    }, 0);
 
   // Generate HSL with fixed saturation and lightness for consistent visibility
   const hue = Math.abs(hash) % 360;
@@ -67,7 +73,7 @@ export function anonymizeDealerName(index: number): string {
  * Format price with Russian locale
  */
 export function formatPrice(price: number): string {
-  return price.toLocaleString('ru-RU') + ' ₽';
+  return price.toLocaleString('ru-RU');
 }
 
 /**

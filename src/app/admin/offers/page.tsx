@@ -84,7 +84,7 @@ export default async function OffersPage({ searchParams }: { searchParams: Searc
     {
       key: 'price',
       label: 'Цена',
-      render: (o: OfferWithRelations) => `${o.price.toLocaleString('ru-RU')} ₽`,
+      render: (o: OfferWithRelations) => `${o.price.toLocaleString('ru-RU')}`,
     },
     {
       key: 'status',

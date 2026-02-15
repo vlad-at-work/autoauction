@@ -56,7 +56,7 @@ export default async function OfferDetailPage({ params }: { params: Params }) {
               <span className="font-mono">{offer.id}</span>
 
               <span className="text-muted-foreground">Цена:</span>
-              <span className="text-lg font-bold">{offer.price.toLocaleString('ru-RU')} ₽</span>
+              <span className="text-lg font-bold">{offer.price.toLocaleString('ru-RU')}</span>
 
               <span className="text-muted-foreground">Дилер:</span>
               <Link

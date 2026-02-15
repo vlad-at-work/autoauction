@@ -96,24 +96,25 @@ describe('anonymizeDealerName', () => {
 
 describe('formatPrice', () => {
   it('formats small prices correctly', () => {
-    expect(formatPrice(1000)).toBe('1\u00A0000 ₽');
+    expect(formatPrice(1000)).toBe('1\u00A0000');
   });
 
   it('formats typical car prices correctly', () => {
     const result = formatPrice(1500000);
     // Russian locale uses non-breaking space as thousands separator
+    expect(result).toContain('1');
     expect(result).toContain('500');
     expect(result).toContain('000');
-    expect(result).toContain('₽');
   });
 
   it('handles zero', () => {
-    expect(formatPrice(0)).toBe('0 ₽');
+    expect(formatPrice(0)).toBe('0');
   });
 
   it('handles decimal numbers', () => {
     const result = formatPrice(1234567.89);
-    expect(result).toContain('₽');
+    expect(result).toContain('1');
+    expect(result).toContain('234');
   });
 });
 

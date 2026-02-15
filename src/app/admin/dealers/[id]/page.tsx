@@ -166,7 +166,7 @@ export default async function DealerDetailPage({ params }: { params: Params }) {
                       className="block rounded-md border p-3 hover:bg-muted/50 transition-colors"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-medium">{offer.price.toLocaleString('ru-RU')} ₽</span>
+                        <span className="font-medium">{offer.price.toLocaleString('ru-RU')}</span>
                         {offer.transaction && <Badge variant="default">Принято</Badge>}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
