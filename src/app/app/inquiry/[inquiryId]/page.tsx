@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Loader2 } from 'lucide-react';
+import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
@@ -11,7 +11,7 @@ import { PageTransition } from '@/components/page-transition';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TopBarWithBack } from '@/components/ui/top-bar';
+import { TopBar } from '@/components/ui/top-bar';
 import { usePolling } from '@/hooks/use-polling';
 import { useWebApp } from '@/hooks/use-webapp';
 import { detectPlatform, getWebApp } from '@/app/app/webapp-ready';
@@ -144,7 +144,7 @@ export default function InquiryDetailPage() {
   return (
     <PageTransition>
       <div className="min-h-screen w-full">
-        <TopBarWithBack backHref="/app/dashboard" backText="Назад к заявкам" />
+        <TopBar />
         <div className="mx-auto max-w-2xl px-4 py-6">
           <Card>
             <CardHeader>
@@ -216,6 +216,16 @@ export default function InquiryDetailPage() {
                 )}
               />
             )}
+          </div>
+
+          {/* Back button at bottom */}
+          <div className="mt-6">
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/app/dashboard">
+                <ArrowLeft className="mr-2 size-4" />
+                Назад к заявкам
+              </Link>
+            </Button>
           </div>
         </div>
       </div>

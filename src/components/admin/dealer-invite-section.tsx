@@ -75,18 +75,18 @@ export function DealerInviteSection({ dealerId, initialToken, initialExpiresAt }
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Invite Links</CardTitle>
+        <CardTitle>Ссылки для приглашения</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {currentMaxUrl ? (
           <>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Status:</span>
-                <Badge variant="default">Active</Badge>
+                <span className="text-sm text-muted-foreground">Статус:</span>
+                <Badge variant="default">Активна</Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Expires:</span>
+                <span className="text-sm text-muted-foreground">Истекает:</span>
                 <span className="text-sm">
                   {inviteExpiresAt ? format(inviteExpiresAt, 'dd.MM.yyyy HH:mm') : '-'}
                 </span>
@@ -95,7 +95,7 @@ export function DealerInviteSection({ dealerId, initialToken, initialExpiresAt }
 
             {/* MAX Link */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">MAX:</label>
+              <label className="text-sm font-medium">MAX ссылка:</label>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -104,7 +104,7 @@ export function DealerInviteSection({ dealerId, initialToken, initialExpiresAt }
                   className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
                 />
                 <Button onClick={handleCopyMax} variant="outline" size="sm">
-                  {copiedMax ? '✓ Copied' : 'Copy'}
+                  {copiedMax ? '✓ Скопировано' : 'Копировать'}
                 </Button>
               </div>
             </div>
@@ -112,7 +112,7 @@ export function DealerInviteSection({ dealerId, initialToken, initialExpiresAt }
             {/* Telegram Link */}
             {tgInviteUrl && (
               <div className="space-y-2">
-                <label className="text-sm font-medium">Telegram:</label>
+                <label className="text-sm font-medium">Telegram ссылка:</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -121,33 +121,32 @@ export function DealerInviteSection({ dealerId, initialToken, initialExpiresAt }
                     className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
                   />
                   <Button onClick={handleCopyTg} variant="outline" size="sm">
-                    {copiedTg ? '✓ Copied' : 'Copy'}
+                    {copiedTg ? '✓ Скопировано' : 'Копировать'}
                   </Button>
                 </div>
               </div>
             )}
 
             <Button onClick={handleGenerateInvite} disabled={loading} variant="secondary" size="sm">
-              Regenerate Links
+              Сгенерировать новые
             </Button>
           </>
         ) : (
           <>
             <p className="text-sm text-muted-foreground">
-              No active invite link. Generate one to allow this dealer to claim their account via
-              MAX or Telegram.
+              Нет активной ссылки. Сгенерируйте ссылку, чтобы дилер мог активировать аккаунт через
+              MAX или Telegram.
             </p>
             <Button onClick={handleGenerateInvite} disabled={loading}>
-              {loading ? 'Generating...' : 'Generate Invite Links'}
+              {loading ? 'Генерация...' : 'Сгенерировать ссылки'}
             </Button>
           </>
         )}
 
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
           <p className="text-xs text-blue-900">
-            <strong>How it works:</strong> Send either link to the dealer. When they open it, a chat
-            with the bot will be created and they&apos;ll receive a button to activate their account
-            in the mini-app.
+            <strong>Как это работает:</strong> Отправьте любую ссылку дилеру. При открытии будет
+            создан чат с ботом, и он получит кнопку для активации аккаунта в мини-приложении.
           </p>
         </div>
       </CardContent>
