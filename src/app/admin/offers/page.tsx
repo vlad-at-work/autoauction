@@ -92,10 +92,10 @@ export default async function OffersPage({ searchParams }: { searchParams: Searc
       render: (o: OfferWithRelations) => (o.transaction ? 'Принято' : 'Ожидание'),
     },
     {
-      key: 'comment',
-      label: 'Комментарий',
+      key: 'additionalComments',
+      label: 'Комментарии',
       render: (o: OfferWithRelations) => (
-        <span className="max-w-[200px] truncate block">{o.comment || '-'}</span>
+        <span className="max-w-[200px] truncate block">{o.additionalComments || '-'}</span>
       ),
     },
     {

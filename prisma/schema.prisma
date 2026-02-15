@@ -48,6 +48,7 @@ model Inquiry {
   transmission String
   color        String
   comment      String?
+  consentAt    DateTime? // When buyer consented to data sharing
 
   createdAt DateTime @default(now())
   expiresAt DateTime
@@ -121,8 +122,12 @@ model Offer {
   dealer   Dealer @relation(fields: [dealerId], references: [id], onDelete: Cascade)
   dealerId String
 
-  price   Int
-  comment String?
+  price               Int
+  configuration       String? // Комплектация
+  deliveryTime        String? // Сроки поставки
+  additionalComments  String? // Дополнительные комментарии
+  confirmedMatch      Boolean // Подтверждение совпадения с требованиями
+  confirmedAt         DateTime? // When dealer confirmed match
 
   createdAt DateTime @default(now())
   deletedAt DateTime?

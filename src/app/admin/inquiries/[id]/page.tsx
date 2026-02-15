@@ -218,8 +218,15 @@ export default async function InquiryDetailPage({ params }: { params: Params }) 
                         От: {offer.dealer.name || offer.dealer.username} •{' '}
                         {format(offer.createdAt, 'dd.MM.yyyy HH:mm')}
                       </div>
-                      {offer.comment && (
-                        <div className="mt-1 truncate text-xs">{offer.comment}</div>
+                      {(offer.configuration || offer.deliveryTime) && (
+                        <div className="text-muted-foreground mt-1 text-xs">
+                          {offer.configuration && `Комплектация: ${offer.configuration}`}
+                          {offer.configuration && offer.deliveryTime && ' • '}
+                          {offer.deliveryTime && `Сроки: ${offer.deliveryTime}`}
+                        </div>
+                      )}
+                      {offer.additionalComments && (
+                        <div className="mt-1 truncate text-xs">{offer.additionalComments}</div>
                       )}
                     </Link>
                   ))}

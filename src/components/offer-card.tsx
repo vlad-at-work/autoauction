@@ -10,7 +10,9 @@ type OfferCardProps = {
   offer: {
     id: string;
     price: number;
-    comment: string | null;
+    configuration?: string | null;
+    deliveryTime?: string | null;
+    additionalComments?: string | null;
     createdAt: Date;
     dealerName?: string;
   };
@@ -45,8 +47,12 @@ export function OfferCard({
         {/* Left: Price */}
         <div className="flex-shrink-0 min-w-[100px]">
           <div className="text-xl font-bold text-gray-900">{formatPrice(offer.price)}</div>
-          {offer.comment && (
-            <p className="text-xs text-gray-500 mt-1 line-clamp-2 max-w-[140px]">{offer.comment}</p>
+          {(offer.configuration || offer.deliveryTime) && (
+            <p className="text-xs text-gray-500 mt-1 line-clamp-2 max-w-[140px]">
+              {offer.configuration}
+              {offer.configuration && offer.deliveryTime && ' • '}
+              {offer.deliveryTime}
+            </p>
           )}
         </div>
 

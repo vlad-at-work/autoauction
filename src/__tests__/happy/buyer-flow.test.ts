@@ -230,7 +230,8 @@ describe('Buyer Happy Path Flow', () => {
           inquiryId: createdInquiryId,
           dealerId: createdDealerId,
           price: 5500000,
-          comment: 'Лучшее предложение на рынке',
+          confirmedMatch: true,
+          additionalComments: 'Лучшее предложение на рынке',
         },
       });
 
@@ -250,7 +251,8 @@ describe('Buyer Happy Path Flow', () => {
           inquiryId: createdInquiryId,
           dealerId: createdDealerId,
           price: 5400000,
-          comment: 'Улучшенное предложение',
+          confirmedMatch: true,
+          additionalComments: 'Улучшенное предложение',
         },
       });
 

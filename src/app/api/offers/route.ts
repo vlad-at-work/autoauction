@@ -10,7 +10,10 @@ const MAX_OFFERS_PER_DEALER_PER_INQUIRY = 5;
 const offerCreateSchema = z.object({
   inquiryId: z.string().min(1),
   price: z.number().int().positive().max(2147483647), // INT4 max
-  comment: z.string().max(1000).optional(),
+  configuration: z.string().max(500).optional(),
+  deliveryTime: z.string().max(200).optional(),
+  additionalComments: z.string().max(1000).optional(),
+  confirmedMatch: z.boolean().default(false),
 });
 
 export async function POST(request: Request) {
@@ -30,7 +33,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const { inquiryId, price, comment } = parsed.data;
+    const { inquiryId, price, configuration, deliveryTime, additionalComments, confirmedMatch } =
+      parsed.data;
 
     const inquiry = await prisma.inquiry.findFirst({
       where: { id: inquiryId, deletedAt: null },
@@ -99,7 +103,16 @@ export async function POST(request: Request) {
     }
 
     const offer = await prisma.offer.create({
-      data: { inquiryId, dealerId: dealer.id, price, comment, deletedAt: null },
+      data: {
+        inquiryId,
+        dealerId: dealer.id,
+        price,
+        configuration,
+        deliveryTime,
+        additionalComments,
+        confirmedMatch,
+        deletedAt: null,
+      },
       select: { id: true },
     });
 

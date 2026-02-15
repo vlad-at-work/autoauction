@@ -24,7 +24,9 @@ type DealerOfferGroup = {
   offers: {
     id: string;
     price: number;
-    comment: string | null;
+    configuration: string | null;
+    deliveryTime: string | null;
+    additionalComments: string | null;
     createdAt: Date;
     isAccepted: boolean;
     transactionId: string | null;
@@ -285,11 +287,27 @@ function DealerOfferCard({
           </span>
         </div>
 
-        {/* Bottom: Comment if exists */}
-        {latestOffer.comment && (
-          <p className="mt-2 text-sm text-gray-600 bg-gray-50 rounded-md px-3 py-2">
-            {latestOffer.comment}
-          </p>
+        {/* Bottom: Offer details */}
+        {(latestOffer.configuration ||
+          latestOffer.deliveryTime ||
+          latestOffer.additionalComments) && (
+          <div className="mt-2 space-y-1 text-sm">
+            {latestOffer.configuration && (
+              <p className="text-gray-600">
+                <span className="font-medium">Комплектация:</span> {latestOffer.configuration}
+              </p>
+            )}
+            {latestOffer.deliveryTime && (
+              <p className="text-gray-600">
+                <span className="font-medium">Сроки:</span> {latestOffer.deliveryTime}
+              </p>
+            )}
+            {latestOffer.additionalComments && (
+              <p className="text-gray-600 bg-gray-50 rounded-md px-3 py-2">
+                {latestOffer.additionalComments}
+              </p>
+            )}
+          </div>
         )}
       </div>
     </Card>

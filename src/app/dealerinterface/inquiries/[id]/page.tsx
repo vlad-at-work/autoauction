@@ -23,7 +23,10 @@ const MAX_OFFERS_PER_DEALER = 5;
 type Offer = {
   id: string;
   price: number;
-  comment?: string | null;
+  configuration?: string | null;
+  deliveryTime?: string | null;
+  additionalComments?: string | null;
+  confirmedMatch?: boolean;
   dealerId: string;
   createdAt: string;
   transaction: { id: string; acceptedAt: string } | null;
@@ -324,8 +327,6 @@ export default function DealerInquiryPage() {
           ) : (
             <OfferForm
               inquiryId={inquiry.id}
-              defaultPrice={myOffers[0]?.price}
-              defaultComment=""
               disabled={false}
               offerNumber={myOffers.length + 1}
               onOfferSubmitted={loadInquiry}

@@ -83,12 +83,29 @@ export default async function OfferDetailPage({ params }: { params: Params }) {
                 {offer.inquiry.buyer.platformUserName || offer.inquiry.buyer.platformUserId}
               </Link>
 
-              {offer.comment && (
+              {offer.configuration && (
                 <>
-                  <span className="text-muted-foreground">Комментарий:</span>
-                  <span>{offer.comment}</span>
+                  <span className="text-muted-foreground">Комплектация:</span>
+                  <span>{offer.configuration}</span>
                 </>
               )}
+
+              {offer.deliveryTime && (
+                <>
+                  <span className="text-muted-foreground">Сроки поставки:</span>
+                  <span>{offer.deliveryTime}</span>
+                </>
+              )}
+
+              {offer.additionalComments && (
+                <>
+                  <span className="text-muted-foreground">Доп. комментарии:</span>
+                  <span>{offer.additionalComments}</span>
+                </>
+              )}
+
+              <span className="text-muted-foreground">Подтверждение совпадения:</span>
+              <span>{offer.confirmedMatch ? '✓ Подтверждено' : '—'}</span>
 
               <span className="text-muted-foreground">Создано:</span>
               <span>{format(offer.createdAt, 'dd.MM.yyyy HH:mm')}</span>

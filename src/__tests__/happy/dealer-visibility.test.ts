@@ -83,7 +83,8 @@ describe('Dealer Transaction Visibility', () => {
         inquiryId,
         dealerId: dealer1Id,
         price: 5000000,
-        comment: 'Offer from dealer 1',
+        confirmedMatch: true,
+        additionalComments: 'Offer from dealer 1',
       },
     });
     offer1Id = offer1.id;
@@ -93,7 +94,8 @@ describe('Dealer Transaction Visibility', () => {
         inquiryId,
         dealerId: dealer2Id,
         price: 5500000,
-        comment: 'Offer from dealer 2',
+        confirmedMatch: true,
+        additionalComments: 'Offer from dealer 2',
       },
     });
 

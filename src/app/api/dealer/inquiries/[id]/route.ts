@@ -49,7 +49,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
           select: {
             id: true,
             price: true,
-            comment: true,
+            configuration: true,
+            deliveryTime: true,
+            additionalComments: true,
+            confirmedMatch: true,
             dealerId: true,
             createdAt: true,
             transaction: {

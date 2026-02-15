@@ -20,7 +20,9 @@ import { formatPrice } from '@/lib/inquiry-utils';
 type OfferDetail = {
   id: string;
   price: number;
-  comment: string | null;
+  configuration: string | null;
+  deliveryTime: string | null;
+  additionalComments: string | null;
   createdAt: Date;
   dealerName: string;
   isAccepted: boolean;
@@ -83,7 +85,9 @@ async function getOfferDetail(
       offer: {
         id: offer.id,
         price: offer.price,
-        comment: offer.comment,
+        configuration: offer.configuration,
+        deliveryTime: offer.deliveryTime,
+        additionalComments: offer.additionalComments,
         createdAt: offer.createdAt,
         dealerName: offer.dealerName,
         isAccepted: offer.isAccepted,
@@ -301,10 +305,24 @@ export default function OfferDetailPage() {
                   <div className="text-3xl font-bold">{formatPrice(offer.price)}</div>
                 </div>
 
-                {offer.comment && (
+                {offer.configuration && (
+                  <div>
+                    <div className="text-muted-foreground mb-1 text-sm">Комплектация</div>
+                    <p className="text-base">{offer.configuration}</p>
+                  </div>
+                )}
+
+                {offer.deliveryTime && (
+                  <div>
+                    <div className="text-muted-foreground mb-1 text-sm">Сроки поставки</div>
+                    <p className="text-base">{offer.deliveryTime}</p>
+                  </div>
+                )}
+
+                {offer.additionalComments && (
                   <div>
                     <div className="text-muted-foreground mb-1 text-sm">Комментарий дилера</div>
-                    <p className="text-base">{offer.comment}</p>
+                    <p className="text-base">{offer.additionalComments}</p>
                   </div>
                 )}
 

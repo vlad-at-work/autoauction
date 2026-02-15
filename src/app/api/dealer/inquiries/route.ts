@@ -52,7 +52,9 @@ export async function GET(request: Request) {
           select: {
             id: true,
             price: true,
-            comment: true,
+            configuration: true,
+            deliveryTime: true,
+            additionalComments: true,
             createdAt: true,
           },
           orderBy: { createdAt: 'desc' },

@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 
 interface Offer {
   id: string;
   price: number;
-  comment?: string | null;
+  configuration?: string | null;
+  deliveryTime?: string | null;
+  additionalComments?: string | null;
+  confirmedMatch?: boolean;
   createdAt: Date;
   transaction: {
     id: string;
@@ -29,8 +31,6 @@ export function OfferCard({
   formatPrice: (price: number) => string;
   formatRelativeTime: (date: Date) => string;
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
   const borderClass = isMyOffer
     ? offer.transaction
       ? 'border-green-200 bg-green-50'
@@ -39,20 +39,10 @@ export function OfferCard({
       ? 'border-orange-200 bg-orange-50'
       : 'border-gray-200 bg-gray-50';
 
-  const hasComment = offer.comment && offer.comment.trim().length > 0;
-  const commentPreview =
-    hasComment && offer.comment && offer.comment.length > 80
-      ? `${offer.comment.substring(0, 80)}…`
-      : offer.comment;
-  const isCommentTruncated = hasComment && offer.comment && offer.comment.length > 80;
+  const hasAdditionalInfo = offer.configuration || offer.deliveryTime || offer.additionalComments;
 
   return (
-    <button
-      onClick={() => hasComment && setIsExpanded(!isExpanded)}
-      className={`w-full rounded-lg border p-3 text-left transition-colors ${borderClass} ${
-        hasComment ? 'cursor-pointer hover:opacity-90' : ''
-      }`}
-    >
+    <div className={`w-full rounded-lg border p-3 text-left ${borderClass}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           {dealerName && <span className="text-muted-foreground text-sm">{dealerName}</span>}
@@ -84,24 +74,29 @@ export function OfferCard({
         </div>
       </div>
 
-      {hasComment && (
-        <div className="mt-2">
-          <p className="text-muted-foreground text-sm">
-            {isExpanded ? offer.comment : commentPreview}
-          </p>
-          {isCommentTruncated && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsExpanded(!isExpanded);
-              }}
-              className="text-primary mt-1 text-xs font-medium underline underline-offset-2"
-            >
-              {isExpanded ? 'Скрыть' : 'Показать полностью'}
-            </button>
+      {/* Additional Offer Details */}
+      {hasAdditionalInfo && (
+        <div className="mt-2 space-y-1 text-sm">
+          {offer.configuration && (
+            <div>
+              <span className="text-muted-foreground">Комплектация:</span>{' '}
+              <span>{offer.configuration}</span>
+            </div>
+          )}
+          {offer.deliveryTime && (
+            <div>
+              <span className="text-muted-foreground">Сроки поставки:</span>{' '}
+              <span>{offer.deliveryTime}</span>
+            </div>
+          )}
+          {offer.additionalComments && (
+            <div>
+              <span className="text-muted-foreground">Комментарии:</span>{' '}
+              <span>{offer.additionalComments}</span>
+            </div>
           )}
         </div>
       )}
-    </button>
+    </div>
   );
 }

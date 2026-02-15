@@ -297,7 +297,7 @@ function MiniAppInquiryFormPageInner() {
               </Field>
 
               <Field orientation="vertical" data-invalid={!!form.formState.errors.submodel}>
-                <FieldLabel>Подмодель / комплектация</FieldLabel>
+                <FieldLabel>Уточните модель</FieldLabel>
                 <FieldContent>
                   <Select
                     value={watchedSubmodel}

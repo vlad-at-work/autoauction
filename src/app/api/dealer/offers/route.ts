@@ -1,12 +1,20 @@
 /**
  * Submit offer for inquiry
  *
- * Body: { inquiryId: string, price: number, comment?: string }
+ * Body: {
+ *   inquiryId: string,
+ *   price: number,
+ *   configuration?: string,
+ *   deliveryTime?: string,
+ *   additionalComments?: string,
+ *   confirmedMatch: boolean
+ * }
  *
  * Validates:
  * - Dealer is authenticated and active
  * - Inquiry exists and is active
  * - Dealer hasn't exceeded offer limit (5 per inquiry)
+ * - confirmedMatch must be true
  */
 
 import { NextResponse } from 'next/server';
@@ -29,13 +37,24 @@ export async function POST(request: Request) {
     const body = (await request.json()) as {
       inquiryId: string;
       price: number;
-      comment?: string;
+      configuration?: string;
+      deliveryTime?: string;
+      additionalComments?: string;
+      confirmedMatch?: boolean;
     };
 
-    const { inquiryId, price, comment } = body;
+    const { inquiryId, price, configuration, deliveryTime, additionalComments, confirmedMatch } =
+      body;
 
     if (!inquiryId || !price || price <= 0) {
       return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
+    }
+
+    if (!confirmedMatch) {
+      return NextResponse.json(
+        { error: 'You must confirm that the offer matches the requirements' },
+        { status: 400 }
+      );
     }
 
     const platformEnum = validation.platform === 'max' ? 'MAX' : 'TELEGRAM';
@@ -107,7 +126,11 @@ export async function POST(request: Request) {
         inquiryId,
         dealerId: dealer.id,
         price: Math.round(price),
-        comment: comment || null,
+        configuration: configuration || null,
+        deliveryTime: deliveryTime || null,
+        additionalComments: additionalComments || null,
+        confirmedMatch: true,
+        confirmedAt: new Date(),
       },
     });
 

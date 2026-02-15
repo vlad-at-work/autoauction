@@ -9,7 +9,7 @@ const BASE_URL = 'http://localhost:3000';
 
 beforeAll(async () => {
   await prisma.offer.deleteMany({
-    where: { comment: { startsWith: TEST_PREFIX } },
+    where: { additionalComments: { startsWith: TEST_PREFIX } },
   });
   await prisma.inquiry.deleteMany({
     where: { name: { startsWith: TEST_PREFIX } },
@@ -71,7 +71,8 @@ describe('POST /api/offers', () => {
       body: JSON.stringify({
         inquiryId: inquiry.id,
         price: 5000000,
-        comment: `${TEST_PREFIX}Offer1`,
+        confirmedMatch: true,
+        additionalComments: `${TEST_PREFIX}Offer1`,
       }),
     });
 
@@ -79,7 +80,6 @@ describe('POST /api/offers', () => {
     const data = await res.json();
     expect(data).toHaveProperty('id');
     expect(data.price).toBe(5000000);
-    expect(data.comment).toBe(`${TEST_PREFIX}Offer1`);
   });
 
   test('should enforce max 5 offers per dealer per inquiry', async () => {
@@ -92,7 +92,8 @@ describe('POST /api/offers', () => {
           inquiryId: inquiry.id,
           dealerId: dealer.id,
           price: 5000000 - i * 100000,
-          comment: `${TEST_PREFIX}Offer${i}`,
+          confirmedMatch: true,
+          additionalComments: `${TEST_PREFIX}Offer${i}`,
         },
       });
     }
@@ -107,7 +108,8 @@ describe('POST /api/offers', () => {
       body: JSON.stringify({
         inquiryId: inquiry.id,
         price: 4500000,
-        comment: `${TEST_PREFIX}Offer6`,
+        confirmedMatch: true,
+        additionalComments: `${TEST_PREFIX}Offer6`,
       }),
     });
 
@@ -141,7 +143,8 @@ describe('POST /api/offers', () => {
       body: JSON.stringify({
         inquiryId: expiredInquiry.id,
         price: 5000000,
-        comment: `${TEST_PREFIX}ExpiredOffer`,
+        confirmedMatch: true,
+        additionalComments: `${TEST_PREFIX}ExpiredOffer`,
       }),
     });
 
@@ -157,7 +160,8 @@ describe('POST /api/offers', () => {
       body: JSON.stringify({
         inquiryId: inquiry.id,
         price: 5000000,
-        comment: `${TEST_PREFIX}NoAuth`,
+        confirmedMatch: true,
+        additionalComments: `${TEST_PREFIX}NoAuth`,
       }),
     });
 

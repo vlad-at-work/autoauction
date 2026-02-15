@@ -12,7 +12,7 @@ beforeAll(async () => {
     where: { buyerName: { startsWith: TEST_PREFIX } },
   });
   await prisma.offer.deleteMany({
-    where: { comment: { startsWith: TEST_PREFIX } },
+    where: { additionalComments: { startsWith: TEST_PREFIX } },
   });
   await prisma.inquiry.deleteMany({
     where: { name: { startsWith: TEST_PREFIX } },
@@ -64,7 +64,8 @@ async function createTestData() {
       inquiryId: inquiry.id,
       dealerId: dealer.id,
       price: 5000000,
-      comment: `${TEST_PREFIX}Offer`,
+      confirmedMatch: true,
+      additionalComments: `${TEST_PREFIX}Offer`,
     },
   });
 
@@ -121,7 +122,8 @@ describe('POST /api/transactions', () => {
           inquiryId: inquiry.id,
           dealerId: dealer.id,
           price: 5000000 - i * 100000,
-          comment: `${TEST_PREFIX}Offer${i}`,
+          confirmedMatch: true,
+          additionalComments: `${TEST_PREFIX}Offer${i}`,
         },
       });
 
@@ -133,11 +135,6 @@ describe('POST /api/transactions', () => {
           buyerName: inquiry.name,
           buyerEmail: inquiry.email,
           buyerPhone: inquiry.phone,
-          price: offer.price,
-          inquiryDetails: {
-            model: inquiry.model,
-            submodel: inquiry.submodel,
-          },
           acceptedAt: new Date(),
         },
       });
@@ -160,7 +157,8 @@ describe('POST /api/transactions', () => {
         inquiryId: inquiry.id,
         dealerId: dealer4.id,
         price: 4500000,
-        comment: `${TEST_PREFIX}Offer4`,
+        confirmedMatch: true,
+        additionalComments: `${TEST_PREFIX}Offer4`,
       },
     });
 
@@ -206,7 +204,7 @@ describe('POST /api/transactions', () => {
 
     expect(res.status).toBe(400);
     const data = await res.json();
-    expect(data.error).toContain('уже принято' || 'уже существует');
+    expect(data.error).toMatch(/уже принято|уже существует/);
   });
 
   test('should reject expired inquiry offers', async () => {
@@ -230,7 +228,8 @@ describe('POST /api/transactions', () => {
         inquiryId: expiredInquiry.id,
         dealerId: dealer.id,
         price: 5000000,
-        comment: `${TEST_PREFIX}ExpiredOffer`,
+        confirmedMatch: true,
+        additionalComments: `${TEST_PREFIX}ExpiredOffer`,
       },
     });
 

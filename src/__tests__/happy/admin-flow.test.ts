@@ -232,7 +232,8 @@ describe('Admin Panel CRUD Operations', () => {
           inquiryId,
           dealerId,
           price: 1500000,
-          comment: 'Test offer comment',
+          confirmedMatch: true,
+          additionalComments: 'Test offer comment',
         },
       });
 
@@ -252,7 +253,8 @@ describe('Admin Panel CRUD Operations', () => {
           inquiryId,
           dealerId,
           price: 1450000,
-          comment: 'Second offer - better price',
+          confirmedMatch: true,
+          additionalComments: 'Second offer - better price',
         },
       });
 
@@ -266,12 +268,12 @@ describe('Admin Panel CRUD Operations', () => {
     it('should update an offer', async () => {
       await prisma.offer.update({
         where: { id: offerId },
-        data: { price: 1450000, comment: 'Updated offer comment' },
+        data: { price: 1450000, additionalComments: 'Updated offer comment' },
       });
 
       const offer = await prisma.offer.findUnique({ where: { id: offerId } });
       expect(offer?.price).toBe(1450000);
-      expect(offer?.comment).toBe('Updated offer comment');
+      expect(offer?.additionalComments).toBe('Updated offer comment');
     });
 
     it('should retrieve offer with relations', async () => {
@@ -333,7 +335,8 @@ describe('Admin Panel CRUD Operations', () => {
           inquiryId,
           dealerId,
           price: 1400000,
-          comment: 'Another offer',
+          confirmedMatch: true,
+          additionalComments: 'Another offer',
         },
       });
 

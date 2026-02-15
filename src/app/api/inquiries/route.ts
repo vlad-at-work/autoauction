@@ -153,6 +153,7 @@ export async function POST(request: Request) {
           transmission: input.transmission,
           color: input.color,
           comment: input.comment,
+          consentAt: new Date(),
           expiresAt,
           deletedAt: null,
         },

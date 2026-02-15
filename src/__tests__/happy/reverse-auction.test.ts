@@ -141,7 +141,8 @@ describe('Reverse Auction Flow', () => {
             inquiryId,
             dealerId: dealer1Id,
             price: 5000000 - i * 50000, // Each offer is lower
-            comment: `Предложение ${i}`,
+            confirmedMatch: true,
+            additionalComments: `Предложение ${i}`,
           },
         });
         offers.push(offer);
@@ -166,13 +167,31 @@ describe('Reverse Auction Flow', () => {
     it('should allow different dealers to submit offers', async () => {
       await Promise.all([
         prisma.offer.create({
-          data: { inquiryId, dealerId: dealer2Id, price: 4900000, comment: 'От Бета' },
+          data: {
+            inquiryId,
+            dealerId: dealer2Id,
+            price: 4900000,
+            confirmedMatch: true,
+            additionalComments: 'От Бета',
+          },
         }),
         prisma.offer.create({
-          data: { inquiryId, dealerId: dealer3Id, price: 4850000, comment: 'От Гамма' },
+          data: {
+            inquiryId,
+            dealerId: dealer3Id,
+            price: 4850000,
+            confirmedMatch: true,
+            additionalComments: 'От Гамма',
+          },
         }),
         prisma.offer.create({
-          data: { inquiryId, dealerId: dealer4Id, price: 4800000, comment: 'От Дельта' },
+          data: {
+            inquiryId,
+            dealerId: dealer4Id,
+            price: 4800000,
+            confirmedMatch: true,
+            additionalComments: 'От Дельта',
+          },
         }),
       ]);
 
@@ -444,10 +463,10 @@ describe('Reverse Auction Flow', () => {
       // Create offers from multiple dealers
       await prisma.offer.createMany({
         data: [
-          { inquiryId: newInquiry.id, dealerId: dealer1Id, price: 5000000 },
-          { inquiryId: newInquiry.id, dealerId: dealer1Id, price: 4900000 },
-          { inquiryId: newInquiry.id, dealerId: dealer2Id, price: 4800000 },
-          { inquiryId: newInquiry.id, dealerId: dealer3Id, price: 4700000 },
+          { inquiryId: newInquiry.id, dealerId: dealer1Id, price: 5000000, confirmedMatch: true },
+          { inquiryId: newInquiry.id, dealerId: dealer1Id, price: 4900000, confirmedMatch: true },
+          { inquiryId: newInquiry.id, dealerId: dealer2Id, price: 4800000, confirmedMatch: true },
+          { inquiryId: newInquiry.id, dealerId: dealer3Id, price: 4700000, confirmedMatch: true },
         ],
       });
 
@@ -484,7 +503,7 @@ describe('Reverse Auction Flow', () => {
     it('should cascade correctly when deleting offers', async () => {
       // Create a test offer and transaction
       const testOffer = await prisma.offer.create({
-        data: { inquiryId, dealerId: dealer4Id, price: 4600000 },
+        data: { inquiryId, dealerId: dealer4Id, price: 4600000, confirmedMatch: true },
       });
 
       await prisma.transaction.create({

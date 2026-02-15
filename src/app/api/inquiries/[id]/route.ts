@@ -86,7 +86,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         offers: {
           id: string;
           price: number;
-          comment: string | null;
+          configuration: string | null;
+          deliveryTime: string | null;
+          additionalComments: string | null;
           createdAt: Date;
           isAccepted: boolean;
           transactionId: string | null;
@@ -111,7 +113,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       dealerOffersMap.get(dealerId)!.offers.push({
         id: offer.id,
         price: offer.price,
-        comment: offer.comment,
+        configuration: offer.configuration,
+        deliveryTime: offer.deliveryTime,
+        additionalComments: offer.additionalComments,
         createdAt: offer.createdAt,
         isAccepted: !!offer.transaction,
         transactionId: offer.transaction?.id || null,
@@ -129,7 +133,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const flatOffers = inquiryData.offers.map((offer) => ({
       id: offer.id,
       price: offer.price,
-      comment: offer.comment,
+      configuration: offer.configuration,
+      deliveryTime: offer.deliveryTime,
+      additionalComments: offer.additionalComments,
       createdAt: offer.createdAt,
       dealerId: offer.dealer.id,
       dealerName: offer.dealer.name || offer.dealer.username,
