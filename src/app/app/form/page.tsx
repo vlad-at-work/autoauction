@@ -11,6 +11,7 @@ import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 import { useWebApp } from '@/hooks/use-webapp';
 
 import { Button } from '@/components/ui/button';
+import { getMyInquiries } from '@/lib/api/inquiries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -146,6 +147,30 @@ function MiniAppInquiryFormPageInner() {
     enableClosingConfirmation,
     disableClosingConfirmation,
   ]);
+
+  // Check inquiry limits - redirect if none left
+  useEffect(() => {
+    if (!ready) return;
+
+    const checkLimits = async () => {
+      const webApp = getWebApp();
+      const platform = detectPlatform();
+      const initData = webApp?.initData;
+
+      if (!initData || !platform) return;
+
+      try {
+        const { limits } = await getMyInquiries(initData, platform);
+        if (limits && limits.remaining <= 0) {
+          router.replace('/app/dashboard');
+        }
+      } catch {
+        // Silently fail - let the user try to submit and handle error there
+      }
+    };
+
+    checkLimits();
+  }, [ready, router]);
 
   const submodels = useMemo(() => {
     if (!watchedModel) return [];
