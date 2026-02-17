@@ -12,7 +12,7 @@ export default function Home() {
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-sm">
         <div className="mx-auto max-w-6xl px-4 py-3">
-          <div className="flex items-center">
+          <div className="flex items-center justify-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo1.png" alt="" className="h-12 w-auto object-contain" />
           </div>
@@ -37,7 +37,7 @@ export default function Home() {
               {/* Logo and Service Description */}
               <div className="bg-black/50 p-4 rounded-lg mb-4 inline-block">
                 <h1 className="text-5xl font-bold text-white mb-2 sm:text-6xl md:text-7xl">
-                  Свои авто
+                  Свои Авто
                 </h1>
               </div>
 
@@ -51,7 +51,11 @@ export default function Home() {
               <div className="bg-black/50 p-6 rounded-lg mb-8">
                 <p className="text-2xl text-white sm:text-3xl md:text-4xl leading-relaxed">
                   Приобретайте новый автомобиль по специальной цене и поддерживайте наших бойцов и
-                  их семьи. Выбирая дилера через наш сервис Вы получаете специальное предложение и
+                  их семьи.
+                </p>
+                <br />
+                <p className="text-2xl text-white sm:text-3xl md:text-4xl leading-relaxed">
+                  Выбирая дилера через наш сервис, Вы получаете специальное предложение и
                   направляете часть средств на поддержку участников и ветеранов СВО и их семей.
                 </p>
               </div>
