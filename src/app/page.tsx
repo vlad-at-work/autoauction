@@ -12,28 +12,30 @@ export default function Home() {
     >
       {/* Dark overlay */}
       <div className="min-h-screen bg-black/40">
-        {/* Header */}
-        <header className="bg-black/20 backdrop-blur-sm">
-          <div className="mx-auto max-w-6xl px-4 py-3">
-            <div className="flex items-center justify-center">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo1.png" alt="" className="h-12 w-auto object-contain" />
-            </div>
+        {/* Header with absolutely positioned logo */}
+        <header className="relative bg-black/20 backdrop-blur-sm">
+          {/* Absolutely positioned logo - 2x larger (h-48), moved down 20% */}
+          <div className="absolute left-1/2 -translate-x-1/2 top-10 z-50">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo1.png" alt="" className="h-48 w-auto object-contain drop-shadow-lg" />
+          </div>
+          <div className="mx-auto max-w-6xl px-4 py-2">
+            <div className="h-12" />
           </div>
         </header>
 
         {/* Content */}
-        <div className="flex min-h-[calc(100vh-72px)] flex-col items-center justify-center px-4 py-8">
+        <div className="flex min-h-[calc(100vh-80px)] flex-col items-center justify-center px-4 py-8 pt-16">
           <div className="max-w-4xl w-full text-center">
             {/* Logo and Service Description */}
             <div className="bg-black/50 p-4 rounded-lg mb-4 inline-block">
-              <h1 className="text-5xl font-bold text-white mb-2 sm:text-6xl md:text-7xl">
+              <h1 className="text-6xl font-bold text-white mb-2 sm:text-7xl md:text-8xl lg:text-9xl">
                 Свои Авто
               </h1>
             </div>
 
             <div className="bg-black/50 p-4 rounded-lg mb-6 inline-block">
-              <p className="text-xl text-gray-200 sm:text-2xl md:text-3xl">
+              <p className="text-2xl text-gray-200 sm:text-3xl md:text-4xl">
                 Специальный сервис для поддержки участников СВО и их семей.
               </p>
             </div>
