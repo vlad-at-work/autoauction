@@ -7,7 +7,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { AnimatedList } from '@/components/animated-list';
 import { InquiryCard } from '@/components/inquiry-card';
 import { PageTransition } from '@/components/page-transition';
-import { Badge } from '@/components/ui/badge';
 import { TopBar } from '@/components/ui/top-bar';
 import { usePolling } from '@/hooks/use-polling';
 import { getMyInquiries, type Inquiry, type InquiryLimits } from '@/lib/api/inquiries';
@@ -129,15 +128,16 @@ export default function DashboardPage() {
                       {limits.remaining === 1 ? 'осталась' : 'осталось'}
                     </span>
                   </span>
+                ) : limits.resetsAt && daysUntilReset != null ? (
+                  <span className="text-muted-foreground">
+                    {daysUntilReset}{' '}
+                    {daysUntilReset === 1 ? 'день' : daysUntilReset < 5 ? 'дня' : 'дней'} до новых
+                    заявок
+                  </span>
                 ) : (
                   <span className="text-muted-foreground">Заявки закончились</span>
                 )}
               </div>
-              {limits.remaining === 0 && limits.resetsAt && daysUntilReset != null && (
-                <Badge variant="outline" className="text-sm">
-                  Новая через {daysUntilReset} дн.
-                </Badge>
-              )}
             </div>
           )}
 
