@@ -24,13 +24,11 @@ export function DealerCreateForm() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string> | null>(null);
 
   const [username, setUsername] = useState('');
-  const [name, setName] = useState('Новый Дилер');
-  const [subName, setSubName] = useState('AutoTrade');
-  const [phone, setPhone] = useState('+7');
-  const [email, setEmail] = useState('dealer@example.com');
-  const [description, setDescription] = useState(
-    'Автодилер. Продажа новых и подержанных автомобилей.'
-  );
+  const [name, setName] = useState('');
+  const [subName, setSubName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [description, setDescription] = useState('');
   const [active, setActive] = useState(true);
 
   const onSubmit = async (event: React.FormEvent) => {

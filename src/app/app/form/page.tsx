@@ -52,21 +52,20 @@ function MiniAppInquiryFormPageInner() {
   } = useWebApp();
 
   const [submitState, setSubmitState] = useState<SubmitState>({ status: 'idle' });
-  const [randomSuffix] = useState(() => Math.floor(Math.random() * 10000));
   const [ready, setReady] = useState(false);
 
   const form = useForm<InquiryCreateInput>({
     resolver: zodResolver(inquiryCreateSchema),
     defaultValues: {
-      platform: 'max',
-      platformUserId: `test_user_${randomSuffix}`,
+      platform: undefined,
+      platformUserId: undefined,
       platformChatId: undefined,
       platformUserName: undefined,
-      name: `Олег${randomSuffix}`,
-      email: 'gleb@ub.am',
-      phone: '89266754826',
-      transmission: 'Не важно',
-      color: 'Серебристый',
+      name: undefined,
+      email: undefined,
+      phone: undefined,
+      transmission: undefined,
+      color: undefined,
       comment: undefined,
       consent: false,
     },
