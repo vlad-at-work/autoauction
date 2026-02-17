@@ -18,7 +18,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="hidden w-64 border-r bg-card md:block">
-        <div className="flex h-16 items-center border-b px-6">
+        <div className="flex h-16 items-center gap-3 border-b px-6">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo1.png" alt="" className="h-10 w-auto object-contain" />
           <Link href="/admin" prefetch={false} className="text-xl font-bold">
             Админ-панель
           </Link>
@@ -44,6 +46,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-16 items-center gap-3 border-b bg-card px-4 md:hidden">
           <AdminMobileNav items={mobileNavItems} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo1.png" alt="" className="h-8 w-auto object-contain" />
           <Link href="/admin" prefetch={false} className="text-base font-bold">
             Админ-панель
           </Link>

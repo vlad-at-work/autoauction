@@ -11,9 +11,10 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-sm">
-        <div className="mx-auto max-w-6xl px-4 py-4">
+        <div className="mx-auto max-w-6xl px-4 py-3">
           <div className="flex items-center">
-            <span className="text-3xl font-bold text-white">A</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo1.png" alt="" className="h-12 w-auto object-contain" />
           </div>
         </div>
       </header>
