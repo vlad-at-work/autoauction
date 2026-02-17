@@ -55,14 +55,22 @@ export default function Home() {
                   size="lg"
                   className="h-14 bg-sky-500 hover:bg-sky-600 px-8 text-lg font-semibold"
                 >
-                  <a href={tgBotUrl}>Разместить заявку в Telegram</a>
+                  <a href={tgBotUrl} className="flex items-center gap-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/icons/telegram-logo.svg" alt="" className="h-6 w-6" />
+                    <span>Разместить заявку в Telegram</span>
+                  </a>
                 </Button>
                 <Button
                   asChild
                   size="lg"
                   className="h-14 bg-blue-600 hover:bg-blue-700 px-8 text-lg font-semibold"
                 >
-                  <a href={maxBotUrl}>Разместить заявку в Max</a>
+                  <a href={maxBotUrl} className="flex items-center gap-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/icons/max-logo.svg" alt="" className="h-6 w-6" />
+                    <span>Разместить заявку в Max</span>
+                  </a>
                 </Button>
               </div>
 
