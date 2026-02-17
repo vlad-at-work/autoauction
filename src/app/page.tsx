@@ -19,22 +19,16 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative min-h-screen">
-        {/* Background Image */}
+      {/* Hero Section with Background */}
+      <div className="relative">
+        {/* Background Image - stays fixed */}
         <div className="fixed inset-0 -z-10">
-          <Image
-            src="/header.jpg"
-            alt="Поддержка участников СВО"
-            fill
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-black/30" />
+          <Image src="/header.jpg" alt="" fill className="object-cover" priority />
+          <div className="absolute inset-0 bg-black/40" />
         </div>
 
         {/* Content */}
-        <div className="flex min-h-screen items-center justify-center p-4 pt-24 pb-8">
+        <div className="flex min-h-screen flex-col items-center justify-center px-4 pt-24 pb-8">
           <div className="max-w-4xl w-full text-center">
             {/* Logo and Service Description */}
             <div className="bg-black/50 p-4 rounded-lg mb-4 inline-block">
@@ -96,7 +90,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </div>
     </div>
   );
 }
