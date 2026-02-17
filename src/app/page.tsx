@@ -1,5 +1,3 @@
-import Image from 'next/image';
-
 import { getMaxBotUrl, getTelegramBotUrl } from '@/lib/bot-links';
 import { Button } from '@/components/ui/button';
 
@@ -8,27 +6,24 @@ export default function Home() {
   const tgBotUrl = getTelegramBotUrl('inquiry');
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-sm">
-        <div className="mx-auto max-w-6xl px-4 py-3">
-          <div className="flex items-center justify-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo1.png" alt="" className="h-12 w-auto object-contain" />
+    <div
+      className="min-h-screen bg-cover bg-center bg-fixed"
+      style={{ backgroundImage: 'url(/header.jpg)' }}
+    >
+      {/* Dark overlay */}
+      <div className="min-h-screen bg-black/40">
+        {/* Header */}
+        <header className="bg-black/20 backdrop-blur-sm">
+          <div className="mx-auto max-w-6xl px-4 py-3">
+            <div className="flex items-center justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo1.png" alt="" className="h-12 w-auto object-contain" />
+            </div>
           </div>
-        </div>
-      </header>
-
-      {/* Hero Section with Background */}
-      <div className="relative">
-        {/* Background Image - stays fixed */}
-        <div className="fixed inset-0 -z-10">
-          <Image src="/header.jpg" alt="" fill className="object-cover" priority />
-          <div className="absolute inset-0 bg-black/40" />
-        </div>
+        </header>
 
         {/* Content */}
-        <div className="flex min-h-screen flex-col items-center justify-center px-4 pt-24 pb-8">
+        <div className="flex min-h-[calc(100vh-72px)] flex-col items-center justify-center px-4 py-8">
           <div className="max-w-4xl w-full text-center">
             {/* Logo and Service Description */}
             <div className="bg-black/50 p-4 rounded-lg mb-4 inline-block">
