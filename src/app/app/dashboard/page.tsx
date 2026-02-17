@@ -116,8 +116,18 @@ export default function DashboardPage() {
               <div className="text-base">
                 {limits.remaining > 0 ? (
                   <span>
-                    <span className="font-medium">{limits.remaining} заявки</span>
-                    <span className="text-muted-foreground"> осталось</span>
+                    <span className="font-medium">
+                      {limits.remaining}{' '}
+                      {limits.remaining === 1
+                        ? 'заявка'
+                        : limits.remaining < 5
+                          ? 'заявки'
+                          : 'заявок'}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {' '}
+                      {limits.remaining === 1 ? 'осталась' : 'осталось'}
+                    </span>
                   </span>
                 ) : (
                   <span className="text-muted-foreground">Заявки закончились</span>
