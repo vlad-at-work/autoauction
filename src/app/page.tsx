@@ -29,19 +29,19 @@ export default function Home() {
             </div> */}
 
             <div className="bg-black/50 p-4 rounded-lg mb-6 inline-block">
-              <p className="text-2xl text-gray-200 sm:text-3xl md:text-4xl">
+              <p className="text-2xl text-gray-200 sm:text-3xl md:text-4xl text-justify">
                 Специальный сервис для поддержки участников СВО и их семей.
               </p>
             </div>
 
             {/* Slogan */}
             <div className="bg-black/50 p-6 rounded-lg mb-8">
-              <p className="text-2xl text-white sm:text-3xl md:text-4xl leading-relaxed">
+              <p className="text-2xl text-white sm:text-3xl md:text-4xl leading-relaxed text-justify">
                 Приобретайте новый автомобиль по специальной цене и поддерживайте наших бойцов и их
                 семьи.
               </p>
               <br />
-              <p className="text-2xl text-white sm:text-3xl md:text-4xl leading-relaxed">
+              <p className="text-2xl text-white sm:text-3xl md:text-4xl leading-relaxed text-justify">
                 Выбирая дилера через наш сервис, Вы получаете специальное предложение и направляете
                 часть средств на поддержку участников и ветеранов СВО и их семей.
               </p>
