@@ -29,7 +29,7 @@ export default function Home() {
             </div> */}
 
             <div className="bg-black/50 p-4 rounded-lg mb-6 inline-block">
-              <p className="text-2xl text-gray-200 sm:text-3xl md:text-4xl text-justify">
+              <p className="text-2xl text-gray-200 sm:text-3xl md:text-4xl">
                 Специальный сервис для поддержки участников СВО и их семей.
               </p>
             </div>
