@@ -22,11 +22,11 @@ export default function Home() {
         <div className="flex flex-col items-center justify-center px-4 py-4">
           <div className="max-w-4xl w-full text-center">
             {/* Logo and Service Description */}
-            <div className="bg-black/50 p-4 rounded-lg mb-4 inline-block">
+            {/* <div className="bg-black/50 p-4 rounded-lg mb-4 inline-block">
               <h1 className="text-3xl font-bold text-white mb-2 sm:text-4xl md:text-5xl">
                 Свои Авто
               </h1>
-            </div>
+            </div> */}
 
             <div className="bg-black/50 p-4 rounded-lg mb-6 inline-block">
               <p className="text-2xl text-gray-200 sm:text-3xl md:text-4xl">
