@@ -56,21 +56,21 @@ export default function Home() {
             </div> */}
 
             <div className="bg-black/50 p-4 mb-6 inline-block">
-              <p className="[font-family:var(--font-heading)] text-2xl sm:text-4xl md:text-5xl text-white tracking-wide font-bold">
-                СПЕЦИАЛЬНЫЙ СЕРВИС ДЛЯ ПОДДЕРЖКИ УЧАСТНИКОВ СВО И ИХ СЕМЕЙ
+              <p className="text-2xl sm:text-4xl md:text-5xl text-white font-bold">
+                Специальный сервис для поддержки участников СВО и их семей
               </p>
             </div>
 
             {/* Slogan */}
             <div className="bg-black/50 p-6 mb-8">
-              <p className="[font-family:var(--font-heading)] text-xl sm:text-2xl md:text-3xl text-white leading-relaxed text-justify tracking-wide">
-                ПРИОБРЕТАЙТЕ НОВЫЙ АВТОМОБИЛЬ ПО СПЕЦИАЛЬНОЙ ЦЕНЕ И ПОДДЕРЖИВАЙТЕ НАШИХ БОЙЦОВ И ИХ
-                СЕМЬИ.
+              <p className="text-xl sm:text-2xl md:text-3xl text-white leading-relaxed text-justify">
+                Приобретайте новый автомобиль по специальной цене и поддерживайте наших бойцов и их
+                семьи.
               </p>
               <br />
-              <p className="[font-family:var(--font-heading)] text-xl sm:text-2xl md:text-3xl text-white leading-relaxed text-justify tracking-wide">
-                ВЫБИРАЯ ДИЛЕРА ЧЕРЕЗ НАШ СЕРВИС, ВЫ ПОЛУЧАЕТЕ СПЕЦИАЛЬНОЕ ПРЕДЛОЖЕНИЕ И НАПРАВЛЯЕТЕ
-                ЧАСТЬ СРЕДСТВ НА ПОДДЕРЖКУ УЧАСТНИКОВ И ВЕТЕРАНОВ СВО И ИХ СЕМЕЙ.
+              <p className="text-xl sm:text-2xl md:text-3xl text-white leading-relaxed text-justify">
+                Выбирая дилера через наш сервис, Вы получаете специальное предложение и направляете
+                часть средств на поддержку участников и ветеранов СВО и их семей.
               </p>
             </div>
 
@@ -102,8 +102,8 @@ export default function Home() {
 
             {/* Free Service Note */}
             <div className="bg-black/50 p-4 inline-block">
-              <p className="[font-family:var(--font-heading)] text-xl sm:text-2xl md:text-3xl text-white tracking-wide">
-                СЕРВИС ПРЕДОСТАВЛЯЕТСЯ БЕСПЛАТНО
+              <p className="text-xl sm:text-2xl md:text-3xl text-white">
+                Сервис предоставляется бесплатно
               </p>
             </div>
           </div>
