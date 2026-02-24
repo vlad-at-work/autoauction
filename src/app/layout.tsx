@@ -1,8 +1,22 @@
 import type { Metadata } from 'next';
 import { Toaster } from 'sonner';
+import { Russo_One, Nunito } from 'next/font/google';
 
 import './globals.css';
 import { GlobalLoading } from '@/components/global-loading';
+
+const russoOne = Russo_One({
+  weight: '400',
+  subsets: ['cyrillic', 'latin'],
+  variable: '--font-heading',
+  display: 'swap',
+});
+
+const nunito = Nunito({
+  subsets: ['cyrillic', 'latin'],
+  variable: '--font-body',
+  display: 'swap',
+});
 
 const siteUrl = (() => {
   const envUrl = process.env.NEXT_PUBLIC_APP_URL;
@@ -63,8 +77,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru" suppressHydrationWarning>
-      <body className="antialiased">
+    <html lang="ru" suppressHydrationWarning className={`${russoOne.variable} ${nunito.variable}`}>
+      <body className="antialiased font-sans">
         <GlobalLoading />
         {children}
         <Toaster />
