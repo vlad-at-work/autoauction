@@ -101,6 +101,10 @@ Format: `Bearer {platform}:{botType}:{initData}`
 - `MAX_BOT_TOKEN` / `MAX_BOT_TOKEN_DEALER` — Bot tokens
 - `MAX_BOT_NAME` / `MAX_BOT_NAME_DEALER` — Bot usernames (same as NEXT*PUBLIC* variants)
 
+### Critical: Next.js Standalone Mode
+
+Next.js `output: 'standalone'` does NOT auto-run `instrumentation.ts` at runtime (only during build). For server-side libraries that need initialization (Hawk, Sentry, etc.), call `init()` at module level in the lib file, not just in `instrumentation.ts`. Server secrets must be written to the VPS `.env` file during deploy via SSH step in `deploy.yml` - they don't transfer automatically from build environment.
+
 ---
 
 ## Testing
