@@ -41,10 +41,7 @@ export async function POST(request: Request) {
       startPayload ? `param:${startPayload}` : 'no-param'
     );
 
-    if (
-      updateType === 'bot_started' ||
-      (updateType === 'message_created' && messageText.startsWith('/start'))
-    ) {
+    if (updateType === 'bot_started') {
       if (!userId) {
         return NextResponse.json({ ok: true });
       }
