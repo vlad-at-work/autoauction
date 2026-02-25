@@ -108,9 +108,6 @@ function MiniAppInquiryFormPageInner() {
 
       if (platformUserName) {
         form.setValue('platformUserName', platformUserName);
-        if (!form.getValues('name')) {
-          form.setValue('name', platformUserName, { shouldValidate: true });
-        }
       }
 
       // Mark as ready once we have user data or after timeout

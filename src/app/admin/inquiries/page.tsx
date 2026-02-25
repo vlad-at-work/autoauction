@@ -43,6 +43,7 @@ export default async function InquiriesPage({ searchParams }: { searchParams: Se
   if (q) {
     where.OR = [
       { id: { contains: q, mode: 'insensitive' } },
+      { name: { contains: q, mode: 'insensitive' } },
       { phone: { contains: q, mode: 'insensitive' } },
       { model: { contains: q, mode: 'insensitive' } },
       { submodel: { contains: q, mode: 'insensitive' } },
@@ -70,7 +71,8 @@ export default async function InquiriesPage({ searchParams }: { searchParams: Se
     {
       key: 'buyer',
       label: 'Покупатель',
-      render: (i: InquiryWithRelations) => i.buyer.platformUserName || i.buyer.platformUserId,
+      render: (i: InquiryWithRelations) =>
+        i.name || i.buyer.platformUserName || i.buyer.platformUserId,
     },
     {
       key: 'model',
