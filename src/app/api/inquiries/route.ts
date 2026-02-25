@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { inquiryCreateSchema } from '@/lib/schemas/inquiry';
 import { notifyDealerOfNewInquiryViaBot, notifyBuyer } from '@/lib/notifications';
+import { captureError } from '@/lib/hawk';
 
 const MAX_INQUIRIES_PER_MONTH = 2;
 const INQUIRY_LIMIT_RESET_DAYS = 15;
@@ -268,6 +269,7 @@ export async function POST(request: Request) {
       nextInquiryAt: buyer.inquiryLimitResetAt,
     });
   } catch (err) {
+    captureError(err, { route: 'inquiries' });
     console.error('Inquiry creation error:', err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Внутренняя ошибка' },

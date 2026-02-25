@@ -10,6 +10,7 @@ import { NextResponse } from 'next/server';
 import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
+import { captureError } from '@/lib/hawk';
 
 export async function POST(request: Request) {
   try {
@@ -44,7 +45,9 @@ export async function POST(request: Request) {
     });
 
     if (!dealer || !dealer.passwordHash) {
-      console.warn('[/api/dealer/auth/login] Invalid credentials - dealer not found or no password');
+      console.warn(
+        '[/api/dealer/auth/login] Invalid credentials - dealer not found or no password'
+      );
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
@@ -70,6 +73,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (err) {
+    captureError(err, { route: 'dealer/auth/login' });
     console.error('[/api/dealer/auth/login] Error:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }

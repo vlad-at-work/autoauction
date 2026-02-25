@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
 import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
+import { captureError } from '@/lib/hawk';
 
 const MAX_INQUIRIES_PER_MONTH = 2;
 
@@ -96,6 +97,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
+    captureError(error, { route: 'buyers/me/inquiries' });
     console.error('Get inquiries error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Внутренняя ошибка' },

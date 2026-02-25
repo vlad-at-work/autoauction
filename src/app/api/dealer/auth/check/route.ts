@@ -5,6 +5,7 @@
 import { NextResponse } from 'next/server';
 import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { prisma } from '@/lib/db';
+import { captureError } from '@/lib/hawk';
 
 export async function POST(request: Request) {
   try {
@@ -58,6 +59,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (err) {
+    captureError(err, { route: 'dealer/auth/check' });
     console.error('[CHECK] Error:', err);
     return NextResponse.json({ error: 'Внутренняя ошибка' }, { status: 500 });
   }

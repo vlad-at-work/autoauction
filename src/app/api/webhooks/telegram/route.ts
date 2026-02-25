@@ -10,6 +10,7 @@ import { NextResponse } from 'next/server';
 import { sendTelegramMessage } from '@/lib/notifications/telegram';
 import { prisma } from '@/lib/db';
 import { isInviteTokenValid } from '@/lib/auth/dealer-invite';
+import { captureError } from '@/lib/hawk';
 
 const APP_URL =
   process.env.NEXT_PUBLIC_APP_URL ||
@@ -106,6 +107,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (err) {
+    captureError(err, { route: 'webhooks/telegram' });
     console.error('[Telegram Webhook] Error:', err);
     return NextResponse.json({ ok: true });
   }

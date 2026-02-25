@@ -7,6 +7,7 @@
 import { NextResponse } from 'next/server';
 import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { prisma } from '@/lib/db';
+import { captureError } from '@/lib/hawk';
 
 const MAX_OFFERS_PER_DEALER = 5;
 
@@ -110,6 +111,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       dealerId: dealer.id,
     });
   } catch (err) {
+    captureError(err, { route: 'dealer/inquiries/[id]' });
     console.error('[DEALER INQUIRY DETAIL] Error:', err);
     return NextResponse.json({ error: 'Внутренняя ошибка' }, { status: 500 });
   }

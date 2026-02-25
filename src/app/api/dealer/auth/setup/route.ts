@@ -7,6 +7,7 @@ import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { prisma } from '@/lib/db';
 import { isInviteTokenValid } from '@/lib/auth/dealer-invite';
 import bcrypt from 'bcryptjs';
+import { captureError } from '@/lib/hawk';
 
 export async function POST(request: Request) {
   try {
@@ -109,6 +110,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true, dealerId: dealer.id });
   } catch (err) {
+    captureError(err, { route: 'dealer/auth/setup' });
     console.error('[SETUP] Error:', err);
     return NextResponse.json({ error: 'Внутренняя ошибка' }, { status: 500 });
   }

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
 import { validateWebAppRequest, isPlatformUserDealer } from '@/lib/auth/webapp-validation';
+import { captureError } from '@/lib/hawk';
 
 export async function GET(request: Request) {
   try {
@@ -50,6 +51,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(buyer);
   } catch (error) {
+    captureError(error, { route: 'buyers/me', method: 'GET' });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Внутренняя ошибка' },
       { status: 500 }
@@ -106,6 +108,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(buyer);
   } catch (error) {
+    captureError(error, { route: 'buyers/me', method: 'POST' });
     console.error('Create buyer error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Внутренняя ошибка' },

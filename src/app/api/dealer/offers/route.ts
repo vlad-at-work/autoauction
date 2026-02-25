@@ -21,6 +21,7 @@ import { NextResponse } from 'next/server';
 import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { prisma } from '@/lib/db';
 import { notifyBuyerOfNewOffer } from '@/lib/notifications';
+import { captureError } from '@/lib/hawk';
 
 const MAX_OFFERS_PER_DEALER = 5;
 
@@ -166,11 +167,13 @@ export async function POST(request: Request) {
         console.error('Failed to send buyer notification:', result.error);
       }
     } catch (err) {
+      captureError(err, { route: 'dealer/offers', action: 'notify-buyer' });
       console.error('Failed to send buyer notification:', err);
     }
 
     return NextResponse.json({ offer });
   } catch (err) {
+    captureError(err, { route: 'dealer/offers' });
     console.error('[/api/dealer/offers] Error:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }

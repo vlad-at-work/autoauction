@@ -9,6 +9,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { isInviteTokenValid } from '@/lib/auth/dealer-invite';
+import { captureError } from '@/lib/hawk';
 
 export async function POST(request: Request) {
   try {
@@ -47,6 +48,7 @@ export async function POST(request: Request) {
       dealerName: dealer.name,
     });
   } catch (err) {
+    captureError(err, { route: 'dealer/invite/validate' });
     console.error('[Validate Invite] Error:', err);
     return NextResponse.json({ valid: false, error: 'Внутренняя ошибка' }, { status: 500 });
   }

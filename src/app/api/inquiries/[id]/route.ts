@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
 import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
+import { captureError } from '@/lib/hawk';
 
 const MAX_TRANSACTIONS_PER_INQUIRY = 3;
 
@@ -164,6 +165,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     return NextResponse.json(transformedInquiry);
   } catch (error) {
+    captureError(error, { route: 'inquiries/[id]' });
     console.error('Get inquiry error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Внутренняя ошибка' },

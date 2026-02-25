@@ -11,6 +11,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { createInviteTokenData } from '@/lib/auth/dealer-invite';
+import { captureError } from '@/lib/hawk';
 
 const MAX_BOT_NAME_DEALER =
   process.env.MAX_BOT_NAME_DEALER || process.env.NEXT_PUBLIC_MAX_BOT_NAME_DEALER || '';
@@ -64,6 +65,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       tgInviteUrl,
     });
   } catch (err) {
+    captureError(err, { route: 'admin/dealers/[id]/invite' });
     console.error('[Admin] Generate invite error:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }

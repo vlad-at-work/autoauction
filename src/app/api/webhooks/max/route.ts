@@ -8,6 +8,7 @@ import { NextResponse } from 'next/server';
 import { sendMaxMessage } from '@/lib/notifications/max';
 import { prisma } from '@/lib/db';
 import { isInviteTokenValid } from '@/lib/auth/dealer-invite';
+import { captureError } from '@/lib/hawk';
 
 type BotType = 'customer' | 'dealer';
 
@@ -89,6 +90,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (err) {
+    captureError(err, { route: 'webhooks/max' });
     console.error('[MAX Webhook] Error:', err);
     return NextResponse.json({ ok: true });
   }

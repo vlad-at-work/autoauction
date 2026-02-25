@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { notifyDealerOfAcceptedOfferViaBot, notifyBuyer } from '@/lib/notifications';
+import { captureError } from '@/lib/hawk';
 
 const MAX_TRANSACTIONS_PER_INQUIRY = 3;
 
@@ -208,6 +209,7 @@ ${remainingAcceptances > 0 ? `📋 Вы можете принять ещё ${rem
       );
     }
 
+    captureError(err, { route: 'transactions' });
     console.error('Transaction creation error:', err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Внутренняя ошибка' },

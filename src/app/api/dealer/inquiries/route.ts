@@ -5,6 +5,7 @@
 import { NextResponse } from 'next/server';
 import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { prisma } from '@/lib/db';
+import { captureError } from '@/lib/hawk';
 
 export async function GET(request: Request) {
   try {
@@ -90,6 +91,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ inquiries });
   } catch (err) {
+    captureError(err, { route: 'dealer/inquiries' });
     console.error('[INQUIRIES] Error:', err);
     return NextResponse.json({ error: 'Внутренняя ошибка' }, { status: 500 });
   }

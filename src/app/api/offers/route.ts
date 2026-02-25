@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { parseBasicAuthHeader } from '@/lib/auth/basic';
 import { notifyBuyerOfNewOffer } from '@/lib/notifications';
+import { captureError } from '@/lib/hawk';
 
 const MAX_OFFERS_PER_DEALER_PER_INQUIRY = 5;
 
@@ -133,6 +134,7 @@ export async function POST(request: Request) {
         console.error('Failed to send buyer notification:', result.error);
       }
     } catch (err) {
+      captureError(err, { route: 'offers', action: 'notify-buyer' });
       console.error('Failed to send buyer notification:', err);
     }
 
@@ -142,6 +144,7 @@ export async function POST(request: Request) {
       remainingOffers: MAX_OFFERS_PER_DEALER_PER_INQUIRY - existingOfferCount - 1,
     });
   } catch (err) {
+    captureError(err, { route: 'offers' });
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Внутренняя ошибка' },
       { status: 500 }
