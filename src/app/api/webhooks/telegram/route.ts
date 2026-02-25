@@ -6,6 +6,19 @@
 
 export const dynamic = 'force-dynamic';
 
+// DEBUG: Log env vars on module load
+console.warn('[TELEGRAM WEBHOOK DEBUG] Module loading...');
+console.warn('[TELEGRAM WEBHOOK DEBUG] TG_BOT_TOKEN exists:', !!process.env.TG_BOT_TOKEN);
+console.warn(
+  '[TELEGRAM WEBHOOK DEBUG] TG_BOT_TOKEN length:',
+  process.env.TG_BOT_TOKEN?.length || 0
+);
+console.warn('[TELEGRAM WEBHOOK DEBUG] HAWK_TOKEN exists:', !!process.env.HAWK_TOKEN);
+console.warn(
+  '[TELEGRAM WEBHOOK DEBUG] All TOKEN env keys:',
+  Object.keys(process.env).filter((k) => k.includes('TOKEN'))
+);
+
 import { NextResponse } from 'next/server';
 import { sendTelegramMessage } from '@/lib/notifications/telegram';
 import { prisma } from '@/lib/db';
