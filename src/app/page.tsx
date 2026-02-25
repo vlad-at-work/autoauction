@@ -106,12 +106,6 @@ export default function Home() {
                 Сервис предоставляется бесплатно
               </p>
             </div>
-
-            {/* DEBUG: ENV DUMP */}
-            <div className="bg-red-900/80 p-4 mt-8 text-left font-mono text-xs text-white overflow-auto max-h-96">
-              <h3 className="text-lg font-bold mb-2">DEBUG ENV VARS:</h3>
-              <pre>{JSON.stringify(process.env, null, 2)}</pre>
-            </div>
           </div>
         </div>
       </div>
