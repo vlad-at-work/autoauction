@@ -48,3 +48,6 @@ export function captureError(error: unknown, context?: Record<string, unknown>) 
     console.error('[HAWK DEBUG] Failed to send error:', err);
   }
 }
+
+// Auto-initialize on module load (for API routes where instrumentation.ts doesn't run)
+initHawk();
