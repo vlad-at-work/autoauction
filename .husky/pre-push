@@ -1,4 +1,5 @@
 #!/bin/sh
 . ~/.nvm/nvm.sh
 nvm use --silent
+bun run test
 bun run build
