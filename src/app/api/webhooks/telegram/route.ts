@@ -90,8 +90,15 @@ export async function POST(request: Request) {
       } else {
         await sendTelegramMessage(
           chatId,
-          `👋 Добро пожаловать в AutoAuction, ${firstName}!\n\nОткройте мини-приложение для создания заявок.`,
-          undefined,
+          `👋 Добро пожаловать в AutoAuction, ${firstName}!\n\nНажмите кнопку ниже, чтобы создать заявку.`,
+          [
+            {
+              text: 'Создать заявку',
+              web_app: {
+                url: `${APP_URL}/app?startapp=inquiry`,
+              },
+            },
+          ],
           'customer'
         );
       }

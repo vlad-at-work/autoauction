@@ -72,10 +72,19 @@ export async function POST(request: Request) {
           'dealer'
         );
       } else {
+        const customerBotName =
+          process.env.MAX_BOT_NAME || process.env.NEXT_PUBLIC_MAX_BOT_NAME || '';
         await sendMaxMessage(
           Number(userId),
-          `Добро пожаловать в AutoAuction, ${firstName}!\n\nОткройте мини-приложение для создания заявок.`,
-          [],
+          `Добро пожаловать в AutoAuction, ${firstName}!\n\nНажмите кнопку ниже, чтобы создать заявку.`,
+          [
+            {
+              type: 'open_app',
+              text: 'Создать заявку',
+              web_app: customerBotName,
+              payload: 'inquiry',
+            },
+          ],
           'customer'
         );
       }
