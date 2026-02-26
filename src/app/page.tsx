@@ -19,20 +19,20 @@ export default function Home() {
           <div className="absolute inset-0 backdrop-blur-sm" />
         </div>
 
+        {/* Logo — absolute, top-left, outside container flow */}
+        <div className="absolute z-20 top-2 left-4 md:top-3 md:left-8">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo1.png"
+            alt="Свои Авто"
+            className="h-20 sm:h-24 w-auto object-contain drop-shadow-lg"
+          />
+        </div>
+
         {/* Hero content — constrained to page bounds */}
         <div className="relative z-10 h-full max-w-6xl mx-auto px-6 md:px-12 flex flex-col">
-          {/* Logo — top left */}
-          <div className="pt-1 md:pt-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/logo1.png"
-              alt="Свои Авто"
-              className="h-20 sm:h-24 w-auto object-contain drop-shadow-lg"
-            />
-          </div>
-
-          {/* Main row: heading left, partners right — pushed up tight */}
-          <div className="flex items-center justify-between gap-8 mt-1 md:mt-2">
+          {/* Main row: heading left, partners right — at the very top */}
+          <div className="flex items-center justify-between gap-8 pt-3 md:pt-4">
             {/* Heading + CTA buttons */}
             <div className="max-w-xl">
               <h1
