@@ -56,7 +56,11 @@ export default function Home() {
                 >
                   <span>Оставить заявку</span>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/icons/telegram-logo.svg" alt="" className="h-6 w-6 sm:h-7 sm:w-7" />
+                  <img
+                    src="/icons/telegram-logo.svg"
+                    alt=""
+                    className="h-6 w-6 sm:h-7 sm:w-7 drop-shadow-[0_1px_3px_rgba(0,0,0,0.15)]"
+                  />
                 </a>
                 <a
                   href={maxBotUrl}
@@ -69,7 +73,11 @@ export default function Home() {
                 >
                   <span>Оставить заявку</span>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/icons/max-logo.svg" alt="" className="h-6 w-6 sm:h-7 sm:w-7" />
+                  <img
+                    src="/icons/max-logo.svg"
+                    alt=""
+                    className="h-6 w-6 sm:h-7 sm:w-7 drop-shadow-[0_1px_3px_rgba(0,0,0,0.15)]"
+                  />
                 </a>
               </div>
               <p className="mt-3 text-center text-sm sm:text-base font-raleway font-normal text-white/50">
