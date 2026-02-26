@@ -31,16 +31,21 @@ export default function Home() {
 
         {/* Hero content — constrained to page bounds */}
         <div className="relative z-10 h-full max-w-6xl mx-auto px-6 md:px-12 flex flex-col">
-          {/* Main row: heading left, partners right — vertically centered */}
-          <div className="flex-1 flex items-center justify-between gap-8">
+          {/* Main row: heading left, partners right — shifted up from center */}
+          <div className="flex-1 flex items-center justify-between gap-8 -mt-12">
             {/* Heading + CTA buttons */}
             <div className="max-w-2xl">
               <h1
-                className="text-3xl sm:text-4xl md:text-5xl font-russo text-white leading-tight"
-                style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}
+                className="text-3xl sm:text-4xl md:text-5xl font-russo text-white/95 leading-tight"
+                style={{ textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 1px 3px rgba(0,0,0,0.4)' }}
               >
                 Специальный сервис для поддержки участников СВО и их семей
               </h1>
+              <div className="mt-4 bg-black/50 px-4 py-2 text-center rounded">
+                <p className="text-lg sm:text-xl font-raleway font-extrabold text-white/95">
+                  Сервис предоставляется бесплатно
+                </p>
+              </div>
               <div className="flex gap-3 mt-4">
                 <a
                   href={tgBotUrl}
@@ -74,7 +79,7 @@ export default function Home() {
             {/* Partners — with label */}
             <div className="hidden md:flex flex-col items-center shrink-0">
               <p
-                className="text-lg lg:text-xl font-raleway font-normal text-white/80 mb-3 tracking-wide"
+                className="text-xl lg:text-2xl font-raleway font-semibold text-white/85 mb-3 tracking-wide"
                 style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}
               >
                 При поддержке
@@ -98,7 +103,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Below the fold — white workspace (content coming later) */}
+      {/* Below the fold — white workspace */}
       <section className="max-w-6xl mx-auto px-6 md:px-12 py-16">
         {/* Future content goes here */}
       </section>
