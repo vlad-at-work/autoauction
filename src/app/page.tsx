@@ -32,24 +32,24 @@ export default function Home() {
         {/* Hero content — constrained to page bounds */}
         <div className="relative z-10 h-full max-w-6xl mx-auto px-6 md:px-12 flex flex-col">
           {/* Main row: heading left, partners right — shifted up from center */}
-          <div className="flex-1 flex items-center justify-between gap-8 -mt-12">
+          <div className="flex-1 flex items-start justify-between gap-8 -mt-12 pt-[10vh]">
             {/* Heading + CTA buttons */}
             <div className="max-w-2xl">
               <h1
-                className="text-3xl sm:text-4xl md:text-5xl font-russo text-white/95 leading-tight"
+                className="text-3xl sm:text-4xl md:text-5xl font-russo text-white/95 leading-tight text-center"
                 style={{ textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 1px 3px rgba(0,0,0,0.4)' }}
               >
                 Специальный сервис для поддержки участников СВО и их семей
               </h1>
               <div className="mt-4 bg-black/50 px-4 py-2 text-center rounded">
-                <p className="text-lg sm:text-xl font-raleway font-extrabold text-white/95">
+                <p className="text-lg sm:text-xl font-raleway font-bold text-white/70">
                   Сервис предоставляется бесплатно
                 </p>
               </div>
-              <div className="flex gap-3 mt-4">
+              <div className="flex gap-3 mt-6">
                 <a
                   href={tgBotUrl}
-                  className="flex-1 flex items-center justify-center gap-2 h-14 text-white font-semibold text-base sm:text-lg rounded-md transition-opacity hover:opacity-90"
+                  className="flex-1 flex items-center justify-center gap-2 h-16 text-white font-semibold text-base sm:text-lg rounded-md transition-opacity hover:opacity-90"
                   style={{
                     background: 'linear-gradient(to right, rgb(39, 161, 227), rgb(41, 164, 230))',
                     boxShadow:
@@ -62,7 +62,7 @@ export default function Home() {
                 </a>
                 <a
                   href={maxBotUrl}
-                  className="flex-1 flex items-center justify-center gap-2 h-14 text-white font-semibold text-base sm:text-lg rounded-md transition-opacity hover:opacity-90"
+                  className="flex-1 flex items-center justify-center gap-2 h-16 text-white font-semibold text-base sm:text-lg rounded-md transition-opacity hover:opacity-90"
                   style={{
                     background: 'linear-gradient(to right, rgb(48, 92, 252), rgb(149, 75, 219))',
                     boxShadow:
