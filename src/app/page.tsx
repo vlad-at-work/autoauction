@@ -65,7 +65,7 @@ export default function Home() {
                   textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 1px 3px rgba(0,0,0,0.4)',
                 }}
               >
-                Специальный сервис для поддержки участников СВО и их семей
+                Специальный сервис для поддержки ветеранов СВО и их семей
               </h1>
               <div className="flex gap-2 sm:gap-3 mt-5 md:mt-8">
                 <a
@@ -271,7 +271,7 @@ export default function Home() {
           <p className="font-raleway text-stone-400 text-sm">Все права защищены 🇷🇺</p>
           <div className="flex gap-6">
             <a
-              href="#"
+              href="/about"
               className="font-raleway text-stone-400 text-sm hover:text-stone-300 transition-colors"
             >
               О проекте
