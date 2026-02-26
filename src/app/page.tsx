@@ -168,14 +168,14 @@ export default function Home() {
         <img
           src="/soldier3.png"
           alt=""
-          className="absolute bottom-0 w-auto object-contain object-right-bottom opacity-40 pointer-events-none"
-          style={{ height: '150%', right: '-10%' }}
+          className="absolute bottom-0 w-auto object-contain object-right-bottom opacity-40 pointer-events-none right-[-50%] md:right-[-15%]"
+          style={{ height: '120%' }}
         />
         <div className="relative max-w-3xl mx-auto px-6 md:px-12">
           <h3 className="font-russo text-stone-700 text-2xl md:text-4xl text-center mb-3 md:mb-4">
             Миссия
           </h3>
-          <p className="font-raleway font-medium text-stone-600 text-base md:text-lg leading-relaxed text-left md:text-center border-l-4 border-stone-400 pl-5 md:pl-6 ml-0 md:ml-4">
+          <p className="font-raleway font-medium text-stone-600 text-base md:text-lg leading-relaxed text-center border-l-0 md:border-l-4 border-stone-400 pl-0 md:pl-6 ml-0 md:ml-4">
             Выбирая дилера через наш сервис Вы получаете специальную цену и другие предложения при
             покупке автомобиля, а дилеры направляют часть комиссии на реабилитацию ветеранов СВО и
             поддержку их семей.
@@ -271,7 +271,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-stone-800 py-5 md:py-8">
         <div className="max-w-6xl mx-auto px-6 md:px-12 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="font-raleway text-stone-400 text-sm">Все права защищены</p>
+          <p className="font-raleway text-stone-400 text-sm">Все права защищены 🇷🇺</p>
           <div className="flex gap-6">
             <a
               href="#"
