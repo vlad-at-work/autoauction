@@ -77,7 +77,7 @@ export default function Home() {
                       '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15)',
                   }}
                 >
-                  <span>Заявка в</span>
+                  <span>Заявку в</span>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="/icons/telegram-logo.svg"
@@ -94,7 +94,7 @@ export default function Home() {
                       '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15)',
                   }}
                 >
-                  <span>Заявка в</span>
+                  <span>Заявку в</span>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="/icons/max-logo.svg"
