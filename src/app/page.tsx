@@ -16,8 +16,8 @@ export default function Home() {
 
         {/* Hero content — constrained to page bounds */}
         <div className="relative z-10 h-full max-w-6xl mx-auto px-6 md:px-12 flex flex-col">
-          {/* Logo — top left */}
-          <div className="pt-3 md:pt-4">
+          {/* Logo — top left, tucked into corner */}
+          <div className="pt-2 md:pt-3 -ml-1">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo1.png"
@@ -26,27 +26,38 @@ export default function Home() {
             />
           </div>
 
-          {/* Main row: heading left, partners right — vertically centered in remaining space */}
-          <div className="flex-1 flex items-center justify-between gap-8">
+          {/* Main row: heading left, partners right */}
+          <div className="flex items-center justify-between gap-8 mt-2 md:mt-4">
             {/* Heading */}
-            <h1 className="max-w-xl text-2xl sm:text-3xl md:text-4xl font-russo text-white leading-tight">
+            <h1
+              className="max-w-xl text-3xl sm:text-4xl md:text-5xl font-russo text-white leading-tight"
+              style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}
+            >
               Специальный сервис для поддержки участников СВО и их семей
             </h1>
 
-            {/* Partners — horizontal row, vertically centered with heading */}
-            <div className="hidden md:flex items-center gap-5 shrink-0">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/sponsor1.png"
-                alt="Совет ветеранов СВО ФПСР"
-                className="h-24 lg:h-32 w-auto object-contain drop-shadow-lg"
-              />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/sponsor2.png"
-                alt="Ассоциация ветеранов СВО г.о. Дубна"
-                className="h-24 lg:h-32 w-auto object-contain drop-shadow-lg"
-              />
+            {/* Partners — with label */}
+            <div className="hidden md:flex flex-col items-center shrink-0">
+              <p
+                className="text-sm lg:text-base font-raleway text-white/80 mb-3 tracking-wide"
+                style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}
+              >
+                При поддержке
+              </p>
+              <div className="flex items-center gap-5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/sponsor1.png"
+                  alt="Совет ветеранов СВО ФПСР"
+                  className="h-24 lg:h-32 w-auto object-contain drop-shadow-lg"
+                />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/sponsor2.png"
+                  alt="Ассоциация ветеранов СВО г.о. Дубна"
+                  className="h-24 lg:h-32 w-auto object-contain drop-shadow-lg"
+                />
+              </div>
             </div>
           </div>
         </div>
