@@ -16,38 +16,38 @@ export default function Home() {
 
         {/* Hero content — constrained to page bounds */}
         <div className="relative z-10 h-full max-w-6xl mx-auto px-6 md:px-12 flex flex-col">
-          {/* Top row: logo left, partners right */}
-          <div className="flex items-start justify-between pt-3 md:pt-4">
-            {/* Logo — top left */}
+          {/* Logo — top left */}
+          <div className="pt-3 md:pt-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo1.png"
               alt="Свои Авто"
-              className="h-20 sm:h-24 w-auto object-contain drop-shadow-lg shrink-0"
+              className="h-20 sm:h-24 w-auto object-contain drop-shadow-lg"
             />
+          </div>
 
-            {/* Partners — right side, vertically centered */}
-            <div className="hidden md:flex items-center gap-6">
+          {/* Main row: heading left, partners right — vertically centered in remaining space */}
+          <div className="flex-1 flex items-center justify-between gap-8">
+            {/* Heading */}
+            <h1 className="max-w-xl text-2xl sm:text-3xl md:text-4xl font-russo text-white leading-tight">
+              Специальный сервис для поддержки участников СВО и их семей
+            </h1>
+
+            {/* Partners — horizontal row, vertically centered with heading */}
+            <div className="hidden md:flex items-center gap-5 shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/sponsor1.png"
                 alt="Совет ветеранов СВО ФПСР"
-                className="h-16 lg:h-20 w-auto object-contain drop-shadow-lg"
+                className="h-24 lg:h-32 w-auto object-contain drop-shadow-lg"
               />
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/sponsor2.png"
                 alt="Ассоциация ветеранов СВО г.о. Дубна"
-                className="h-16 lg:h-20 w-auto object-contain drop-shadow-lg"
+                className="h-24 lg:h-32 w-auto object-contain drop-shadow-lg"
               />
             </div>
-          </div>
-
-          {/* Heading — pushed up close to logo */}
-          <div className="mt-4 md:mt-6">
-            <h1 className="max-w-xl text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-tight">
-              Специальный сервис для поддержки участников СВО и их семей
-            </h1>
           </div>
         </div>
       </section>

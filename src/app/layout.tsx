@@ -1,9 +1,23 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
+import { Raleway, Russo_One } from 'next/font/google';
 import { Toaster } from 'sonner';
 
 import './globals.css';
 import { GlobalLoading } from '@/components/global-loading';
+
+const raleway = Raleway({
+  subsets: ['latin', 'cyrillic'],
+  variable: '--font-raleway',
+  display: 'swap',
+});
+
+const russoOne = Russo_One({
+  weight: '400',
+  subsets: ['latin', 'cyrillic'],
+  variable: '--font-russo',
+  display: 'swap',
+});
 
 const siteUrl = (() => {
   const envUrl = process.env.NEXT_PUBLIC_APP_URL;
@@ -65,7 +79,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" suppressHydrationWarning>
-      <body className="antialiased">
+      <body className={`${raleway.variable} ${russoOne.variable} font-raleway antialiased`}>
         <GlobalLoading />
         {children}
         <Toaster />
