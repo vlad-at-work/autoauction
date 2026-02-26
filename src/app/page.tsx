@@ -1,4 +1,9 @@
+import { getMaxBotUrl, getTelegramBotUrl } from '@/lib/bot-links';
+
 export default function Home() {
+  const maxBotUrl = getMaxBotUrl('inquiry');
+  const tgBotUrl = getTelegramBotUrl('inquiry');
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero — ~50vh, contains background + logo + heading */}
@@ -16,8 +21,8 @@ export default function Home() {
 
         {/* Hero content — constrained to page bounds */}
         <div className="relative z-10 h-full max-w-6xl mx-auto px-6 md:px-12 flex flex-col">
-          {/* Logo — top left, tucked into corner */}
-          <div className="pt-2 md:pt-3 -ml-1">
+          {/* Logo — centered */}
+          <div className="pt-1 md:pt-2 flex justify-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo1.png"
@@ -28,18 +33,38 @@ export default function Home() {
 
           {/* Main row: heading left, partners right */}
           <div className="flex items-center justify-between gap-8 mt-2 md:mt-4">
-            {/* Heading */}
-            <h1
-              className="max-w-xl text-3xl sm:text-4xl md:text-5xl font-russo text-white leading-tight"
-              style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}
-            >
-              Специальный сервис для поддержки участников СВО и их семей
-            </h1>
+            {/* Heading + CTA buttons */}
+            <div className="max-w-xl">
+              <h1
+                className="text-3xl sm:text-4xl md:text-5xl font-russo text-white leading-tight"
+                style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}
+              >
+                Специальный сервис для поддержки участников СВО и их семей
+              </h1>
+              <div className="flex gap-3 mt-4">
+                <a
+                  href={tgBotUrl}
+                  className="flex-1 flex items-center justify-center gap-2 h-12 bg-sky-500 hover:bg-sky-600 text-white font-semibold text-sm sm:text-base rounded-md transition-colors"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/icons/telegram-logo.svg" alt="" className="h-5 w-5 sm:h-6 sm:w-6" />
+                  <span>Заявка в Telegram</span>
+                </a>
+                <a
+                  href={maxBotUrl}
+                  className="flex-1 flex items-center justify-center gap-2 h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm sm:text-base rounded-md transition-colors"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/icons/max-logo.svg" alt="" className="h-5 w-5 sm:h-6 sm:w-6" />
+                  <span>Заявка в Max</span>
+                </a>
+              </div>
+            </div>
 
             {/* Partners — with label */}
             <div className="hidden md:flex flex-col items-center shrink-0">
               <p
-                className="text-sm lg:text-base font-raleway text-white/80 mb-3 tracking-wide"
+                className="text-lg lg:text-xl font-raleway font-normal text-white/80 mb-3 tracking-wide"
                 style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}
               >
                 При поддержке
