@@ -23,7 +23,7 @@ export default function Home() {
         <div className="absolute z-20 top-2 left-4 md:top-3 md:left-8">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/logo1.png"
+            src="/logo3.png"
             alt="Свои Авто"
             className="h-12 sm:h-16 md:h-24 lg:h-28 w-auto object-contain drop-shadow-lg"
           />

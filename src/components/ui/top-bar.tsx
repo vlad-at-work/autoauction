@@ -7,7 +7,7 @@ export function TopBar({ disableNewInquiry = false }: { disableNewInquiry?: bool
   return (
     <div className="bg-background border-border sticky top-0 z-40 flex items-center justify-between border-b px-5 py-4">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo1.png" alt="" className="h-10 w-auto object-contain" />
+      <img src="/logo3.png" alt="" className="h-10 w-auto object-contain" />
       {disableNewInquiry ? (
         <Button
           size="icon"
@@ -55,7 +55,7 @@ export function TopBarWithBack({
       {/* Original header */}
       <div className="flex items-center justify-between px-5 py-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo1.png" alt="" className="h-10 w-auto object-contain" />
+        <img src="/logo3.png" alt="" className="h-10 w-auto object-contain" />
         {disableNewInquiry ? (
           <Button
             size="icon"

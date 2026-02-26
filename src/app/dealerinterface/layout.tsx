@@ -13,7 +13,7 @@ export default function DealerInterfaceLayout({ children }: { children: React.Re
       <div className="min-h-screen flex flex-col">
         <header className="flex h-14 items-center gap-3 border-b bg-card px-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo1.png" alt="" className="h-10 w-auto object-contain" />
+          <img src="/logo3.png" alt="" className="h-10 w-auto object-contain" />
         </header>
         <main className="flex-1">{children}</main>
       </div>
