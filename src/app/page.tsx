@@ -36,12 +36,15 @@ export default function Home() {
             {/* Heading + CTA buttons */}
             <div className="max-w-2xl">
               <h1
-                className="text-3xl sm:text-4xl md:text-5xl font-russo text-white/95 leading-tight text-center"
-                style={{ textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 1px 3px rgba(0,0,0,0.4)' }}
+                className="font-russo text-white/95 leading-tight text-center"
+                style={{
+                  fontSize: 'clamp(2rem, 5vw, 3.25rem)',
+                  textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 1px 3px rgba(0,0,0,0.4)',
+                }}
               >
                 Специальный сервис для поддержки участников СВО и их семей
               </h1>
-              <div className="flex gap-3 mt-6">
+              <div className="flex gap-3 mt-8">
                 <a
                   href={tgBotUrl}
                   className="flex-1 flex items-center justify-center gap-3 h-16 text-white font-semibold text-lg sm:text-xl rounded-md transition-opacity hover:opacity-90"
