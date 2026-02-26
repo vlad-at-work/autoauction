@@ -6,7 +6,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero — ~50vh, contains background + logo + heading */}
+      {/* Hero */}
       <section className="relative h-auto md:h-[50vh] md:min-h-[400px]">
         {/* Background image */}
         <div
@@ -31,12 +31,35 @@ export default function Home() {
 
         {/* Hero content — constrained to page bounds */}
         <div className="relative z-10 h-full max-w-6xl mx-auto px-6 md:px-12 flex flex-col">
-          {/* Main row: stacked on mobile, side-by-side on desktop */}
-          <div className="flex-1 flex flex-col items-center pt-14 pb-6 gap-6 md:flex-row md:items-start md:justify-center md:gap-16 md:-mt-12 md:pt-[10vh] md:pb-0">
-            {/* Heading + CTA buttons */}
+          {/* Heading + CTA — centered */}
+          <div className="flex-1 flex flex-col items-center justify-center pt-4 pb-6 gap-2 md:pt-3 md:pb-0">
+            {/* Partners — "presenting" block */}
+            <div className="flex flex-col items-center">
+              <p
+                className="text-xs md:text-sm font-raleway font-semibold text-white/60 mb-1 md:mb-1.5 tracking-wide uppercase"
+                style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}
+              >
+                При поддержке
+              </p>
+              <div className="flex items-center gap-3 md:gap-5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/sponsor1.jpeg"
+                  alt="Совет ветеранов СВО ФПСР"
+                  className="h-16 md:h-24 w-auto object-contain drop-shadow-lg rounded-[25%] opacity-90"
+                />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/sponsor2.png"
+                  alt="Ассоциация ветеранов СВО г.о. Дубна"
+                  className="h-16 md:h-24 w-auto object-contain drop-shadow-lg rounded-[25%] opacity-90"
+                />
+              </div>
+            </div>
+
             <div className="max-w-2xl">
               <h1
-                className="font-russo text-white/95 leading-tight text-center"
+                className="font-russo text-white/95 leading-[1.0] text-center"
                 style={{
                   fontSize: 'clamp(2rem, 5vw, 3.25rem)',
                   textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 1px 3px rgba(0,0,0,0.4)',
@@ -54,7 +77,7 @@ export default function Home() {
                       '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15)',
                   }}
                 >
-                  <span>Оставить заявку в</span>
+                  <span>Заявка в</span>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="/icons/telegram-logo.svg"
@@ -71,7 +94,7 @@ export default function Home() {
                       '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15)',
                   }}
                 >
-                  <span>Оставить заявку в</span>
+                  <span>Заявка в</span>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="/icons/max-logo.svg"
@@ -83,30 +106,6 @@ export default function Home() {
               <p className="mt-3 text-center text-sm sm:text-base font-raleway font-normal text-white/50">
                 Сервис предоставляется бесплатно
               </p>
-            </div>
-
-            {/* Partners — with label */}
-            <div className="flex flex-col items-center shrink-0">
-              <p
-                className="text-sm md:text-xl lg:text-2xl font-raleway font-semibold text-white/85 mb-2 md:mb-5 tracking-wide"
-                style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}
-              >
-                При поддержке
-              </p>
-              <div className="flex items-center gap-4 md:gap-8">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/sponsor1.jpeg"
-                  alt="Совет ветеранов СВО ФПСР"
-                  className="h-14 md:h-24 lg:h-32 w-auto object-contain drop-shadow-lg rounded-[25%] opacity-90"
-                />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/sponsor2.png"
-                  alt="Ассоциация ветеранов СВО г.о. Дубна"
-                  className="h-14 md:h-24 lg:h-32 w-auto object-contain drop-shadow-lg rounded-[25%] opacity-90"
-                />
-              </div>
             </div>
           </div>
         </div>
