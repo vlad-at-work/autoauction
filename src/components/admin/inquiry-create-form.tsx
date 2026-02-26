@@ -117,7 +117,14 @@ export function InquiryCreateForm() {
         <Field orientation="vertical" data-invalid={!!fieldErrors?.phone}>
           <FieldLabel>Телефон</FieldLabel>
           <FieldContent>
-            <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <Input
+              type="tel"
+              inputMode="numeric"
+              maxLength={11}
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="79991234567"
+            />
             <FieldError
               errors={[fieldErrors?.phone ? { message: fieldErrors.phone } : undefined]}
             />

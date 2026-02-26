@@ -278,7 +278,14 @@ function MiniAppInquiryFormPageInner() {
               <Field orientation="vertical" data-invalid={!!form.formState.errors.phone}>
                 <FieldLabel htmlFor="phone">Телефон</FieldLabel>
                 <FieldContent>
-                  <Input id="phone" {...form.register('phone')} placeholder="+7…" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={11}
+                    {...form.register('phone')}
+                    placeholder="79991234567"
+                  />
                   <FieldError errors={[form.formState.errors.phone]} />
                 </FieldContent>
               </Field>
