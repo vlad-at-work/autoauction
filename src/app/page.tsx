@@ -9,25 +9,42 @@ export default function Home() {
           style={{ backgroundImage: 'url(/header.jpg)' }}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30" />
-          {/* Top shadow */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-transparent" />
+          {/* Top shadow — stronger */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-transparent" />
           <div className="absolute inset-0 backdrop-blur-sm" />
         </div>
 
         {/* Hero content — constrained to page bounds */}
         <div className="relative z-10 h-full max-w-6xl mx-auto px-6 md:px-12 flex flex-col">
-          {/* Logo — top left, inside page bounds */}
-          <div className="pt-6 md:pt-8">
+          {/* Top row: logo left, partners right */}
+          <div className="flex items-start justify-between pt-3 md:pt-4">
+            {/* Logo — top left */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo1.png"
               alt="Свои Авто"
-              className="h-20 sm:h-24 w-auto object-contain drop-shadow-lg"
+              className="h-20 sm:h-24 w-auto object-contain drop-shadow-lg shrink-0"
             />
+
+            {/* Partners — right side, vertically centered */}
+            <div className="hidden md:flex items-center gap-6">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/sponsor1.png"
+                alt="Совет ветеранов СВО ФПСР"
+                className="h-16 lg:h-20 w-auto object-contain drop-shadow-lg"
+              />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/sponsor2.png"
+                alt="Ассоциация ветеранов СВО г.о. Дубна"
+                className="h-16 lg:h-20 w-auto object-contain drop-shadow-lg"
+              />
+            </div>
           </div>
 
-          {/* Heading — vertically centered in remaining space, left-aligned */}
-          <div className="flex-1 flex items-center">
+          {/* Heading — pushed up close to logo */}
+          <div className="mt-4 md:mt-6">
             <h1 className="max-w-xl text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-tight">
               Специальный сервис для поддержки участников СВО и их семей
             </h1>
