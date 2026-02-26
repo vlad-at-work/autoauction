@@ -32,7 +32,7 @@ export default function Home() {
         {/* Hero content — constrained to page bounds */}
         <div className="relative z-10 h-full max-w-6xl mx-auto px-6 md:px-12 flex flex-col">
           {/* Main row: heading left, partners right — shifted up from center */}
-          <div className="flex-1 flex items-start justify-between gap-8 -mt-12 pt-[10vh]">
+          <div className="flex-1 flex items-start justify-center gap-16 -mt-12 pt-[10vh]">
             {/* Heading + CTA buttons */}
             <div className="max-w-2xl">
               <h1
@@ -113,8 +113,8 @@ export default function Home() {
       </section>
 
       {/* Slogan */}
-      <section className="bg-stone-50 py-8 md:py-10">
-        <div className="max-w-6xl mx-auto px-6 md:px-12">
+      <section className="bg-stone-50 py-6 md:py-8">
+        <div className="mx-auto px-6 md:px-16 lg:px-24">
           <h2
             className="font-russo text-stone-800 leading-tight text-center"
             style={{ fontSize: 'clamp(1.5rem, 4vw, 2.5rem)' }}
@@ -126,7 +126,7 @@ export default function Home() {
       </section>
 
       {/* Как это работает */}
-      <section className="bg-white py-8 md:py-10">
+      <section className="bg-white py-6 md:py-8">
         <div className="max-w-4xl mx-auto px-6 md:px-12">
           <h3 className="font-russo text-stone-700 text-2xl md:text-3xl text-center mb-6">
             Как это работает
@@ -161,7 +161,7 @@ export default function Home() {
       </section>
 
       {/* Миссия */}
-      <section className="bg-stone-50 py-8 md:py-10">
+      <section className="bg-stone-50 py-6 md:py-8">
         <div className="max-w-3xl mx-auto px-6 md:px-12">
           <h3 className="font-russo text-stone-700 text-2xl md:text-3xl text-center mb-4">
             Миссия
@@ -175,7 +175,7 @@ export default function Home() {
       </section>
 
       {/* Что это даёт */}
-      <section className="bg-white py-8 md:py-10">
+      <section className="bg-white py-6 md:py-8">
         <div className="max-w-3xl mx-auto px-6 md:px-12">
           <h3 className="font-russo text-stone-700 text-2xl md:text-3xl text-center mb-5">
             Что это даёт?
@@ -212,7 +212,7 @@ export default function Home() {
       </section>
 
       {/* Bottom CTA */}
-      <section className="bg-stone-50 py-8 md:py-10">
+      <section className="bg-stone-50 py-6 md:py-8">
         <div className="max-w-xl mx-auto px-6 md:px-12">
           <h3 className="font-russo text-stone-700 text-2xl md:text-3xl text-center mb-4">
             Оставить заявку
