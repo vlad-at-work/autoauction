@@ -54,8 +54,7 @@ export default function Home() {
                       '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15)',
                   }}
                 >
-                  <span className="md:hidden">Заявка в</span>
-                  <span className="hidden md:inline">Оставить заявку в</span>
+                  <span>Оставить заявку в</span>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="/icons/telegram-logo.svg"
@@ -72,8 +71,7 @@ export default function Home() {
                       '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15)',
                   }}
                 >
-                  <span className="md:hidden">Заявка в</span>
-                  <span className="hidden md:inline">Оставить заявку в</span>
+                  <span>Оставить заявку в</span>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="/icons/max-logo.svg"
@@ -168,8 +166,8 @@ export default function Home() {
         <img
           src="/soldier3.png"
           alt=""
-          className="absolute bottom-0 w-auto object-contain object-right-bottom opacity-40 pointer-events-none right-[-50%] md:right-[-15%]"
-          style={{ height: '120%' }}
+          className="absolute bottom-0 w-auto object-contain object-right-bottom opacity-40 pointer-events-none right-[-25%] md:right-[-5%]"
+          style={{ height: '105%' }}
         />
         <div className="relative max-w-3xl mx-auto px-6 md:px-12">
           <h3 className="font-russo text-stone-700 text-2xl md:text-4xl text-center mb-3 md:mb-4">
