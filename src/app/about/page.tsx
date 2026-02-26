@@ -163,7 +163,7 @@ export default function AboutPage() {
               О проекте
             </a>
             <a
-              href="#"
+              href="/contact"
               className="font-raleway text-stone-400 text-sm hover:text-stone-300 transition-colors"
             >
               Связаться
