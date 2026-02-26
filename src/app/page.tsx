@@ -21,8 +21,8 @@ export default function Home() {
 
         {/* Hero content — constrained to page bounds */}
         <div className="relative z-10 h-full max-w-6xl mx-auto px-6 md:px-12 flex flex-col">
-          {/* Logo — centered */}
-          <div className="pt-1 md:pt-2 flex justify-center">
+          {/* Logo — top left */}
+          <div className="pt-1 md:pt-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo1.png"
@@ -31,8 +31,8 @@ export default function Home() {
             />
           </div>
 
-          {/* Main row: heading left, partners right */}
-          <div className="flex items-center justify-between gap-8 mt-2 md:mt-4">
+          {/* Main row: heading left, partners right — pushed up tight */}
+          <div className="flex items-center justify-between gap-8 mt-1 md:mt-2">
             {/* Heading + CTA buttons */}
             <div className="max-w-xl">
               <h1
@@ -44,7 +44,12 @@ export default function Home() {
               <div className="flex gap-3 mt-4">
                 <a
                   href={tgBotUrl}
-                  className="flex-1 flex items-center justify-center gap-2 h-12 bg-sky-500 hover:bg-sky-600 text-white font-semibold text-sm sm:text-base rounded-md transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 h-12 text-white font-semibold text-sm sm:text-base rounded-md transition-opacity hover:opacity-90"
+                  style={{
+                    background: 'linear-gradient(to right, rgb(39, 161, 227), rgb(41, 164, 230))',
+                    boxShadow:
+                      '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15)',
+                  }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src="/icons/telegram-logo.svg" alt="" className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -52,7 +57,12 @@ export default function Home() {
                 </a>
                 <a
                   href={maxBotUrl}
-                  className="flex-1 flex items-center justify-center gap-2 h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm sm:text-base rounded-md transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 h-12 text-white font-semibold text-sm sm:text-base rounded-md transition-opacity hover:opacity-90"
+                  style={{
+                    background: 'linear-gradient(to right, rgb(48, 92, 252), rgb(149, 75, 219))',
+                    boxShadow:
+                      '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15)',
+                  }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src="/icons/max-logo.svg" alt="" className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -72,15 +82,15 @@ export default function Home() {
               <div className="flex items-center gap-5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/sponsor1.png"
+                  src="/sponsor1.jpeg"
                   alt="Совет ветеранов СВО ФПСР"
-                  className="h-24 lg:h-32 w-auto object-contain drop-shadow-lg"
+                  className="h-24 lg:h-32 w-auto object-contain drop-shadow-lg rounded-[25%]"
                 />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/sponsor2.png"
                   alt="Ассоциация ветеранов СВО г.о. Дубна"
-                  className="h-24 lg:h-32 w-auto object-contain drop-shadow-lg"
+                  className="h-24 lg:h-32 w-auto object-contain drop-shadow-lg rounded-[25%]"
                 />
               </div>
             </div>
@@ -126,7 +136,7 @@ export default function Home() {
 
       {/* Sponsor logos
       <div className="flex gap-3">
-        <img src="/sponsor1.png" alt="Совет ветеранов СВО ФПСР" className="h-16 w-auto object-contain" />
+        <img src="/sponsor1.jpeg" alt="Совет ветеранов СВО ФПСР" className="h-16 w-auto object-contain" />
         <img src="/sponsor2.png" alt="Ассоциация ветеранов СВО г.о. Дубна" className="h-16 w-auto object-contain" />
       </div>
       */}
