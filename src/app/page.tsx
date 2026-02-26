@@ -113,8 +113,8 @@ export default function Home() {
       </section>
 
       {/* Slogan */}
-      <section className="bg-stone-50 py-16 md:py-20">
-        <div className="max-w-3xl mx-auto px-6 md:px-12">
+      <section className="bg-stone-50 py-8 md:py-10">
+        <div className="max-w-6xl mx-auto px-6 md:px-12">
           <h2
             className="font-russo text-stone-800 leading-tight text-center"
             style={{ fontSize: 'clamp(1.5rem, 4vw, 2.5rem)' }}
@@ -126,9 +126,9 @@ export default function Home() {
       </section>
 
       {/* Как это работает */}
-      <section className="bg-white py-16 md:py-20">
+      <section className="bg-white py-8 md:py-10">
         <div className="max-w-4xl mx-auto px-6 md:px-12">
-          <h3 className="font-russo text-stone-700 text-2xl md:text-3xl text-center mb-12">
+          <h3 className="font-russo text-stone-700 text-2xl md:text-3xl text-center mb-6">
             Как это работает
           </h3>
           <div className="space-y-8 max-w-2xl mx-auto">
@@ -161,9 +161,9 @@ export default function Home() {
       </section>
 
       {/* Миссия */}
-      <section className="bg-stone-50 py-16 md:py-20">
+      <section className="bg-stone-50 py-8 md:py-10">
         <div className="max-w-3xl mx-auto px-6 md:px-12">
-          <h3 className="font-russo text-stone-700 text-2xl md:text-3xl text-center mb-8">
+          <h3 className="font-russo text-stone-700 text-2xl md:text-3xl text-center mb-4">
             Миссия
           </h3>
           <p className="font-raleway text-stone-600 text-lg leading-relaxed text-center border-l-4 border-stone-400 pl-6 ml-4">
@@ -175,9 +175,9 @@ export default function Home() {
       </section>
 
       {/* Что это даёт */}
-      <section className="bg-white py-16 md:py-20">
+      <section className="bg-white py-8 md:py-10">
         <div className="max-w-3xl mx-auto px-6 md:px-12">
-          <h3 className="font-russo text-stone-700 text-2xl md:text-3xl text-center mb-10">
+          <h3 className="font-russo text-stone-700 text-2xl md:text-3xl text-center mb-5">
             Что это даёт?
           </h3>
           <ul className="space-y-5 max-w-2xl mx-auto">
@@ -212,9 +212,9 @@ export default function Home() {
       </section>
 
       {/* Bottom CTA */}
-      <section className="bg-stone-50 py-16 md:py-20">
+      <section className="bg-stone-50 py-8 md:py-10">
         <div className="max-w-xl mx-auto px-6 md:px-12">
-          <h3 className="font-russo text-stone-700 text-2xl md:text-3xl text-center mb-8">
+          <h3 className="font-russo text-stone-700 text-2xl md:text-3xl text-center mb-4">
             Оставить заявку
           </h3>
           <div className="flex gap-3">
