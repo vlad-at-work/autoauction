@@ -134,7 +134,7 @@ export default function ContactPage() {
             </p>
             <p className="font-raleway font-medium text-base md:text-lg leading-relaxed">
               <a
-                href="https://vk.com/svoiavto"
+                href="https://vk.com/svoauto"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:text-blue-700 underline transition-colors"
