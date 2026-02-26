@@ -115,38 +115,126 @@ export default function AboutPage() {
       </section>
 
       {/* О проекте */}
-      <section className="bg-stone-50 py-6 md:py-10">
+      <section className="bg-stone-50 py-4 md:py-8">
         <div className="max-w-3xl mx-auto px-6 md:px-12">
-          <h2 className="font-russo text-stone-800 text-2xl md:text-4xl text-center mb-5 md:mb-8">
+          <h3 className="font-russo text-stone-700 text-2xl md:text-4xl text-center mb-3 md:mb-4">
             О проекте
-          </h2>
-          <div className="space-y-4 md:space-y-6">
-            <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed">
-              <strong className="font-bold">Свои Авто</strong> — это некоммерческая платформа,
-              помогающая ветеранам СВО и их семьям приобрести новый автомобиль ЛАДА по справедливой
-              цене.
-            </p>
-            <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed">
-              Мы <strong className="font-bold">бесплатно</strong> собираем заявки на покупку
-              автомобилей и организуем конкурентные торги среди сертифицированных дилеров Московской
-              области. Покупатель получает лучшие предложения без необходимости обзванивать
-              автосалоны и торговаться самостоятельно.
-            </p>
-            <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed">
-              <strong className="font-bold">Часть комиссии</strong>, которую дилеры платят за
-              привлечение клиента, направляется на реабилитацию ветеранов СВО и поддержку их семей
-              через партнёрские благотворительные организации.
-            </p>
-            <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed">
-              Мы <strong className="font-bold">не передаём</strong> личные данные покупателей
-              дилерам, пока покупатель сам не выберет понравившееся предложение. Это защищает от
-              спама и нежелательных звонков.
-            </p>
-            <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed">
-              Проект создан и развивается при поддержке{' '}
-              <strong className="font-bold">Совета ветеранов СВО ФПСР</strong> и{' '}
-              <strong className="font-bold">Ассоциации ветеранов СВО г.о. Дубна</strong>.
-            </p>
+          </h3>
+          <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center">
+            {'\u00AB'}Свои Авто{'\u00BB'} — социальный проект команды добровольцев из Дубны при
+            поддержке совета ветеранов СВО Дубны и совета ветеранов ФПСР (федерация практической
+            стрельбы России).
+          </p>
+          <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center mt-4">
+            Мы поддерживаем:
+          </p>
+          <ul className="mt-3 space-y-2 max-w-2xl mx-auto">
+            <li className="flex gap-4 items-start">
+              <span className="shrink-0 text-stone-500 mt-0.5">&#x2714;</span>
+              <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed">
+                ветеранов СВО и их семьи;
+              </p>
+            </li>
+            <li className="flex gap-4 items-start">
+              <span className="shrink-0 text-stone-500 mt-0.5">&#x2714;</span>
+              <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed">
+                отечественный автопром;
+              </p>
+            </li>
+            <li className="flex gap-4 items-start">
+              <span className="shrink-0 text-stone-500 mt-0.5">&#x2714;</span>
+              <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed">
+                российские интернет-платформы (мессенджер MAXX).
+              </p>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      {/* Как мы работаем */}
+      <section className="bg-white py-4 md:py-8">
+        <div className="max-w-3xl mx-auto px-6 md:px-12">
+          <h3 className="font-russo text-stone-700 text-2xl md:text-4xl text-center mb-3 md:mb-4">
+            Как мы работаем
+          </h3>
+          <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center">
+            Мы ничего не просим и не принимаем никаких пожертвований. У нас есть модель взаимного
+            сотрудничества с коммерческими компаниями, которая заключается в том, что мы помогаем им
+            найти покупателей, а они в свою очередь в ответ помогают нашим парням, вернувшимся с
+            СВО. Сейчас проект живет благодаря энтузиазму команды в свободное время, но в будущем мы
+            ищем разработчика и дизайнера.
+          </p>
+        </div>
+      </section>
+
+      {/* Главная цель */}
+      <section className="bg-stone-50 py-4 md:py-8">
+        <div className="max-w-3xl mx-auto px-6 md:px-12">
+          <h3 className="font-russo text-stone-700 text-2xl md:text-4xl text-center mb-3 md:mb-4">
+            Главная цель
+          </h3>
+          <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center">
+            Самая главная цель проекта, это поддержка парней, которые приходят с передовой и которым
+            нужно помогать адаптироваться к гражданской жизни. Для начала мы хотели бы помочь
+            проекту
+            {' \u00AB'}Стальной характер{'\u00BB'}, это проект включает в себя различные спортивные
+            тренировки, в том числе в дисциплине {'\u00AB'}Практическая стрельба{'\u00BB'}. Помощь
+            идет на оплату тренеров и закупку расходных материалов.
+          </p>
+        </div>
+      </section>
+
+      {/* Поддержка отечественного автопрома */}
+      <section className="bg-white py-4 md:py-8">
+        <div className="max-w-3xl mx-auto px-6 md:px-12">
+          <h3 className="font-russo text-stone-700 text-2xl md:text-4xl text-center mb-3 md:mb-4">
+            Поддержка отечественного автопрома
+          </h3>
+          <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center">
+            Проект взаимодействует с маркой Лада и мы хотели бы, чтобы люди больше гордились
+            отечественным продуктом и выбирали его в качестве основного средства передвижения.
+          </p>
+        </div>
+      </section>
+
+      {/* Поддержка отечественных сервисов */}
+      <section className="bg-stone-50 py-4 md:py-8">
+        <div className="max-w-3xl mx-auto px-6 md:px-12">
+          <h3 className="font-russo text-stone-700 text-2xl md:text-4xl text-center mb-3 md:mb-4">
+            Поддержка отечественных сервисов
+          </h3>
+          <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center">
+            Проект и все данные пользователей находятся на территории Российской Федерации, в
+            соответствии с требованиями законодательства. Мы помогаем продвигать новую платформу
+            мессенджера Макс и в первую очередь адоптировали проект под неё.
+          </p>
+        </div>
+      </section>
+
+      {/* Связь */}
+      <section className="bg-white py-4 md:py-8">
+        <div className="max-w-3xl mx-auto px-6 md:px-12">
+          <h3 className="font-russo text-stone-700 text-2xl md:text-4xl text-center mb-3 md:mb-4">
+            Связь
+          </h3>
+          <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center">
+            По вопросам сотрудничества и другим, пишите на почту или группу в ВК:
+          </p>
+          <div className="mt-4 flex flex-col items-center gap-2">
+            <a
+              href="mailto:gleb@ub.am"
+              className="font-raleway font-medium text-base md:text-lg text-blue-600 hover:text-blue-700 underline transition-colors"
+            >
+              gleb@ub.am
+            </a>
+            <a
+              href="https://vk.com/svoauto"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-raleway font-medium text-base md:text-lg text-blue-600 hover:text-blue-700 underline transition-colors"
+            >
+              Подписывайтесь на нас в VK
+            </a>
           </div>
         </div>
       </section>
