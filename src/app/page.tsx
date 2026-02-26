@@ -41,45 +41,43 @@ export default function Home() {
               >
                 Специальный сервис для поддержки участников СВО и их семей
               </h1>
-              <div className="mt-4 bg-black/50 px-4 py-2 text-center rounded">
-                <p className="text-lg sm:text-xl font-raleway font-bold text-white/70">
-                  Сервис предоставляется бесплатно
-                </p>
-              </div>
               <div className="flex gap-3 mt-6">
                 <a
                   href={tgBotUrl}
-                  className="flex-1 flex items-center justify-center gap-2 h-16 text-white font-semibold text-base sm:text-lg rounded-md transition-opacity hover:opacity-90"
+                  className="flex-1 flex items-center justify-center gap-3 h-16 text-white font-semibold text-lg sm:text-xl rounded-md transition-opacity hover:opacity-90"
                   style={{
                     background: 'linear-gradient(to right, rgb(39, 161, 227), rgb(41, 164, 230))',
                     boxShadow:
                       '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15)',
                   }}
                 >
+                  <span>Оставить заявку</span>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/icons/telegram-logo.svg" alt="" className="h-5 w-5 sm:h-6 sm:w-6" />
-                  <span>Заявка в Telegram</span>
+                  <img src="/icons/telegram-logo.svg" alt="" className="h-6 w-6 sm:h-7 sm:w-7" />
                 </a>
                 <a
                   href={maxBotUrl}
-                  className="flex-1 flex items-center justify-center gap-2 h-16 text-white font-semibold text-base sm:text-lg rounded-md transition-opacity hover:opacity-90"
+                  className="flex-1 flex items-center justify-center gap-3 h-16 text-white font-semibold text-lg sm:text-xl rounded-md transition-opacity hover:opacity-90"
                   style={{
                     background: 'linear-gradient(to right, rgb(48, 92, 252), rgb(149, 75, 219))',
                     boxShadow:
                       '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15)',
                   }}
                 >
+                  <span>Оставить заявку</span>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/icons/max-logo.svg" alt="" className="h-5 w-5 sm:h-6 sm:w-6" />
-                  <span>Заявка в Max</span>
+                  <img src="/icons/max-logo.svg" alt="" className="h-6 w-6 sm:h-7 sm:w-7" />
                 </a>
               </div>
+              <p className="mt-3 text-center text-sm sm:text-base font-raleway font-normal text-white/50">
+                Сервис предоставляется бесплатно
+              </p>
             </div>
 
             {/* Partners — with label */}
             <div className="hidden md:flex flex-col items-center shrink-0">
               <p
-                className="text-xl lg:text-2xl font-raleway font-semibold text-white/85 mb-3 tracking-wide"
+                className="text-xl lg:text-2xl font-raleway font-semibold text-white/85 mb-5 tracking-wide"
                 style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}
               >
                 При поддержке
