@@ -25,16 +25,16 @@ export default function Home() {
           <img
             src="/logo1.png"
             alt="Свои Авто"
-            className="h-20 sm:h-24 w-auto object-contain drop-shadow-lg"
+            className="h-24 sm:h-28 w-auto object-contain drop-shadow-lg"
           />
         </div>
 
         {/* Hero content — constrained to page bounds */}
         <div className="relative z-10 h-full max-w-6xl mx-auto px-6 md:px-12 flex flex-col">
-          {/* Main row: heading left, partners right — at the very top */}
-          <div className="flex items-center justify-between gap-8 pt-3 md:pt-4">
+          {/* Main row: heading left, partners right — vertically centered */}
+          <div className="flex-1 flex items-center justify-between gap-8">
             {/* Heading + CTA buttons */}
-            <div className="max-w-xl">
+            <div className="max-w-2xl">
               <h1
                 className="text-3xl sm:text-4xl md:text-5xl font-russo text-white leading-tight"
                 style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}
@@ -44,7 +44,7 @@ export default function Home() {
               <div className="flex gap-3 mt-4">
                 <a
                   href={tgBotUrl}
-                  className="flex-1 flex items-center justify-center gap-2 h-12 text-white font-semibold text-sm sm:text-base rounded-md transition-opacity hover:opacity-90"
+                  className="flex-1 flex items-center justify-center gap-2 h-14 text-white font-semibold text-base sm:text-lg rounded-md transition-opacity hover:opacity-90"
                   style={{
                     background: 'linear-gradient(to right, rgb(39, 161, 227), rgb(41, 164, 230))',
                     boxShadow:
@@ -57,7 +57,7 @@ export default function Home() {
                 </a>
                 <a
                   href={maxBotUrl}
-                  className="flex-1 flex items-center justify-center gap-2 h-12 text-white font-semibold text-sm sm:text-base rounded-md transition-opacity hover:opacity-90"
+                  className="flex-1 flex items-center justify-center gap-2 h-14 text-white font-semibold text-base sm:text-lg rounded-md transition-opacity hover:opacity-90"
                   style={{
                     background: 'linear-gradient(to right, rgb(48, 92, 252), rgb(149, 75, 219))',
                     boxShadow:
@@ -79,18 +79,18 @@ export default function Home() {
               >
                 При поддержке
               </p>
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-8">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/sponsor1.jpeg"
                   alt="Совет ветеранов СВО ФПСР"
-                  className="h-24 lg:h-32 w-auto object-contain drop-shadow-lg rounded-[25%]"
+                  className="h-24 lg:h-32 w-auto object-contain drop-shadow-lg rounded-[25%] opacity-90"
                 />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/sponsor2.png"
                   alt="Ассоциация ветеранов СВО г.о. Дубна"
-                  className="h-24 lg:h-32 w-auto object-contain drop-shadow-lg rounded-[25%]"
+                  className="h-24 lg:h-32 w-auto object-contain drop-shadow-lg rounded-[25%] opacity-90"
                 />
               </div>
             </div>
