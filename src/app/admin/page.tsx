@@ -1,7 +1,6 @@
 import { prisma } from '@/lib/db';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, FileText, Store, Tag, CheckCircle } from 'lucide-react';
-import { ClearDbButton } from '@/components/admin/clear-db-button';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,7 +49,6 @@ export default async function AdminDashboardPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Дашборд</h1>
-        <ClearDbButton />
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {cards.map((card) => (
