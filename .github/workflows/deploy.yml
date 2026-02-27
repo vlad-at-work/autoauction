@@ -59,13 +59,13 @@ jobs:
         if: always()
         uses: appleboy/telegram-action@master
         with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID }}
-          token: ${{ secrets.TELEGRAM_TOKEN }}
+          to: ${{ secrets.NOTIFICATION_TG_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            ✅ Workflow ${{ job.status }}!
+            Workflow ${{ job.status }}!
             Repo: ${{ github.repository }}
             By: ${{ github.actor }}
-            
+
       - name: Restart app
         uses: appleboy/ssh-action@master
         with:
