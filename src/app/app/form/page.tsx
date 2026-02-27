@@ -252,11 +252,12 @@ function MiniAppInquiryFormPageInner() {
           <div className="flex flex-col items-center gap-2">
             <CardTitle className="text-center text-xl">Заявка на автомобиль</CardTitle>
             <p className="text-muted-foreground text-center text-base">
-              Заполните форму — дилеры увидят запрос в течение 24 часов.{' '}
-              <span className="font-bold">
-                Обработка данных осуществляется в соответствии с ч. 5 ст. 18 ФЗ № 152‑ФЗ: серверы
-                расположены в РФ
-              </span>
+              Заполните форму — дилеры увидят запрос в течение 24 часов.
+            </p>
+            <p className="text-muted-foreground text-center text-base">
+              {/* <span className="font-bold"> */}
+              Мы храним ваши данные на серверах в РФ в соответствии с законодательством (152‑ФЗ)
+              {/* </span> */}
             </p>
           </div>
         </CardHeader>
