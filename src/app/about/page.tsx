@@ -211,8 +211,29 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Связь */}
+      {/* Персональные данные */}
       <section className="bg-white py-4 md:py-8">
+        <div className="max-w-3xl mx-auto px-6 md:px-12">
+          <h3 className="font-russo text-stone-700 text-2xl md:text-4xl text-center mb-3 md:mb-4">
+            Персональные данные
+          </h3>
+          <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center">
+            Мы обрабатываем ваши персональные данные в соответствии с требованиями Федерального
+            закона от 27 июля 2006 года №152-ФЗ «О персональных данных». В частности, часть 5 статьи
+            18 этого закона обязывает нас обеспечивать запись, систематизацию, накопление, хранение,
+            уточнение и извлечение персональных данных граждан РФ с использованием баз данных,
+            расположенных на территории России.
+          </p>
+          <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center mt-4">
+            Все наши серверы и базы данных размещены в России, в дата-центре reg.ru (Москва). Это
+            гарантирует соблюдение требований законодательства о локализации данных и защите вашей
+            информации.
+          </p>
+        </div>
+      </section>
+
+      {/* Связь */}
+      <section className="bg-stone-50 py-4 md:py-8">
         <div className="max-w-3xl mx-auto px-6 md:px-12">
           <h3 className="font-russo text-stone-700 text-2xl md:text-4xl text-center mb-3 md:mb-4">
             Связь
