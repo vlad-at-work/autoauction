@@ -30,9 +30,7 @@ const MAX_BOT_NAME = process.env.MAX_BOT_NAME || process.env.NEXT_PUBLIC_MAX_BOT
 const MAX_BOT_NAME_DEALER =
   process.env.MAX_BOT_NAME_DEALER || process.env.NEXT_PUBLIC_MAX_BOT_NAME_DEALER || '';
 // App URL for Telegram web_app buttons
-const APP_URL =
-  process.env.NEXT_PUBLIC_APP_URL ||
-  `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL || 'localhost:3000'}`;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 /**
  * Send plain text message

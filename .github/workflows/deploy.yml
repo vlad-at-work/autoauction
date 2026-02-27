@@ -71,8 +71,7 @@ jobs:
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           format: html
           message: |
-            <code>${{ github.event.head_commit.message }}</code> 
-            <b>${{ job.status == 'success' && '✅ OK' || '❌ FAILED' }}</b>
+            <b>${{ job.status == 'success' && '✅ OK' || '❌ FAILED' }}</b> <code>${{ github.event.head_commit.message }}</code> 
             
             <b>Repo:</b> <code>${{ github.repository }}</code>
             <b>Branch:</b> <code>${{ github.ref_name }}</code>

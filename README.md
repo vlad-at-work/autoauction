@@ -9,7 +9,7 @@ All legacy docs were moved to `docs/archived_docs/`. This `README.md` is the sin
 - Runtime: Bun
 - Framework: Next.js 16 (App Router)
 - DB: PostgreSQL (Neon) via Prisma
-- Deploy: Vercel
+- Deploy: VPS (regru) via GitHub Actions
 - Bots: Telegram Bot API + MAX Platform API
 
 ## App Layouts & Routes
@@ -61,7 +61,7 @@ All legacy docs were moved to `docs/archived_docs/`. This `README.md` is the sin
 - `PasswordResetCode`
   - 6-digit, expires after 10 minutes
 
-## Environment Variables (Vercel + `.env.local`)
+## Environment Variables (`.env.local`)
 
 Do not commit secrets; this list is names/meaning only.
 
@@ -104,11 +104,11 @@ Do not commit secrets; this list is names/meaning only.
 - `MAX_BOT_NAME_DEALER`
 - `NEXT_PUBLIC_MAX_BOT_NAME_DEALER`
 
-**Deep-link base URL (strongly recommended)**
+**Deep-link base URL (required)**
 
 - `NEXT_PUBLIC_APP_URL`
   - Used for Telegram `web_app` buttons and dealer/buyer notification buttons.
-  - Fallback logic: `https://$VERCEL_URL` on Vercel, else `http://localhost:3000`.
+  - Example: `https://autoauction.ru`
 
 **Legacy (optional)**
 
@@ -200,18 +200,20 @@ The app supports **dual-bot architecture**: separate bots for customers (buyers)
 
 ### Manual Webhook Setup (if needed)
 
+Replace `$APP_URL` with your actual domain (e.g., `https://autoauction.ru`).
+
 **MAX Platform:**
 
 ```bash
 # Customer bot
 curl -X POST https://platform-api.max.ru/subscriptions \
   -H "Authorization: $MAX_BOT_TOKEN" \
-  -d '{"url": "https://autoauction-two.vercel.app/api/webhooks/max?bot=customer"}'
+  -d '{"url": "'$APP_URL'/api/webhooks/max?bot=customer"}'
 
 # Dealer bot
 curl -X POST https://platform-api.max.ru/subscriptions \
   -H "Authorization: $MAX_BOT_TOKEN_DEALER" \
-  -d '{"url": "https://autoauction-two.vercel.app/api/webhooks/max?bot=dealer"}'
+  -d '{"url": "'$APP_URL'/api/webhooks/max?bot=dealer"}'
 ```
 
 **Telegram:**
@@ -219,11 +221,11 @@ curl -X POST https://platform-api.max.ru/subscriptions \
 ```bash
 # Customer bot
 curl -X POST "https://api.telegram.org/bot$TG_BOT_TOKEN/setWebhook" \
-  -d '{"url": "https://autoauction-two.vercel.app/api/webhooks/telegram?bot=customer", "secret_token": "'$TG_WEBHOOK_SECRET'"}'
+  -d '{"url": "'$APP_URL'/api/webhooks/telegram?bot=customer", "secret_token": "'$TG_WEBHOOK_SECRET'"}'
 
 # Dealer bot
 curl -X POST "https://api.telegram.org/bot$TG_BOT_TOKEN_DEALER/setWebhook" \
-  -d '{"url": "https://autoauction-two.vercel.app/api/webhooks/telegram?bot=dealer", "secret_token": "'$TG_DEALER_WEBHOOK_SECRET'"}'
+  -d '{"url": "'$APP_URL'/api/webhooks/telegram?bot=dealer", "secret_token": "'$TG_DEALER_WEBHOOK_SECRET'"}'
 ```
 
 ## Local Dev
@@ -325,5 +327,5 @@ Authorization: Bearer mock:<platform>:<botType>:<userId>
 
 - Dealer sees “not registered”: admin must create dealer and/or send invite link; dealer can also share their platform ID to admin.
 - Dealer sees “needs invite”: there are multiple unclaimed dealers; use invite link from admin dealer detail.
-- Buttons open wrong domain: set `NEXT_PUBLIC_APP_URL` (or confirm `VERCEL_URL` is present on Vercel).
+- Buttons open wrong domain: set `NEXT_PUBLIC_APP_URL` to your production domain.
 - Notifications missing: ensure dealer is claimed (`platform`, `platformUserId` set) and bot tokens are configured.

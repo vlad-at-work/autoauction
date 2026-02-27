@@ -12,7 +12,7 @@
     "test:integration": "bun run test:live-db",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:prod": "PLAYWRIGHT_BASE_URL=https://autoauction.vercel.app playwright test",
+    "test:e2e:prod": "PLAYWRIGHT_BASE_URL=https://autoauction.ru playwright test",
     "test:full": "bun run test && bun run test:integration && bun run test:e2e",
     "e2e:install": "playwright install chromium",
     "db:generate": "prisma generate",

@@ -12,9 +12,7 @@ import { prisma } from '@/lib/db';
 import { isInviteTokenValid } from '@/lib/auth/dealer-invite';
 import { captureError } from '@/lib/hawk';
 
-const APP_URL =
-  process.env.NEXT_PUBLIC_APP_URL ||
-  `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL || 'autoauction-two.vercel.app'}`;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 type BotType = 'customer' | 'dealer';
 
