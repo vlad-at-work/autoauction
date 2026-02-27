@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/db';
 import { BroadcastForm } from '@/components/admin/broadcast-form';
 
+export const dynamic = 'force-dynamic';
+
 export default async function NotificationsPage() {
   const counts = await prisma.buyer.groupBy({
     by: ['platform'],
