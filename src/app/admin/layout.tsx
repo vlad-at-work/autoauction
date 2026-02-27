@@ -28,7 +28,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
         <nav className="p-4">
           <ul className="space-y-1">
-            {navItems.map((item) => (
+            {navItems.slice(0, 6).map((item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  prefetch={false}
+                  className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+            <li className="py-2">
+              <hr className="border-border" />
+            </li>
+            {navItems.slice(6).map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
