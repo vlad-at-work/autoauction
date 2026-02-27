@@ -8,19 +8,18 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Hero */}
-      <section className="relative h-auto md:h-[50vh] md:min-h-[400px]">
+      <section className="relative">
         {/* Background image */}
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: 'url(/header.jpg)' }}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30" />
-          {/* Top shadow — stronger */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-transparent" />
           <div className="absolute inset-0 backdrop-blur-sm" />
         </div>
 
-        {/* Logo — absolute, top-left, outside container flow */}
+        {/* Logo — absolute, top-left */}
         <div className="absolute z-20 top-2 left-4 md:top-3 md:left-8">
           <Link href="/">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -32,11 +31,10 @@ export default function ContactPage() {
           </Link>
         </div>
 
-        {/* Hero content — constrained to page bounds */}
-        <div className="relative z-10 h-full max-w-6xl mx-auto px-6 md:px-12 flex flex-col">
-          {/* Heading + CTA — centered */}
-          <div className="flex-1 flex flex-col items-center justify-center pt-4 pb-6 gap-2 md:pt-3 md:pb-0">
-            {/* Partners — "presenting" block */}
+        {/* Hero content */}
+        <div className="relative z-10 max-w-6xl mx-auto px-6 md:px-12">
+          <div className="flex flex-col items-center pt-4 pb-6 md:pt-6 md:pb-8 gap-2">
+            {/* Partners */}
             <div className="flex flex-col items-center">
               <p
                 className="text-xs md:text-sm font-raleway font-semibold text-white/60 mb-1 md:mb-1.5 tracking-wide uppercase"
@@ -49,13 +47,13 @@ export default function ContactPage() {
                 <img
                   src="/sponsor1.jpeg"
                   alt="Совет ветеранов СВО ФПСР"
-                  className="h-16 md:h-24 w-auto object-contain drop-shadow-lg rounded-[25%] opacity-90"
+                  className="h-16 md:h-20 lg:h-24 w-auto object-contain drop-shadow-lg rounded-[25%] opacity-90"
                 />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/sponsor2.png"
                   alt="Ассоциация ветеранов СВО г.о. Дубна"
-                  className="h-16 md:h-24 w-auto object-contain drop-shadow-lg rounded-[25%] opacity-90"
+                  className="h-16 md:h-20 lg:h-24 w-auto object-contain drop-shadow-lg rounded-[25%] opacity-90"
                 />
               </div>
             </div>
@@ -64,7 +62,7 @@ export default function ContactPage() {
               <h1
                 className="font-russo text-white/95 leading-[1.0] text-center"
                 style={{
-                  fontSize: 'clamp(2rem, 5vw, 3.25rem)',
+                  fontSize: 'clamp(1.75rem, 4vw, 3.25rem)',
                   textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 1px 3px rgba(0,0,0,0.4)',
                 }}
               >
