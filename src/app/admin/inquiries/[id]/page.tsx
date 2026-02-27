@@ -10,6 +10,7 @@ import { DeleteDialog } from '@/components/admin/delete-dialog';
 import { InquiryEditForm } from '@/components/admin/inquiry-edit-form';
 import { RestoreButton } from '@/components/admin/restore-button';
 import { deleteInquiry, restoreInquiry } from '@/lib/admin/actions';
+import { formatPhoneRU } from '@/lib/format-phone';
 
 type Params = Promise<{ id: string }>;
 
@@ -81,7 +82,7 @@ export default async function InquiryDetailPage({ params }: { params: Params }) 
               <span>{inquiry.name}</span>
 
               <span className="text-muted-foreground">Телефон:</span>
-              <span>{inquiry.phone}</span>
+              <span>{formatPhoneRU(inquiry.phone)}</span>
 
               <span className="text-muted-foreground">Эл. почта:</span>
               <span>{inquiry.email || '-'}</span>

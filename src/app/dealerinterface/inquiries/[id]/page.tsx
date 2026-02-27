@@ -9,6 +9,7 @@ import { useWebApp } from '@/hooks/use-webapp';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { OfferForm } from '@/app/dealerinterface/inquiries/[id]/offer-form';
 import { OfferCard } from '@/app/dealerinterface/inquiries/[id]/offer-card';
+import { formatPhoneRU } from '@/lib/format-phone';
 import {
   getShortId,
   getIdColorClass,
@@ -221,8 +222,11 @@ export default function DealerInquiryPage() {
               </div>
               <div>
                 <span className="font-medium">Телефон:</span>{' '}
-                <a href={`tel:${myTransaction.buyerPhone}`} className="text-blue-600 underline">
-                  {myTransaction.buyerPhone}
+                <a
+                  href={`tel:${myTransaction.buyerPhone.replace(/\D/g, '')}`}
+                  className="text-blue-600 underline"
+                >
+                  {formatPhoneRU(myTransaction.buyerPhone)}
                 </a>
               </div>
               {myTransaction.buyerEmail && (

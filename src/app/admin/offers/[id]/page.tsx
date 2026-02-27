@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { DeleteDialog } from '@/components/admin/delete-dialog';
 import { RestoreButton } from '@/components/admin/restore-button';
 import { deleteOffer, restoreOffer } from '@/lib/admin/actions';
+import { formatPhoneRU } from '@/lib/format-phone';
 
 type Params = Promise<{ id: string }>;
 
@@ -162,7 +163,7 @@ export default async function OfferDetailPage({ params }: { params: Params }) {
                     <span className="font-medium">{offer.transaction.buyerName}</span>
                   </div>
                   <div className="text-muted-foreground mt-1 text-xs">
-                    {offer.transaction.buyerPhone} •{' '}
+                    {formatPhoneRU(offer.transaction.buyerPhone)} •{' '}
                     {format(offer.transaction.acceptedAt, 'dd.MM.yyyy HH:mm')}
                   </div>
                 </Link>

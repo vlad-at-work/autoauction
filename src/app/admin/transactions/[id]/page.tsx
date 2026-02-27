@@ -11,6 +11,7 @@ import { DeleteDialog } from '@/components/admin/delete-dialog';
 import { RestoreButton } from '@/components/admin/restore-button';
 import { TransactionBillingForm } from '@/components/admin/transaction-billing-form';
 import { deleteTransaction, restoreTransaction } from '@/lib/admin/actions';
+import { formatPhoneRU } from '@/lib/format-phone';
 
 type Params = Promise<{ id: string }>;
 
@@ -37,7 +38,7 @@ export default async function TransactionDetailPage({ params }: { params: Params
   const dealerLabel =
     tx.dealerSubName || tx.dealerName || tx.dealer.subName || tx.dealer.name || tx.dealer.username;
   const dealerContact = tx.dealerEmail || tx.dealer.email || '-';
-  const dealerPhone = tx.dealerPhone || tx.dealer.phone || '-';
+  const dealerPhone = formatPhoneRU(tx.dealerPhone || tx.dealer.phone);
 
   const carLabel =
     (tx.inquiryModel || tx.inquiry.model) + ' ' + (tx.inquirySubmodel || tx.inquiry.submodel);
@@ -79,7 +80,7 @@ export default async function TransactionDetailPage({ params }: { params: Params
               <span>{tx.buyerName}</span>
 
               <span className="text-muted-foreground">Телефон:</span>
-              <span>{tx.buyerPhone}</span>
+              <span>{formatPhoneRU(tx.buyerPhone)}</span>
 
               <span className="text-muted-foreground">Email:</span>
               <span>{tx.buyerEmail || '-'}</span>

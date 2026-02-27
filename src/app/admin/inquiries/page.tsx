@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { formatPhoneRU } from '@/lib/format-phone';
 import type { Inquiry, Buyer, Prisma } from '@prisma/client';
 
 const LIMIT = 25;
@@ -79,7 +80,7 @@ export default async function InquiriesPage({ searchParams }: { searchParams: Se
       label: 'Модель',
       render: (i: InquiryWithRelations) => `${i.model} ${i.submodel}`,
     },
-    { key: 'phone', label: 'Телефон' },
+    { key: 'phone', label: 'Телефон', render: (i: InquiryWithRelations) => formatPhoneRU(i.phone) },
     { key: 'offers', label: 'Предложения', render: (i: InquiryWithRelations) => i._count.offers },
     {
       key: 'status',

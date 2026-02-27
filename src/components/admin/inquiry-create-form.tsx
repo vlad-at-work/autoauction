@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import InputMask from 'react-input-mask';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -117,14 +118,18 @@ export function InquiryCreateForm() {
         <Field orientation="vertical" data-invalid={!!fieldErrors?.phone}>
           <FieldLabel>Телефон</FieldLabel>
           <FieldContent>
-            <Input
-              type="tel"
-              inputMode="numeric"
-              maxLength={11}
+            <InputMask
+              mask="+7 999 99 99 99"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="79991234567"
-            />
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setPhone(e.target.value.replace(/\D/g, ''))
+              }
+            >
+              {(inputProps: {
+                value: string;
+                onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+              }) => <Input type="tel" placeholder="+7 ___ __ __ __" {...inputProps} />}
+            </InputMask>
             <FieldError
               errors={[fieldErrors?.phone ? { message: fieldErrors.phone } : undefined]}
             />

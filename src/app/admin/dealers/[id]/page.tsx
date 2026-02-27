@@ -11,6 +11,7 @@ import { DealerEditForm } from '@/components/admin/dealer-edit-form';
 import { RestoreButton } from '@/components/admin/restore-button';
 import { DealerInviteSection } from '@/components/admin/dealer-invite-section';
 import { deleteDealer, restoreDealer } from '@/lib/admin/actions';
+import { formatPhoneRU } from '@/lib/format-phone';
 
 type Params = Promise<{ id: string }>;
 
@@ -74,7 +75,7 @@ export default async function DealerDetailPage({ params }: { params: Params }) {
               <span>{dealer.subName || '-'}</span>
 
               <span className="text-muted-foreground">Телефон:</span>
-              <span>{dealer.phone || '-'}</span>
+              <span>{formatPhoneRU(dealer.phone)}</span>
 
               <span className="text-muted-foreground">Email:</span>
               <span>{dealer.email || '-'}</span>
