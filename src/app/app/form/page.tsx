@@ -2,6 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Suspense, useEffect, useMemo, useState } from 'react';
@@ -246,11 +247,14 @@ function MiniAppInquiryFormPageInner() {
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col gap-6 px-4 py-10">
       <Card>
-        <CardHeader className="flex flex-col gap-2">
-          <CardTitle className="text-xl">Заявка на автомобиль</CardTitle>
-          <p className="text-muted-foreground text-base">
-            Заполните форму — дилеры увидят запрос в течение 24 часов.
-          </p>
+        <CardHeader className="flex flex-col items-center gap-4">
+          <Image src="/logo3.png" alt="Свои Авто" width={64} height={64} className="h-16 w-auto" />
+          <div className="flex flex-col items-center gap-2">
+            <CardTitle className="text-center text-xl">Заявка на автомобиль</CardTitle>
+            <p className="text-muted-foreground text-center text-base">
+              Заполните форму — дилеры увидят запрос в течение 24 часов.
+            </p>
+          </div>
         </CardHeader>
 
         <CardContent className="flex flex-col gap-6">
