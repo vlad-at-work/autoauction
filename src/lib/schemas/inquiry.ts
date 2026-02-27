@@ -13,7 +13,7 @@ export const inquiryCreateSchema = z
     platformUserName: z.string().optional(),
     name: z.string().min(2, 'Имя должно содержать минимум 2 символа'),
     email: z.string().email('Некорректный адрес электронной почты').optional().or(z.literal('')),
-    phone: z.string().regex(/^\d{11}$/, 'Телефон должен содержать ровно 11 цифр'),
+    phone: z.string().regex(/^\d{11}$/, 'Номер телефона должен состоять из 11 цифр'),
     model: z.enum(modelValues),
     submodel: z.enum(submodelValues),
     transmission: z.enum(TRANSMISSION_OPTIONS),

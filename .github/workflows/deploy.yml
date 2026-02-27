@@ -71,11 +71,11 @@ jobs:
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           format: html
           message: |
-            <code>${{ github.sha }}</code> <b>Deploy ${{ job.status == 'success' && '✅ SUCCESS' || '❌ FAILED' }}</b>
+            <code>${{ github.event.head_commit.message }}</code> <b>Deploy ${{ job.status == 'success' && '✅ SUCCESS' || '❌ FAILED' }}</b>
             
             <b>Repo:</b> <code>${{ github.repository }}</code>
             <b>Branch:</b> <code>${{ github.ref_name }}</code>
             ${{ github.actor }}
             
-            <b>Commit:</b> ${{ github.event.head_commit.message }}
+            <b>Commit: ${{ github.sha }}</b>
             ${{ github.event.head_commit.timestamp }}

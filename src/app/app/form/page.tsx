@@ -279,7 +279,10 @@ function MiniAppInquiryFormPageInner() {
                 </FieldContent>
               </Field>
 
-              <Field orientation="vertical" data-invalid={!!form.formState.errors.phone}>
+              <Field
+                orientation="vertical"
+                data-invalid={!!form.formState.errors.phone && !!form.formState.touchedFields.phone}
+              >
                 <FieldLabel htmlFor="phone">Телефон</FieldLabel>
                 <FieldContent>
                   <Input
@@ -287,10 +290,18 @@ function MiniAppInquiryFormPageInner() {
                     type="tel"
                     inputMode="numeric"
                     maxLength={11}
-                    {...form.register('phone')}
                     placeholder="79991234567"
+                    {...form.register('phone', {
+                      onChange: (e) => {
+                        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 11);
+                      },
+                    })}
                   />
-                  <FieldError errors={[form.formState.errors.phone]} />
+                  <FieldError
+                    errors={[
+                      form.formState.touchedFields.phone ? form.formState.errors.phone : undefined,
+                    ]}
+                  />
                 </FieldContent>
               </Field>
 
