@@ -71,7 +71,7 @@ function MiniAppInquiryFormPageInner() {
       comment: undefined,
       consent: false,
     },
-    mode: 'onChange',
+    mode: 'onBlur',
   });
 
   const watched = useWatch({ control: form.control });
@@ -252,7 +252,11 @@ function MiniAppInquiryFormPageInner() {
           <div className="flex flex-col items-center gap-2">
             <CardTitle className="text-center text-xl">Заявка на автомобиль</CardTitle>
             <p className="text-muted-foreground text-center text-base">
-              Заполните форму — дилеры увидят запрос в течение 24 часов.
+              Заполните форму — дилеры увидят запрос в течение 24 часов.{' '}
+              <span className="font-bold">
+                Обработка данных осуществляется в соответствии с ч. 5 ст. 18 ФЗ № 152‑ФЗ: серверы
+                расположены в РФ
+              </span>
             </p>
           </div>
         </CardHeader>
@@ -271,11 +275,18 @@ function MiniAppInquiryFormPageInner() {
             <input type="hidden" {...form.register('platformUserName')} />
 
             <FieldGroup>
-              <Field orientation="vertical" data-invalid={!!form.formState.errors.name}>
+              <Field
+                orientation="vertical"
+                data-invalid={!!form.formState.errors.name && !!form.formState.touchedFields.name}
+              >
                 <FieldLabel htmlFor="name">Имя</FieldLabel>
                 <FieldContent>
                   <Input id="name" {...form.register('name')} placeholder="Как к вам обращаться" />
-                  <FieldError errors={[form.formState.errors.name]} />
+                  <FieldError
+                    errors={[
+                      form.formState.touchedFields.name ? form.formState.errors.name : undefined,
+                    ]}
+                  />
                 </FieldContent>
               </Field>
 
@@ -305,23 +316,36 @@ function MiniAppInquiryFormPageInner() {
                 </FieldContent>
               </Field>
 
-              <Field orientation="vertical" data-invalid={!!form.formState.errors.email}>
+              <Field
+                orientation="vertical"
+                data-invalid={!!form.formState.errors.email && !!form.formState.touchedFields.email}
+              >
                 <FieldLabel htmlFor="email">Эл. почта (необязательно)</FieldLabel>
                 <FieldContent>
                   <Input id="email" {...form.register('email')} placeholder="you@example.com" />
-                  <FieldError errors={[form.formState.errors.email]} />
+                  <FieldError
+                    errors={[
+                      form.formState.touchedFields.email ? form.formState.errors.email : undefined,
+                    ]}
+                  />
                 </FieldContent>
               </Field>
             </FieldGroup>
 
             <FieldGroup>
-              <Field orientation="vertical" data-invalid={!!form.formState.errors.model}>
+              <Field
+                orientation="vertical"
+                data-invalid={!!form.formState.errors.model && !!form.formState.touchedFields.model}
+              >
                 <FieldLabel>Модель</FieldLabel>
                 <FieldContent>
                   <Select
                     value={watchedModel}
                     onValueChange={(value) =>
-                      form.setValue('model', value as never, { shouldValidate: true })
+                      form.setValue('model', value as never, {
+                        shouldValidate: true,
+                        shouldTouch: true,
+                      })
                     }
                   >
                     <SelectTrigger className="w-full">
@@ -335,17 +359,29 @@ function MiniAppInquiryFormPageInner() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <FieldError errors={[form.formState.errors.model]} />
+                  <FieldError
+                    errors={[
+                      form.formState.touchedFields.model ? form.formState.errors.model : undefined,
+                    ]}
+                  />
                 </FieldContent>
               </Field>
 
-              <Field orientation="vertical" data-invalid={!!form.formState.errors.submodel}>
+              <Field
+                orientation="vertical"
+                data-invalid={
+                  !!form.formState.errors.submodel && !!form.formState.touchedFields.submodel
+                }
+              >
                 <FieldLabel>Уточните модель</FieldLabel>
                 <FieldContent>
                   <Select
                     value={watchedSubmodel}
                     onValueChange={(value) =>
-                      form.setValue('submodel', value as never, { shouldValidate: true })
+                      form.setValue('submodel', value as never, {
+                        shouldValidate: true,
+                        shouldTouch: true,
+                      })
                     }
                   >
                     <SelectTrigger className="w-full">
@@ -359,11 +395,23 @@ function MiniAppInquiryFormPageInner() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <FieldError errors={[form.formState.errors.submodel]} />
+                  <FieldError
+                    errors={[
+                      form.formState.touchedFields.submodel
+                        ? form.formState.errors.submodel
+                        : undefined,
+                    ]}
+                  />
                 </FieldContent>
               </Field>
 
-              <Field orientation="vertical" data-invalid={!!form.formState.errors.transmission}>
+              <Field
+                orientation="vertical"
+                data-invalid={
+                  !!form.formState.errors.transmission &&
+                  !!form.formState.touchedFields.transmission
+                }
+              >
                 <FieldLabel>Коробка</FieldLabel>
                 <FieldContent>
                   <div className="grid gap-2">
@@ -372,7 +420,10 @@ function MiniAppInquiryFormPageInner() {
                         key={option}
                         className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm cursor-pointer hover:bg-accent"
                         onClick={() =>
-                          form.setValue('transmission', option as never, { shouldValidate: true })
+                          form.setValue('transmission', option as never, {
+                            shouldValidate: true,
+                            shouldTouch: true,
+                          })
                         }
                       >
                         <div
@@ -391,17 +442,29 @@ function MiniAppInquiryFormPageInner() {
                       </div>
                     ))}
                   </div>
-                  <FieldError errors={[form.formState.errors.transmission]} />
+                  <FieldError
+                    errors={[
+                      form.formState.touchedFields.transmission
+                        ? form.formState.errors.transmission
+                        : undefined,
+                    ]}
+                  />
                 </FieldContent>
               </Field>
 
-              <Field orientation="vertical" data-invalid={!!form.formState.errors.color}>
+              <Field
+                orientation="vertical"
+                data-invalid={!!form.formState.errors.color && !!form.formState.touchedFields.color}
+              >
                 <FieldLabel>Цвет</FieldLabel>
                 <FieldContent>
                   <Select
                     value={watchedColor}
                     onValueChange={(value) =>
-                      form.setValue('color', value as never, { shouldValidate: true })
+                      form.setValue('color', value as never, {
+                        shouldValidate: true,
+                        shouldTouch: true,
+                      })
                     }
                   >
                     <SelectTrigger className="w-full">
@@ -415,13 +478,22 @@ function MiniAppInquiryFormPageInner() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <FieldError errors={[form.formState.errors.color]} />
+                  <FieldError
+                    errors={[
+                      form.formState.touchedFields.color ? form.formState.errors.color : undefined,
+                    ]}
+                  />
                 </FieldContent>
               </Field>
             </FieldGroup>
 
             <FieldGroup>
-              <Field orientation="vertical" data-invalid={!!form.formState.errors.comment}>
+              <Field
+                orientation="vertical"
+                data-invalid={
+                  !!form.formState.errors.comment && !!form.formState.touchedFields.comment
+                }
+              >
                 <FieldLabel htmlFor="comment">Комментарий (необязательно)</FieldLabel>
                 <FieldContent>
                   <Textarea
@@ -429,13 +501,24 @@ function MiniAppInquiryFormPageInner() {
                     {...form.register('comment')}
                     placeholder="Любые детали…"
                   />
-                  <FieldError errors={[form.formState.errors.comment]} />
+                  <FieldError
+                    errors={[
+                      form.formState.touchedFields.comment
+                        ? form.formState.errors.comment
+                        : undefined,
+                    ]}
+                  />
                 </FieldContent>
               </Field>
             </FieldGroup>
 
             <FieldGroup>
-              <Field orientation="vertical" data-invalid={!!form.formState.errors.consent}>
+              <Field
+                orientation="vertical"
+                data-invalid={
+                  !!form.formState.errors.consent && !!form.formState.touchedFields.consent
+                }
+              >
                 <FieldLabel className="w-full cursor-pointer flex gap-3 items-start">
                   <Checkbox
                     className="size-6 mt-1 shrink-0"
@@ -456,7 +539,13 @@ function MiniAppInquiryFormPageInner() {
                   </div>
                 </FieldLabel>
                 <FieldContent>
-                  <FieldError errors={[form.formState.errors.consent]} />
+                  <FieldError
+                    errors={[
+                      form.formState.touchedFields.consent
+                        ? form.formState.errors.consent
+                        : undefined,
+                    ]}
+                  />
                 </FieldContent>
               </Field>
             </FieldGroup>
