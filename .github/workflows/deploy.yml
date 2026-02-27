@@ -55,6 +55,17 @@ jobs:
           SOURCE: "public/"
           TARGET: "/home/autoauction/app/public/"
 
+      - name: Send Telegram Notification
+        if: always()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ✅ Workflow ${{ job.status }}!
+            Repo: ${{ github.repository }}
+            By: ${{ github.actor }}
+            
       - name: Restart app
         uses: appleboy/ssh-action@master
         with:
