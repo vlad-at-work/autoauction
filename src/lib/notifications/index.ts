@@ -60,7 +60,7 @@ export async function notifyBuyerOfNewOffer(
   dealerName?: string
 ): Promise<NotifyResult> {
   const dealerDisplayName = dealerName || 'Дилер';
-  const text = `Предложение от ${dealerDisplayName} на ${carModel} ${carSubmodel}\n\n💰 ${price.toLocaleString('ru-RU')}`;
+  const text = `🚗 Предложение от ${dealerDisplayName}\n\n${carModel} ${carSubmodel}\n💰 ${price.toLocaleString('ru-RU')}`;
   const payload = `offer_${inquiryId}_${offerId}`;
 
   if (buyer.platform === 'MAX') {
@@ -115,7 +115,7 @@ export async function notifyDealerOfNewInquiryViaBot(
   transmission: string,
   color: string
 ): Promise<NotifyResult> {
-  const text = `📋 Новая заявка!\n\n🚗 ${carModel} ${carSubmodel}\n⚙️ КПП: ${transmission}\n🎨 Цвет: ${color}`;
+  const text = `🚗 Новая заявка!\n\n${carModel} ${carSubmodel}\nКПП: ${transmission}\nЦвет: ${color}`;
   const payload = `inquiry_${inquiryId}`;
 
   if (dealer.platform === 'MAX' && dealer.platformUserId) {
@@ -158,8 +158,8 @@ export async function notifyDealerOfAcceptedOfferViaBot(
     `🎉 Ваше предложение принято!\n\n` +
     `🚗 ${carModel} ${carSubmodel}\n` +
     `💰 ${price.toLocaleString('ru-RU')}\n\n` +
-    `👤 Покупатель: ${buyerName}\n` +
-    `📞 Телефон: ${buyerPhone}`;
+    `Покупатель: ${buyerName}\n` +
+    `Телефон: ${buyerPhone}`;
   const payload = `accepted_${inquiryId}`;
 
   if (dealer.platform === 'MAX' && dealer.platformUserId) {

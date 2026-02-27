@@ -144,7 +144,7 @@ export default function AboutPage() {
             <li className="flex gap-4 items-start">
               <span className="shrink-0 text-stone-500 mt-0.5">&#x2714;</span>
               <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed">
-                российские интернет-платформы (мессенджер MAXX).
+                российские интернет-платформы (мессенджер MAX).
               </p>
             </li>
           </ul>

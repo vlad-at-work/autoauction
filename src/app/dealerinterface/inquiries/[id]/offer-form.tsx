@@ -1,10 +1,11 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { CheckCircle2 } from 'lucide-react';
 
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 import { useWebApp } from '@/hooks/use-webapp';
@@ -46,6 +47,7 @@ export function OfferForm({
   onOfferSubmitted?: () => void;
 }) {
   const { enableClosingConfirmation, disableClosingConfirmation, hapticNotification } = useWebApp();
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const form = useForm<OfferFormValues>({
     resolver: zodResolver(offerFormSchema),
@@ -119,6 +121,7 @@ export function OfferForm({
     hapticNotification('success');
     disableClosingConfirmation();
     toast.success(`Предложение #${offerNumber} отправлено!`);
+    setIsSuccess(true);
     form.reset({
       price: '',
       configuration: '',
@@ -218,12 +221,23 @@ export function OfferForm({
         </Field>
       </FieldGroup>
 
-      <Button type="submit" disabled={disabled || form.formState.isSubmitting}>
-        {form.formState.isSubmitting
-          ? 'Отправляем…'
-          : isFirstOffer
-            ? 'Отправить предложение'
-            : 'Отправить новое предложение'}
+      <Button
+        type="submit"
+        disabled={disabled || form.formState.isSubmitting || isSuccess}
+        variant={isSuccess ? 'default' : undefined}
+      >
+        {form.formState.isSubmitting ? (
+          'Отправляем…'
+        ) : isSuccess ? (
+          <>
+            <CheckCircle2 className="mr-2 h-4 w-4" />
+            Предложение отправлено!
+          </>
+        ) : isFirstOffer ? (
+          'Отправить предложение'
+        ) : (
+          'Отправить новое предложение'
+        )}
       </Button>
     </form>
   );

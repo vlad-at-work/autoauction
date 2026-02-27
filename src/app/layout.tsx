@@ -29,17 +29,17 @@ const siteUrl = (() => {
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'AutoAuction',
-    template: '%s | AutoAuction',
+    default: 'Свои Авто',
+    template: '%s | Свои Авто',
   },
   description:
-    'AutoAuction — платформа для быстрого запроса и получения конкурентных предложений от автодилеров.',
-  applicationName: 'AutoAuction',
+    'Свои Авто — платформа для быстрого запроса и получения конкурентных предложений от автодилеров.',
+  applicationName: 'Свои Авто',
   referrer: 'origin-when-cross-origin',
-  keywords: ['AutoAuction', 'авто', 'покупка автомобиля', 'предложения дилеров', 'аукцион', 'Lada'],
-  authors: [{ name: 'AutoAuction' }],
-  creator: 'AutoAuction',
-  publisher: 'AutoAuction',
+  keywords: ['Свои Авто', 'авто', 'покупка автомобиля', 'предложения дилеров', 'аукцион', 'Lada'],
+  authors: [{ name: 'Свои Авто' }],
+  creator: 'Свои Авто',
+  publisher: 'Свои Авто',
   robots: {
     index: true,
     follow: true,
@@ -56,13 +56,13 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'ru_RU',
     url: '/',
-    siteName: 'AutoAuction',
-    title: 'AutoAuction',
+    siteName: 'Свои Авто',
+    title: 'Свои Авто',
     description: 'Запросите авто и получите несколько предложений от дилеров — быстро и прозрачно.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AutoAuction',
+    title: 'Свои Авто',
     description: 'Запросите авто и получите несколько предложений от дилеров — быстро и прозрачно.',
   },
   formatDetection: {

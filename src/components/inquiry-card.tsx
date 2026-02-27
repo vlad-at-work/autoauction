@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { Check, MessageSquare } from 'lucide-react';
+import { Check, MessageSquare, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
@@ -60,9 +60,15 @@ export function InquiryCard({ inquiry }: InquiryCardProps) {
 
           <div className="flex items-center justify-between text-base">
             <CountdownTimer expiresAt={inquiry.expiresAt} isExpired={isExpired} />
-            <div className="flex items-center gap-2">
-              <MessageSquare className="size-5" />
-              <span>{offerCount === 0 ? 'Нет предложений' : `${offerCount} предл.`}</span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="size-5" />
+                <span>{offerCount === 0 ? 'Нет предложений' : `${offerCount} предл.`}</span>
+              </div>
+              <div className="flex items-center gap-1.5 rounded bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground">
+                Смотреть
+                <ArrowRight className="size-4" />
+              </div>
             </div>
           </div>
         </CardContent>

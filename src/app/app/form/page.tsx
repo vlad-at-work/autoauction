@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import InputMask from 'react-input-mask';
 
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 import { useWebApp } from '@/hooks/use-webapp';
@@ -279,19 +278,14 @@ function MiniAppInquiryFormPageInner() {
               <Field orientation="vertical" data-invalid={!!form.formState.errors.phone}>
                 <FieldLabel htmlFor="phone">Телефон</FieldLabel>
                 <FieldContent>
-                  <InputMask
-                    mask="+7 999 99 99 99"
-                    {...form.register('phone', {
-                      setValueAs: (value) => value.replace(/\D/g, ''),
-                    })}
-                  >
-                    {(inputProps: {
-                      value: string;
-                      onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-                    }) => (
-                      <Input id="phone" type="tel" placeholder="+7 ___ __ __ __" {...inputProps} />
-                    )}
-                  </InputMask>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={11}
+                    {...form.register('phone')}
+                    placeholder="79991234567"
+                  />
                   <FieldError errors={[form.formState.errors.phone]} />
                 </FieldContent>
               </Field>

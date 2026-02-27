@@ -91,7 +91,7 @@ export async function POST(request: Request) {
       } else {
         await sendTelegramMessage(
           chatId,
-          `👋 Добро пожаловать в AutoAuction, ${firstName}!\n\nНажмите кнопку ниже, чтобы создать заявку.`,
+          `👋 Добро пожаловать в Свои Авто, ${firstName}!\n\nНажмите кнопку ниже, чтобы создать заявку.`,
           [
             {
               text: 'Создать заявку',

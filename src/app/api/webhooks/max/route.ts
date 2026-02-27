@@ -74,7 +74,7 @@ export async function POST(request: Request) {
           process.env.MAX_BOT_NAME || process.env.NEXT_PUBLIC_MAX_BOT_NAME || '';
         await sendMaxMessage(
           Number(userId),
-          `Добро пожаловать в AutoAuction, ${firstName}!\n\nНажмите кнопку ниже, чтобы создать заявку.`,
+          `👋 Добро пожаловать в Свои Авто, ${firstName}!\n\nНажмите кнопку ниже, чтобы создать заявку.`,
           [
             {
               type: 'open_app',

@@ -130,14 +130,14 @@ export async function POST(request: Request) {
     const dealerName = offer.dealer.name || offer.dealer.username;
     const remainingAcceptances = MAX_TRANSACTIONS_PER_INQUIRY - currentTransactionCount - 1;
 
-    const buyerMessage = `🎉 Поздравляем! Вы приняли предложение от ${dealerName}!
+    const buyerMessage = `🎉 Вы приняли предложение от ${dealerName}!
 
 🚗 ${offer.inquiry.model} ${offer.inquiry.submodel}
-💰 Цена: ${offer.price.toLocaleString('ru-RU')}
+💰 ${offer.price.toLocaleString('ru-RU')}
 
 Дилер скоро свяжется с вами по номеру ${formattedPhone}.
 
-${remainingAcceptances > 0 ? `📋 Вы можете принять ещё ${remainingAcceptances} предложение${remainingAcceptances === 1 ? '' : remainingAcceptances < 5 ? 'я' : 'ий'}.` : '✅ Вы использовали все доступные принятия для этой заявки.'}`;
+${remainingAcceptances > 0 ? `Вы можете принять ещё ${remainingAcceptances} предложение${remainingAcceptances === 1 ? '' : remainingAcceptances < 5 ? 'я' : 'ий'}.` : `Вы использовали все доступные принятия для этой заявки.`}`;
 
     // eslint-disable-next-line no-console
     console.log('Sending acceptance notification to buyer:', offer.inquiry.buyer);

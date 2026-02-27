@@ -230,11 +230,11 @@ export async function POST(request: Request) {
 
     const remainingText =
       remainingInquiries > 0
-        ? `\n\n📋 Осталось заявок: ${remainingInquiries} из ${MAX_INQUIRIES_PER_MONTH}`
-        : `\n\n⚠️ Это была ваша последняя заявка в этом периоде.`;
+        ? `\n\nОсталось заявок: ${remainingInquiries} из ${MAX_INQUIRIES_PER_MONTH}`
+        : `\n\nЭто была ваша последняя заявка в этом периоде.`;
 
     // Build detailed inquiry description
-    const commentText = input.comment ? `\n💬 Комментарий: ${input.comment}` : '';
+    const commentText = input.comment ? `\nКомментарий: ${input.comment}` : '';
 
     // IMPORTANT: await notifications to avoid serverless "fire-and-forget" drops.
     await Promise.allSettled([
@@ -244,7 +244,7 @@ export async function POST(request: Request) {
           platformChatId: buyer.platformChatId,
           platformUserId: buyer.platformUserId,
         },
-        `✅ Заявка создана!\n\n🚗 ${input.model} ${input.submodel}\n⚙️ КПП: ${input.transmission}\n🎨 Цвет: ${input.color}${commentText}\n\nДилеры начнут присылать вам предложения. Заявка активна 24 часа.${remainingText}`
+        `🎉 Заявка создана!\n\n🚗 ${input.model} ${input.submodel}\nКПП: ${input.transmission}\nЦвет: ${input.color}${commentText}\n\nДилеры начнут присылать вам предложения. Заявка активна 24 часа.${remainingText}`
       ),
       ...claimedDealers.map((dealer) =>
         notifyDealerOfNewInquiryViaBot(
