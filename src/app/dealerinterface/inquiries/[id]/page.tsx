@@ -173,36 +173,42 @@ export default function DealerInquiryPage() {
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-4 px-4 py-4">
       {/* Inquiry header */}
-      <div className="border-b pb-4">
-        <div className="flex items-center gap-3">
+      <div className="rounded-lg border bg-white p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-xl font-bold leading-tight">
+              {inquiry.model} · {inquiry.submodel}
+            </h1>
+            <div className="text-muted-foreground mt-1 flex items-center gap-2 text-sm">
+              {isExpired ? (
+                <span className="text-orange-600 font-medium">Истекла</span>
+              ) : (
+                <span>~{hoursLeft}ч</span>
+              )}
+              <span className="text-muted-foreground/40">·</span>
+              <span>{inquiry.transactionCount} принято</span>
+            </div>
+          </div>
           <span
-            className={`rounded px-2 py-1 text-sm font-mono font-medium ${colorClass.bg} ${colorClass.text} border ${colorClass.border}`}
+            className={`shrink-0 rounded px-2 py-1 text-xs font-mono font-medium ${colorClass.bg} ${colorClass.text} border ${colorClass.border}`}
           >
             {shortId}
           </span>
-          <h1 className="text-xl font-bold">
-            {inquiry.model} • {inquiry.submodel}
-          </h1>
         </div>
-        <div className="text-muted-foreground mt-1 text-sm">
-          {isExpired ? (
-            <span className="text-orange-600">Заявка истекла</span>
-          ) : (
-            <span>Осталось: ~{hoursLeft}ч</span>
-          )}
-          {' · '}
-          {inquiry.transactionCount} принято
-        </div>
-        <div className="mt-2 text-sm">
+
+        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t pt-3 text-sm">
           <div>
-            <span className="font-medium">Коробка:</span> {inquiry.transmission}
+            <span className="text-muted-foreground">Коробка:</span>{' '}
+            <span className="font-medium">{inquiry.transmission}</span>
           </div>
           <div>
-            <span className="font-medium">Цвет:</span> {inquiry.color}
+            <span className="text-muted-foreground">Цвет:</span>{' '}
+            <span className="font-medium">{inquiry.color}</span>
           </div>
           {inquiry.comment && (
-            <div>
-              <span className="font-medium">Комментарий:</span> {inquiry.comment}
+            <div className="basis-full">
+              <span className="text-muted-foreground">Комментарий:</span>{' '}
+              <span className="font-medium">{inquiry.comment}</span>
             </div>
           )}
         </div>

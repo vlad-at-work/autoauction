@@ -70,10 +70,10 @@ export function anonymizeDealerName(index: number): string {
 }
 
 /**
- * Format price with Russian locale
+ * Format price with Russian locale and ruble sign
  */
 export function formatPrice(price: number): string {
-  return price.toLocaleString('ru-RU');
+  return `${price.toLocaleString('ru-RU')} \u20BD`;
 }
 
 /**

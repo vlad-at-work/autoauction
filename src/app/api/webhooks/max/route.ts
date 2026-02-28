@@ -57,7 +57,7 @@ export async function POST(request: Request) {
         } else {
           await sendMaxMessage(
             Number(userId),
-            `Добро пожаловать в панель дилера, ${firstName}!\n\nОткройте мини-приложение из меню ниже.`,
+            `👋 Добро пожаловать в панель дилера, ${firstName}!\n\nОткройте мини-приложение из меню ниже.`,
             [],
             'dealer'
           );
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
       } else if (botType === 'dealer') {
         await sendMaxMessage(
           Number(userId),
-          `Добро пожаловать в панель дилера, ${firstName}!\n\nОткройте мини-приложение из меню ниже.`,
+          `👋 Добро пожаловать в панель дилера, ${firstName}!\n\nОткройте мини-приложение из меню ниже.`,
           [],
           'dealer'
         );

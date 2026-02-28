@@ -107,6 +107,14 @@ Next.js `output: 'standalone'` does NOT auto-run `instrumentation.ts` at runtime
 
 ---
 
+## Messaging & Formatting Rules
+
+- **Emojis in bot messages**: At most 1 emoji at the very start of a message (e.g. 🎉, 👋, 🚗, ❌). Never use emojis inline or mid-message.
+- **NEVER use 💰 (money bag emoji)** — it contains a dollar sign and is inappropriate for a Russian-facing product. Use the ruble sign (₽ / `\u20BD` / `&#8381;`) instead.
+- **Money formatting**: Always format as `price.toLocaleString('ru-RU')` followed by ` ₽`. Use `formatPrice()` from `src/lib/inquiry-utils.ts` in UI code — it handles both formatting and the ruble sign.
+
+---
+
 ## Testing
 
 - Unit tests: `bun run test`

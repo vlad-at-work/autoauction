@@ -244,7 +244,7 @@ export async function POST(request: Request) {
           platformChatId: buyer.platformChatId,
           platformUserId: buyer.platformUserId,
         },
-        `🎉 Заявка создана!\n\n🚗 ${input.model} ${input.submodel}\nКПП: ${input.transmission}\nЦвет: ${input.color}${commentText}\n\nДилеры начнут присылать вам предложения. Заявка активна 24 часа.${remainingText}`
+        `🎉 Заявка создана!\n\n${input.model} ${input.submodel}\nКПП: ${input.transmission}\nЦвет: ${input.color}${commentText}\n\nДилеры начнут присылать вам предложения. Заявка активна 24 часа.${remainingText}`
       ),
       ...claimedDealers.map((dealer) =>
         notifyDealerOfNewInquiryViaBot(

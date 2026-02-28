@@ -108,7 +108,7 @@ export default async function TransactionDetailPage({ params }: { params: Params
               </Link>
 
               <span className="text-muted-foreground">Цена предложения:</span>
-              <span className="font-medium">{offerPrice.toLocaleString('ru-RU')}</span>
+              <span className="font-medium">{offerPrice.toLocaleString('ru-RU')} &#8381;</span>
 
               <span className="text-muted-foreground">Offer ID:</span>
               <Link

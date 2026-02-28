@@ -208,7 +208,9 @@ export default async function InquiryDetailPage({ params }: { params: Params }) 
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-medium">{offer.price.toLocaleString('ru-RU')}</span>
+                        <span className="font-medium">
+                          {offer.price.toLocaleString('ru-RU')} &#8381;
+                        </span>
                         {offer.transaction ? (
                           <Badge className="bg-green-600">Принято</Badge>
                         ) : (

@@ -132,8 +132,8 @@ export async function POST(request: Request) {
 
     const buyerMessage = `🎉 Вы приняли предложение от ${dealerName}!
 
-🚗 ${offer.inquiry.model} ${offer.inquiry.submodel}
-💰 ${offer.price.toLocaleString('ru-RU')}
+${offer.inquiry.model} ${offer.inquiry.submodel}
+${offer.price.toLocaleString('ru-RU')} \u20BD
 
 Дилер скоро свяжется с вами по номеру ${formattedPhone}.
 
