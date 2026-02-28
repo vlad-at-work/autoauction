@@ -3,10 +3,13 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { captureError } from '@/lib/hawk';
+import { logger, withLogging } from '@/lib/logger';
 
 const MAX_INQUIRIES_PER_MONTH = 2;
 
-export async function GET(request: Request) {
+const log = logger.child({ route: 'buyers/me/inquiries' });
+
+export const GET = withLogging('buyers/me/inquiries', async (request: Request) => {
   try {
     const authHeader = request.headers.get('authorization');
     const validation = validateWebAppRequest(authHeader);
@@ -98,10 +101,10 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     captureError(error, { route: 'buyers/me/inquiries' });
-    console.error('Get inquiries error:', error);
+    log.error({ err: error }, 'error');
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Внутренняя ошибка' },
       { status: 500 }
     );
   }
-}
+});

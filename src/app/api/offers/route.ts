@@ -5,8 +5,11 @@ import { prisma } from '@/lib/db';
 import { parseBasicAuthHeader } from '@/lib/auth/basic';
 import { notifyBuyerOfNewOffer } from '@/lib/notifications';
 import { captureError } from '@/lib/hawk';
+import { logger, withLogging } from '@/lib/logger';
 
 const MAX_OFFERS_PER_DEALER_PER_INQUIRY = 5;
+
+const log = logger.child({ route: 'offers' });
 
 const offerCreateSchema = z.object({
   inquiryId: z.string().min(1),
@@ -17,7 +20,7 @@ const offerCreateSchema = z.object({
   confirmedMatch: z.boolean().default(false),
 });
 
-export async function POST(request: Request) {
+export const POST = withLogging('offers', async (request: Request) => {
   const auth = parseBasicAuthHeader(request.headers.get('authorization'));
   if (!auth) {
     return NextResponse.json({ error: 'Неавторизован' }, { status: 401 });
@@ -117,8 +120,12 @@ export async function POST(request: Request) {
       select: { id: true },
     });
 
+    log.info(
+      { offerId: offer.id, dealerId: dealer.id, inquiryId, price },
+      'offer created (basic auth)'
+    );
+
     // Send notification to buyer
-    // Notify on every new offer (user sees "Дилер обновил предложение!")
     try {
       const isFirstOffer = existingOfferCount === 0;
       const result = await notifyBuyerOfNewOffer(
@@ -131,11 +138,11 @@ export async function POST(request: Request) {
         isFirstOffer
       );
       if (!result.success) {
-        console.error('Failed to send buyer notification:', result.error);
+        log.error({ error: result.error }, 'failed to send buyer notification');
       }
     } catch (err) {
       captureError(err, { route: 'offers', action: 'notify-buyer' });
-      console.error('Failed to send buyer notification:', err);
+      log.error({ err }, 'failed to send buyer notification');
     }
 
     return NextResponse.json({
@@ -150,4 +157,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
+});

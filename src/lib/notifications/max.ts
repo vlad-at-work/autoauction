@@ -2,6 +2,10 @@
  * MAX Platform messaging
  */
 
+import { logger } from '@/lib/logger';
+
+const log = logger.child({ module: 'notifications/max' });
+
 const MAX_API_BASE = 'https://platform-api.max.ru';
 const MAX_BOT_TOKEN = process.env.MAX_BOT_TOKEN || '';
 const MAX_BOT_TOKEN_DEALER = process.env.MAX_BOT_TOKEN_DEALER || '';
@@ -22,7 +26,7 @@ export async function sendMaxMessage(
   const token = botType === 'dealer' ? MAX_BOT_TOKEN_DEALER : MAX_BOT_TOKEN;
 
   if (!token || token === '<from_vercel>') {
-    console.warn('[MAX] Bot token not configured for:', botType);
+    log.warn({ botType }, 'bot token not configured');
     return { success: false, error: 'Bot token not configured' };
   }
 
@@ -59,13 +63,13 @@ export async function sendMaxMessage(
 
     if (!response.ok) {
       const responseText = await response.text();
-      console.error('[MAX] Send failed:', response.status, responseText);
+      log.error({ status: response.status, responseText }, 'send failed');
       return { success: false, error: `HTTP ${response.status}: ${responseText}` };
     }
 
     return { success: true };
   } catch (err) {
-    console.error('[MAX] Send error:', (err as Error).message);
+    log.error({ err }, 'send error');
     return { success: false, error: String(err) };
   }
 }

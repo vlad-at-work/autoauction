@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db';
+import { logger, withLogging } from '@/lib/logger';
 
 const TG_API_BASE = 'https://api.telegram.org';
 const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN || '';
@@ -6,7 +7,9 @@ const MAX_API_BASE = 'https://platform-api.max.ru';
 const MAX_BOT_TOKEN = process.env.MAX_BOT_TOKEN || '';
 
 const BATCH_SIZE = 50;
-const MESSAGE_LENGTH_LIMIT = 4000; // MAX limit (Telegram is 4096, MAX undocumented but safe at 4000)
+const MESSAGE_LENGTH_LIMIT = 4000;
+
+const log = logger.child({ route: 'admin/broadcast' });
 
 async function sendTelegram(
   chatId: string,
@@ -39,7 +42,7 @@ async function sendMax(userId: string, text: string): Promise<{ ok: boolean; err
   }
 }
 
-export async function POST(request: Request) {
+export const POST = withLogging('admin/broadcast', async (request: Request) => {
   const body = await request.json();
   const message = (body.message || '').trim();
 
@@ -74,6 +77,8 @@ export async function POST(request: Request) {
     }))
     .filter((r) => r.id);
 
+  log.info({ recipientCount: recipients.length }, 'starting broadcast');
+
   let sent = 0;
   const errors: string[] = [];
 
@@ -94,7 +99,6 @@ export async function POST(request: Request) {
       })
     );
 
-    // Count any unexpected rejections
     for (const r of results) {
       if (r.status === 'rejected') {
         errors.push(`Unexpected: ${r.reason}`);
@@ -102,10 +106,12 @@ export async function POST(request: Request) {
     }
   }
 
+  log.info({ sent, failed: errors.length, total: recipients.length }, 'broadcast complete');
+
   return Response.json({
     sent,
     failed: errors.length,
     total: recipients.length,
     errors: errors.slice(0, 50),
   });
-}
+});

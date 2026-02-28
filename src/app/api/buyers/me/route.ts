@@ -3,8 +3,11 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { validateWebAppRequest, isPlatformUserDealer } from '@/lib/auth/webapp-validation';
 import { captureError } from '@/lib/hawk';
+import { logger, withLogging } from '@/lib/logger';
 
-export async function GET(request: Request) {
+const log = logger.child({ route: 'buyers/me' });
+
+export const GET = withLogging('buyers/me', async (request: Request) => {
   try {
     const authHeader = request.headers.get('authorization');
     const validation = validateWebAppRequest(authHeader);
@@ -57,9 +60,9 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = withLogging('buyers/me', async (request: Request) => {
   try {
     const authHeader = request.headers.get('authorization');
     const validation = validateWebAppRequest(authHeader);
@@ -109,10 +112,10 @@ export async function POST(request: Request) {
     return NextResponse.json(buyer);
   } catch (error) {
     captureError(error, { route: 'buyers/me', method: 'POST' });
-    console.error('Create buyer error:', error);
+    log.error({ err: error }, 'create buyer error');
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Внутренняя ошибка' },
       { status: 500 }
     );
   }
-}
+});

@@ -6,8 +6,11 @@ import { NextResponse } from 'next/server';
 import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { prisma } from '@/lib/db';
 import { captureError } from '@/lib/hawk';
+import { logger, withLogging } from '@/lib/logger';
 
-export async function GET(request: Request) {
+const log = logger.child({ route: 'dealer/inquiries' });
+
+export const GET = withLogging('dealer/inquiries', async (request: Request) => {
   try {
     const authHeader = request.headers.get('Authorization');
     const validation = validateWebAppRequest(authHeader, 'dealer');
@@ -92,7 +95,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ inquiries });
   } catch (err) {
     captureError(err, { route: 'dealer/inquiries' });
-    console.error('[INQUIRIES] Error:', err);
+    log.error({ err }, 'error');
     return NextResponse.json({ error: 'Внутренняя ошибка' }, { status: 500 });
   }
-}
+});

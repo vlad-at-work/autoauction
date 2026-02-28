@@ -6,14 +6,17 @@ import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { notifyDealerOfAcceptedOfferViaBot, notifyBuyer } from '@/lib/notifications';
 import { captureError } from '@/lib/hawk';
 import { formatPhoneRU } from '@/lib/format-phone';
+import { logger, withLogging } from '@/lib/logger';
 
 const MAX_TRANSACTIONS_PER_INQUIRY = 3;
+
+const log = logger.child({ route: 'transactions' });
 
 const transactionCreateSchema = z.object({
   offerId: z.string().min(1),
 });
 
-export async function POST(request: Request) {
+export const POST = withLogging('transactions', async (request: Request) => {
   try {
     const authHeader = request.headers.get('authorization');
     const validation = validateWebAppRequest(authHeader);
@@ -37,7 +40,6 @@ export async function POST(request: Request) {
     const { offerId } = parsed.data;
     const dbPlatform = validation.platform === 'max' ? 'MAX' : 'TELEGRAM';
 
-    // Get offer with inquiry and buyer info
     const offer = await prisma.offer.findFirst({
       where: {
         id: offerId,
@@ -61,7 +63,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Предложение не найдено' }, { status: 404 });
     }
 
-    // Verify the user owns this inquiry
     if (
       offer.inquiry.buyer.platform !== dbPlatform ||
       offer.inquiry.buyer.platformUserId !== validation.userId
@@ -69,17 +70,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Нет доступа' }, { status: 403 });
     }
 
-    // Check if inquiry has expired
     if (offer.inquiry.expiresAt <= new Date()) {
       return NextResponse.json({ error: 'Заявка истекла' }, { status: 410 });
     }
 
-    // Check if this specific offer already has a transaction
     if (offer.transaction) {
       return NextResponse.json({ error: 'Вы уже приняли это предложение' }, { status: 409 });
     }
 
-    // Check if this dealer already has a transaction for this inquiry
     const existingDealerTransaction = offer.inquiry.transactions.find(
       (t) => t.dealerId === offer.dealerId
     );
@@ -90,7 +88,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if inquiry has reached the transaction cap
     const currentTransactionCount = offer.inquiry.transactions.length;
     if (currentTransactionCount >= MAX_TRANSACTIONS_PER_INQUIRY) {
       return NextResponse.json(
@@ -101,7 +98,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create transaction
     const transaction = await prisma.transaction.create({
       data: {
         inquiryId: offer.inquiryId,
@@ -125,7 +121,16 @@ export async function POST(request: Request) {
       },
     });
 
-    // Send notifications
+    log.info(
+      {
+        transactionId: transaction.id,
+        offerId,
+        dealerId: offer.dealerId,
+        inquiryId: offer.inquiryId,
+      },
+      'transaction created'
+    );
+
     const formattedPhone = formatPhoneRU(offer.inquiry.phone);
     const dealerName = offer.dealer.name || offer.dealer.username;
     const remainingAcceptances = MAX_TRANSACTIONS_PER_INQUIRY - currentTransactionCount - 1;
@@ -139,10 +144,11 @@ ${offer.price.toLocaleString('ru-RU')} \u20BD
 
 ${remainingAcceptances > 0 ? `Вы можете принять ещё ${remainingAcceptances} предложение${remainingAcceptances === 1 ? '' : remainingAcceptances < 5 ? 'я' : 'ий'}.` : `Вы использовали все доступные принятия для этой заявки.`}`;
 
-    // eslint-disable-next-line no-console
-    console.log('Sending acceptance notification to buyer:', offer.inquiry.buyer);
+    log.info(
+      { buyerPlatform: offer.inquiry.buyer.platform, buyerId: offer.inquiry.buyer.platformUserId },
+      'sending acceptance notification'
+    );
 
-    // IMPORTANT: await notifications to avoid serverless "fire-and-forget" drops.
     const notifications: Array<Promise<unknown>> = [
       notifyBuyer(
         {
@@ -171,9 +177,9 @@ ${remainingAcceptances > 0 ? `Вы можете принять ещё ${remainin
         )
       );
     } else {
-      console.warn(
-        '[POST /api/transactions] Skipping dealer notification: dealer platform not configured',
-        { dealerId: offer.dealerId }
+      log.warn(
+        { dealerId: offer.dealerId },
+        'skipping dealer notification: platform not configured'
       );
     }
 
@@ -186,7 +192,6 @@ ${remainingAcceptances > 0 ? `Вы можете принять ещё ${remainin
       remainingAcceptances,
     });
   } catch (err) {
-    // Handle unique constraint violation (dealer already has transaction for this inquiry)
     if (
       typeof err === 'object' &&
       err &&
@@ -200,10 +205,10 @@ ${remainingAcceptances > 0 ? `Вы можете принять ещё ${remainin
     }
 
     captureError(err, { route: 'transactions' });
-    console.error('Transaction creation error:', err);
+    log.error({ err }, 'transaction creation error');
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Внутренняя ошибка' },
       { status: 500 }
     );
   }
-}
+});

@@ -11,14 +11,17 @@ import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { captureError } from '@/lib/hawk';
+import { logger, withLogging } from '@/lib/logger';
 
-export async function POST(request: Request) {
+const log = logger.child({ route: 'dealer/auth/login' });
+
+export const POST = withLogging('dealer/auth/login', async (request: Request) => {
   try {
     const authHeader = request.headers.get('Authorization');
     const validation = validateWebAppRequest(authHeader, 'dealer');
 
     if (!validation.valid) {
-      console.error('[/api/dealer/auth/login] Invalid WebApp data:', validation.error);
+      log.warn({ error: validation.error }, 'invalid webapp data');
       return NextResponse.json({ error: validation.error }, { status: 401 });
     }
 
@@ -31,10 +34,7 @@ export async function POST(request: Request) {
 
     const platformEnum = validation.platform === 'max' ? 'MAX' : 'TELEGRAM';
 
-    console.warn('[/api/dealer/auth/login]', {
-      platform: platformEnum,
-      userId: validation.userId,
-    });
+    log.info({ platform: platformEnum, userId: validation.userId }, 'login attempt');
 
     const dealer = await prisma.dealer.findFirst({
       where: {
@@ -45,25 +45,23 @@ export async function POST(request: Request) {
     });
 
     if (!dealer || !dealer.passwordHash) {
-      console.warn(
-        '[/api/dealer/auth/login] Invalid credentials - dealer not found or no password'
-      );
+      log.warn('invalid credentials - dealer not found or no password');
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
     if (!dealer.active) {
-      console.warn('[/api/dealer/auth/login] Account inactive');
+      log.warn({ dealerId: dealer.id }, 'account inactive');
       return NextResponse.json({ error: 'Account inactive' }, { status: 403 });
     }
 
     const valid = await bcrypt.compare(password, dealer.passwordHash);
 
     if (!valid) {
-      console.warn('[/api/dealer/auth/login] Invalid password');
+      log.warn({ dealerId: dealer.id }, 'invalid password');
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    console.warn('[/api/dealer/auth/login] Login successful');
+    log.info({ dealerId: dealer.id }, 'login successful');
     return NextResponse.json({
       ok: true,
       dealer: {
@@ -74,7 +72,7 @@ export async function POST(request: Request) {
     });
   } catch (err) {
     captureError(err, { route: 'dealer/auth/login' });
-    console.error('[/api/dealer/auth/login] Error:', err);
+    log.error({ err }, 'error');
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
-}
+});

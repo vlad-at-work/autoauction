@@ -5,14 +5,13 @@ import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { inquiryCreateSchema } from '@/lib/schemas/inquiry';
 import { notifyDealerOfNewInquiryViaBot, notifyBuyer } from '@/lib/notifications';
 import { captureError } from '@/lib/hawk';
+import { logger, withLogging } from '@/lib/logger';
 
 const MAX_INQUIRIES_PER_MONTH = 2;
 const INQUIRY_LIMIT_RESET_DAYS = 15;
 
-/**
- * Check if buyer's inquiry limit should be reset and update if needed
- * Returns the updated buyer with current limit info
- */
+const log = logger.child({ route: 'inquiries' });
+
 async function checkAndResetInquiryLimit(
   tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
   buyerId: string
@@ -31,9 +30,7 @@ async function checkAndResetInquiryLimit(
   const now = new Date();
   const resetAt = new Date(buyer.inquiryLimitResetAt);
 
-  // Check if we need to reset (15 days passed since last reset)
   if (now >= resetAt) {
-    // Calculate next reset date (15 days from now)
     const nextReset = new Date(now.getTime() + INQUIRY_LIMIT_RESET_DAYS * 24 * 60 * 60 * 1000);
 
     const updated = await tx.buyer.update({
@@ -55,7 +52,7 @@ async function checkAndResetInquiryLimit(
   return buyer;
 }
 
-export async function POST(request: Request) {
+export const POST = withLogging('inquiries', async (request: Request) => {
   try {
     const authHeader = request.headers.get('authorization');
     const validation = validateWebAppRequest(authHeader);
@@ -96,7 +93,6 @@ export async function POST(request: Request) {
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     const result = await prisma.$transaction(async (tx) => {
-      // Upsert buyer first
       const buyer = await tx.buyer.upsert({
         where: {
           platform_platformUserId: {
@@ -107,7 +103,6 @@ export async function POST(request: Request) {
         update: {
           platformUserName: input.platformUserName,
           deletedAt: null,
-          // Update chat_id if provided (may change between sessions)
           ...(input.platformChatId && { platformChatId: input.platformChatId }),
         },
         create: {
@@ -123,13 +118,11 @@ export async function POST(request: Request) {
         },
       });
 
-      // Check and potentially reset inquiry limit
       const buyerWithLimit = await checkAndResetInquiryLimit(tx, buyer.id);
       if (!buyerWithLimit) {
         throw new Error('Buyer not found after creation');
       }
 
-      // Check if user has reached their monthly inquiry limit
       if (buyerWithLimit.inquiriesUsedThisMonth >= MAX_INQUIRIES_PER_MONTH) {
         const resetDate = new Date(buyerWithLimit.inquiryLimitResetAt);
 
@@ -142,7 +135,6 @@ export async function POST(request: Request) {
         };
       }
 
-      // Create the inquiry
       const newInquiry = await tx.inquiry.create({
         data: {
           buyerId: buyer.id,
@@ -161,7 +153,6 @@ export async function POST(request: Request) {
         select: { id: true },
       });
 
-      // Increment the used inquiries count
       const updatedBuyer = await tx.buyer.update({
         where: { id: buyer.id },
         data: {
@@ -185,7 +176,6 @@ export async function POST(request: Request) {
       };
     });
 
-    // If limit was reached, return error response
     if (!result.success) {
       return NextResponse.json(
         {
@@ -198,12 +188,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // TypeScript narrowing: after checking success, buyer and inquiry are guaranteed
     const inquiry = result.inquiry!;
     const buyer = result.buyer!;
     const remainingInquiries = result.remainingInquiries!;
 
-    // Notify buyer and all active, claimed dealers (via dealer bot tokens)
+    log.info(
+      { inquiryId: inquiry.id, model: input.model, submodel: input.submodel },
+      'inquiry created'
+    );
+
     const dealers = await prisma.dealer.findMany({
       where: {
         deletedAt: null,
@@ -233,10 +226,8 @@ export async function POST(request: Request) {
         ? `\n\nОсталось заявок: ${remainingInquiries} из ${MAX_INQUIRIES_PER_MONTH}`
         : `\n\nЭто была ваша последняя заявка в этом периоде.`;
 
-    // Build detailed inquiry description
     const commentText = input.comment ? `\nКомментарий: ${input.comment}` : '';
 
-    // IMPORTANT: await notifications to avoid serverless "fire-and-forget" drops.
     await Promise.allSettled([
       notifyBuyer(
         {
@@ -270,10 +261,10 @@ export async function POST(request: Request) {
     });
   } catch (err) {
     captureError(err, { route: 'inquiries' });
-    console.error('Inquiry creation error:', err);
+    log.error({ err }, 'inquiry creation error');
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Внутренняя ошибка' },
       { status: 500 }
     );
   }
-}
+});

@@ -9,10 +9,13 @@ import { sendMaxMessage } from '@/lib/notifications/max';
 import { prisma } from '@/lib/db';
 import { isInviteTokenValid } from '@/lib/auth/dealer-invite';
 import { captureError } from '@/lib/hawk';
+import { logger, withLogging } from '@/lib/logger';
 
 type BotType = 'customer' | 'dealer';
 
-export async function POST(request: Request) {
+const log = logger.child({ route: 'webhooks/max' });
+
+export const POST = withLogging('webhooks/max', async (request: Request) => {
   try {
     const url = new URL(request.url);
     const botParam = url.searchParams.get('bot');
@@ -34,13 +37,7 @@ export async function POST(request: Request) {
         ?.first_name as string) ||
       'User';
 
-    console.warn(
-      '[MAX Webhook]',
-      updateType,
-      botType,
-      userId ? `user:${userId}` : 'no-user',
-      startPayload ? `param:${startPayload}` : 'no-param'
-    );
+    log.info({ updateType, botType, userId, startPayload }, 'webhook received');
 
     if (updateType === 'bot_started') {
       if (!userId) {
@@ -91,10 +88,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   } catch (err) {
     captureError(err, { route: 'webhooks/max' });
-    console.error('[MAX Webhook] Error:', err);
+    log.error({ err }, 'webhook error');
     return NextResponse.json({ ok: true });
   }
-}
+});
 
 async function handleDealerInvite(userId: number, firstName: string, param: string) {
   // Extract token from either format

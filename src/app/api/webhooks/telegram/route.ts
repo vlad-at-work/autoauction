@@ -11,12 +11,15 @@ import { sendTelegramMessage } from '@/lib/notifications/telegram';
 import { prisma } from '@/lib/db';
 import { isInviteTokenValid } from '@/lib/auth/dealer-invite';
 import { captureError } from '@/lib/hawk';
+import { logger, withLogging } from '@/lib/logger';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 type BotType = 'customer' | 'dealer';
 
-export async function POST(request: Request) {
+const log = logger.child({ route: 'webhooks/telegram' });
+
+export const POST = withLogging('webhooks/telegram', async (request: Request) => {
   try {
     const url = new URL(request.url);
     const botParam = url.searchParams.get('bot');
@@ -27,7 +30,7 @@ export async function POST(request: Request) {
       botType === 'dealer' ? process.env.TG_DEALER_WEBHOOK_SECRET : process.env.TG_WEBHOOK_SECRET;
     const headerSecret = request.headers.get('x-telegram-bot-api-secret-token');
     if (secret && headerSecret !== secret) {
-      console.warn('[Telegram Webhook] Unauthorized request');
+      log.warn('unauthorized request');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
@@ -52,12 +55,7 @@ export async function POST(request: Request) {
     const firstName = message.from?.first_name || 'User';
     const text = message.text || '';
 
-    console.warn('[Telegram Webhook]', {
-      bot: botType,
-      chatId,
-      userId,
-      text: text.substring(0, 50),
-    });
+    log.info({ botType, chatId, userId, text: text.substring(0, 50) }, 'webhook received');
 
     // Handle /start command
     if (text.startsWith('/start')) {
@@ -106,10 +104,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   } catch (err) {
     captureError(err, { route: 'webhooks/telegram' });
-    console.error('[Telegram Webhook] Error:', err);
+    log.error({ err }, 'webhook error');
     return NextResponse.json({ ok: true });
   }
-}
+});
 
 async function handleDealerInviteTelegram(chatId: number, firstName: string, param: string) {
   // Extract token from either format

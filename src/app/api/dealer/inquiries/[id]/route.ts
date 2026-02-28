@@ -8,111 +8,117 @@ import { NextResponse } from 'next/server';
 import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { prisma } from '@/lib/db';
 import { captureError } from '@/lib/hawk';
+import { logger, withLogging } from '@/lib/logger';
 
 const MAX_OFFERS_PER_DEALER = 5;
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    const { id } = await params;
-    const authHeader = request.headers.get('Authorization');
-    const validation = validateWebAppRequest(authHeader, 'dealer');
+const log = logger.child({ route: 'dealer/inquiries/[id]' });
 
-    if (!validation.valid) {
-      return NextResponse.json({ error: validation.error }, { status: 401 });
-    }
+export const GET = withLogging(
+  'dealer/inquiries/[id]',
+  async (request: Request, context: unknown) => {
+    try {
+      const { id } = await (context as { params: Promise<{ id: string }> }).params;
+      const authHeader = request.headers.get('Authorization');
+      const validation = validateWebAppRequest(authHeader, 'dealer');
 
-    const platformEnum = validation.platform === 'max' ? 'MAX' : 'TELEGRAM';
+      if (!validation.valid) {
+        return NextResponse.json({ error: validation.error }, { status: 401 });
+      }
 
-    const dealer = await prisma.dealer.findFirst({
-      where: {
-        platform: platformEnum,
-        platformUserId: validation.userId,
-        deletedAt: null,
-        active: true,
-      },
-      select: { id: true, passwordHash: true },
-    });
+      const platformEnum = validation.platform === 'max' ? 'MAX' : 'TELEGRAM';
 
-    if (!dealer) {
-      return NextResponse.json({ error: 'Дилер не найден' }, { status: 404 });
-    }
+      const dealer = await prisma.dealer.findFirst({
+        where: {
+          platform: platformEnum,
+          platformUserId: validation.userId,
+          deletedAt: null,
+          active: true,
+        },
+        select: { id: true, passwordHash: true },
+      });
 
-    if (!dealer.passwordHash) {
-      return NextResponse.json({ error: 'Завершите настройку аккаунта' }, { status: 403 });
-    }
+      if (!dealer) {
+        return NextResponse.json({ error: 'Дилер не найден' }, { status: 404 });
+      }
 
-    const inquiry = await prisma.inquiry.findFirst({
-      where: { id, deletedAt: null },
-      include: {
-        offers: {
-          where: { deletedAt: null },
-          orderBy: { createdAt: 'desc' },
-          select: {
-            id: true,
-            price: true,
-            configuration: true,
-            deliveryTime: true,
-            additionalComments: true,
-            confirmedMatch: true,
-            dealerId: true,
-            createdAt: true,
-            transaction: {
-              select: {
-                id: true,
-                acceptedAt: true,
+      if (!dealer.passwordHash) {
+        return NextResponse.json({ error: 'Завершите настройку аккаунта' }, { status: 403 });
+      }
+
+      const inquiry = await prisma.inquiry.findFirst({
+        where: { id, deletedAt: null },
+        include: {
+          offers: {
+            where: { deletedAt: null },
+            orderBy: { createdAt: 'desc' },
+            select: {
+              id: true,
+              price: true,
+              configuration: true,
+              deliveryTime: true,
+              additionalComments: true,
+              confirmedMatch: true,
+              dealerId: true,
+              createdAt: true,
+              transaction: {
+                select: {
+                  id: true,
+                  acceptedAt: true,
+                },
               },
             },
           },
-        },
-        transactions: {
-          where: { dealerId: dealer.id },
-          select: {
-            id: true,
-            dealerId: true,
-            buyerName: true,
-            buyerEmail: true,
-            buyerPhone: true,
-            acceptedAt: true,
+          transactions: {
+            where: { dealerId: dealer.id },
+            select: {
+              id: true,
+              dealerId: true,
+              buyerName: true,
+              buyerEmail: true,
+              buyerPhone: true,
+              acceptedAt: true,
+            },
+          },
+          _count: {
+            select: { transactions: true },
           },
         },
-        _count: {
-          select: { transactions: true },
+      });
+
+      if (!inquiry) {
+        return NextResponse.json({ error: 'Заявка не найдена' }, { status: 404 });
+      }
+
+      const myOffers = inquiry.offers.filter((o) => o.dealerId === dealer.id);
+      const otherOffers = inquiry.offers.filter((o) => o.dealerId !== dealer.id);
+      const myTransaction = inquiry.transactions.find((t) => t.dealerId === dealer.id) || null;
+
+      const canMakeOffer =
+        inquiry.expiresAt > new Date() && !myTransaction && myOffers.length < MAX_OFFERS_PER_DEALER;
+
+      return NextResponse.json({
+        inquiry: {
+          id: inquiry.id,
+          model: inquiry.model,
+          submodel: inquiry.submodel,
+          transmission: inquiry.transmission,
+          color: inquiry.color,
+          comment: inquiry.comment,
+          expiresAt: inquiry.expiresAt,
+          transactionCount: inquiry._count.transactions,
         },
-      },
-    });
-
-    if (!inquiry) {
-      return NextResponse.json({ error: 'Заявка не найдена' }, { status: 404 });
+        myOffers,
+        otherOffers,
+        myTransaction,
+        canMakeOffer,
+        remainingOffers: MAX_OFFERS_PER_DEALER - myOffers.length,
+        dealerId: dealer.id,
+      });
+    } catch (err) {
+      captureError(err, { route: 'dealer/inquiries/[id]' });
+      log.error({ err }, 'error');
+      return NextResponse.json({ error: 'Внутренняя ошибка' }, { status: 500 });
     }
-
-    const myOffers = inquiry.offers.filter((o) => o.dealerId === dealer.id);
-    const otherOffers = inquiry.offers.filter((o) => o.dealerId !== dealer.id);
-    const myTransaction = inquiry.transactions.find((t) => t.dealerId === dealer.id) || null;
-
-    const canMakeOffer =
-      inquiry.expiresAt > new Date() && !myTransaction && myOffers.length < MAX_OFFERS_PER_DEALER;
-
-    return NextResponse.json({
-      inquiry: {
-        id: inquiry.id,
-        model: inquiry.model,
-        submodel: inquiry.submodel,
-        transmission: inquiry.transmission,
-        color: inquiry.color,
-        comment: inquiry.comment,
-        expiresAt: inquiry.expiresAt,
-        transactionCount: inquiry._count.transactions,
-      },
-      myOffers,
-      otherOffers,
-      myTransaction,
-      canMakeOffer,
-      remainingOffers: MAX_OFFERS_PER_DEALER - myOffers.length,
-      dealerId: dealer.id,
-    });
-  } catch (err) {
-    captureError(err, { route: 'dealer/inquiries/[id]' });
-    console.error('[DEALER INQUIRY DETAIL] Error:', err);
-    return NextResponse.json({ error: 'Внутренняя ошибка' }, { status: 500 });
   }
-}
+);

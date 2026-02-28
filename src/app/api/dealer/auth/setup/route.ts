@@ -8,8 +8,11 @@ import { prisma } from '@/lib/db';
 import { isInviteTokenValid } from '@/lib/auth/dealer-invite';
 import bcrypt from 'bcryptjs';
 import { captureError } from '@/lib/hawk';
+import { logger, withLogging } from '@/lib/logger';
 
-export async function POST(request: Request) {
+const log = logger.child({ route: 'dealer/auth/setup' });
+
+export const POST = withLogging('dealer/auth/setup', async (request: Request) => {
   try {
     const authHeader = request.headers.get('Authorization');
     const validation = validateWebAppRequest(authHeader, 'dealer');
@@ -32,21 +35,17 @@ export async function POST(request: Request) {
     let dealer;
 
     if (startParam) {
-      // Support both old format (setup_dealerId_token) and new format (6-digit code)
       let token: string;
 
       if (startParam.startsWith('setup_')) {
-        // Old format: setup_dealerId_token
         const parts = startParam.split('_');
         token = parts.slice(2).join('_');
       } else if (/^\d{6}$/.test(startParam)) {
-        // New format: 6-digit code
         token = startParam;
       } else {
         return NextResponse.json({ error: 'Неверный формат кода' }, { status: 400 });
       }
 
-      // Look up dealer by invite token directly
       dealer = await prisma.dealer.findFirst({
         where: {
           inviteToken: token,
@@ -80,14 +79,7 @@ export async function POST(request: Request) {
         },
       });
 
-      console.warn(
-        '[SETUP] Dealer claimed:',
-        dealer.id,
-        'by user:',
-        validation.userId,
-        'with token:',
-        token
-      );
+      log.info({ dealerId: dealer.id, userId: validation.userId, token }, 'dealer claimed');
     } else {
       dealer = await prisma.dealer.findFirst({
         where: {
@@ -111,7 +103,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, dealerId: dealer.id });
   } catch (err) {
     captureError(err, { route: 'dealer/auth/setup' });
-    console.error('[SETUP] Error:', err);
+    log.error({ err }, 'error');
     return NextResponse.json({ error: 'Внутренняя ошибка' }, { status: 500 });
   }
-}
+});

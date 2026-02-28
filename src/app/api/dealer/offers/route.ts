@@ -1,20 +1,5 @@
 /**
  * Submit offer for inquiry
- *
- * Body: {
- *   inquiryId: string,
- *   price: number,
- *   configuration?: string,
- *   deliveryTime?: string,
- *   additionalComments?: string,
- *   confirmedMatch: boolean
- * }
- *
- * Validates:
- * - Dealer is authenticated and active
- * - Inquiry exists and is active
- * - Dealer hasn't exceeded offer limit (5 per inquiry)
- * - confirmedMatch must be true
  */
 
 import { NextResponse } from 'next/server';
@@ -22,16 +7,19 @@ import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { prisma } from '@/lib/db';
 import { notifyBuyerOfNewOffer } from '@/lib/notifications';
 import { captureError } from '@/lib/hawk';
+import { logger, withLogging } from '@/lib/logger';
 
 const MAX_OFFERS_PER_DEALER = 5;
 
-export async function POST(request: Request) {
+const log = logger.child({ route: 'dealer/offers' });
+
+export const POST = withLogging('dealer/offers', async (request: Request) => {
   try {
     const authHeader = request.headers.get('Authorization');
     const validation = validateWebAppRequest(authHeader, 'dealer');
 
     if (!validation.valid) {
-      console.error('[/api/dealer/offers] Invalid WebApp data:', validation.error);
+      log.warn({ error: validation.error }, 'invalid webapp data');
       return NextResponse.json({ error: validation.error }, { status: 401 });
     }
 
@@ -70,15 +58,11 @@ export async function POST(request: Request) {
     });
 
     if (!dealer || !dealer.passwordHash) {
-      console.warn('[/api/dealer/offers] Unauthorized - dealer not found or not set up');
+      log.warn('unauthorized - dealer not found or not set up');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.warn('[/api/dealer/offers] Submitting offer:', {
-      dealerId: dealer.id,
-      inquiryId,
-      price,
-    });
+    log.info({ dealerId: dealer.id, inquiryId, price }, 'submitting offer');
 
     // Check inquiry exists and is active
     const inquiry = await prisma.inquiry.findFirst({
@@ -100,7 +84,7 @@ export async function POST(request: Request) {
     });
 
     if (!inquiry) {
-      console.warn('[/api/dealer/offers] Inquiry not found or expired');
+      log.warn({ inquiryId }, 'inquiry not found or expired');
       return NextResponse.json({ error: 'Inquiry not found or expired' }, { status: 404 });
     }
 
@@ -114,7 +98,7 @@ export async function POST(request: Request) {
     });
 
     if (offerCount >= MAX_OFFERS_PER_DEALER) {
-      console.warn('[/api/dealer/offers] Offer limit reached');
+      log.warn({ dealerId: dealer.id, inquiryId, offerCount }, 'offer limit reached');
       return NextResponse.json(
         { error: `Maximum ${MAX_OFFERS_PER_DEALER} offers per inquiry` },
         { status: 400 }
@@ -135,7 +119,7 @@ export async function POST(request: Request) {
       },
     });
 
-    console.warn('[/api/dealer/offers] Offer created:', offer.id);
+    log.info({ offerId: offer.id, dealerId: dealer.id, inquiryId }, 'offer created');
 
     // Notify buyer of new offer
     try {
@@ -164,17 +148,17 @@ export async function POST(request: Request) {
       );
 
       if (!result.success) {
-        console.error('Failed to send buyer notification:', result.error);
+        log.error({ error: result.error }, 'failed to send buyer notification');
       }
     } catch (err) {
       captureError(err, { route: 'dealer/offers', action: 'notify-buyer' });
-      console.error('Failed to send buyer notification:', err);
+      log.error({ err }, 'failed to send buyer notification');
     }
 
     return NextResponse.json({ offer });
   } catch (err) {
     captureError(err, { route: 'dealer/offers' });
-    console.error('[/api/dealer/offers] Error:', err);
+    log.error({ err }, 'error');
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
-}
+});

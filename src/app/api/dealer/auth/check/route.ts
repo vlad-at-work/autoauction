@@ -6,14 +6,17 @@ import { NextResponse } from 'next/server';
 import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { prisma } from '@/lib/db';
 import { captureError } from '@/lib/hawk';
+import { logger, withLogging } from '@/lib/logger';
 
-export async function POST(request: Request) {
+const log = logger.child({ route: 'dealer/auth/check' });
+
+export const POST = withLogging('dealer/auth/check', async (request: Request) => {
   try {
     const authHeader = request.headers.get('Authorization');
     const validation = validateWebAppRequest(authHeader, 'dealer');
 
     if (!validation.valid) {
-      console.warn('[CHECK] Auth failed:', validation.error);
+      log.warn({ error: validation.error }, 'auth failed');
       return NextResponse.json({ error: validation.error }, { status: 401 });
     }
 
@@ -60,7 +63,7 @@ export async function POST(request: Request) {
     });
   } catch (err) {
     captureError(err, { route: 'dealer/auth/check' });
-    console.error('[CHECK] Error:', err);
+    log.error({ err }, 'error');
     return NextResponse.json({ error: 'Внутренняя ошибка' }, { status: 500 });
   }
-}
+});

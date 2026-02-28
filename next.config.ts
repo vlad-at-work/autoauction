@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   // Prevent Next from inferring the workspace root from lockfiles outside this repo
   // (e.g. a stray ~/package-lock.json), which can break output file tracing.
   outputFileTracingRoot: __dirname,
+  serverExternalPackages: ['pino', 'pino-pretty'],
 };
 
 if (process.env.NODE_ENV === 'development') {

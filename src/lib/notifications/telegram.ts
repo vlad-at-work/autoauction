@@ -4,6 +4,10 @@
  * Mirrors src/lib/notifications/max.ts for Telegram Bot API
  */
 
+import { logger } from '@/lib/logger';
+
+const log = logger.child({ module: 'notifications/telegram' });
+
 const TG_API_BASE = 'https://api.telegram.org';
 const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN || '';
 const TG_BOT_TOKEN_DEALER = process.env.TG_BOT_TOKEN_DEALER || '';
@@ -22,7 +26,7 @@ export async function sendTelegramMessage(
   const token = botType === 'dealer' ? TG_BOT_TOKEN_DEALER : TG_BOT_TOKEN;
 
   if (!token) {
-    console.error('[Telegram] Bot token not configured for:', botType);
+    log.warn({ botType }, 'bot token not configured');
     return { success: false, error: 'Bot token not configured' };
   }
 
@@ -58,13 +62,13 @@ export async function sendTelegramMessage(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[Telegram] HTTP error:', response.status, errorText);
+      log.error({ status: response.status, errorText }, 'send failed');
       return { success: false, error: `HTTP ${response.status}: ${errorText}` };
     }
 
     return { success: true };
   } catch (err) {
-    console.error('[Telegram] Error sending message:', err);
+    log.error({ err }, 'send error');
     return { success: false, error: String(err) };
   }
 }

@@ -3,12 +3,15 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { captureError } from '@/lib/hawk';
+import { logger, withLogging } from '@/lib/logger';
 
 const MAX_TRANSACTIONS_PER_INQUIRY = 3;
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+const log = logger.child({ route: 'inquiries/[id]' });
+
+export const GET = withLogging('inquiries/[id]', async (request: Request, context: unknown) => {
   try {
-    const { id } = await params;
+    const { id } = await (context as { params: Promise<{ id: string }> }).params;
     const authHeader = request.headers.get('authorization');
     const validation = validateWebAppRequest(authHeader);
     if (!validation.valid || !validation.userId) {
@@ -70,7 +73,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: 'Заявка не найдена' }, { status: 404 });
     }
 
-    // Check ownership
     if (inquiry.buyer.platformUserId !== validation.userId) {
       return NextResponse.json({ error: 'Нет доступа' }, { status: 403 });
     }
@@ -78,7 +80,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { buyer, ...inquiryData } = inquiry;
 
-    // Group offers by dealer for the response
     const dealerOffersMap = new Map<
       string,
       {
@@ -123,14 +124,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       });
     }
 
-    // Convert to array and sort by latest offer
     const offersByDealer = Array.from(dealerOffersMap.values()).sort((a, b) => {
       const aLatest = a.offers[0]?.createdAt || new Date(0);
       const bLatest = b.offers[0]?.createdAt || new Date(0);
       return new Date(bLatest).getTime() - new Date(aLatest).getTime();
     });
 
-    // Also provide flat list for legacy compatibility
     const flatOffers = inquiryData.offers.map((offer) => ({
       id: offer.id,
       price: offer.price,
@@ -166,10 +165,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json(transformedInquiry);
   } catch (error) {
     captureError(error, { route: 'inquiries/[id]' });
-    console.error('Get inquiry error:', error);
+    log.error({ err: error }, 'error');
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Внутренняя ошибка' },
       { status: 500 }
     );
   }
-}
+});
