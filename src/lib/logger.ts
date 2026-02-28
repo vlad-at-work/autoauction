@@ -4,25 +4,33 @@ import path from 'path';
 const LOG_DIR = process.env.LOG_DIR || '/var/log/autoauction';
 const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
 
-const isDev = process.env.NODE_ENV === 'development';
+const isProd = process.env.NODE_ENV === 'production';
 
 function createLogger() {
-  if (isDev) {
-    // In dev, write to stdout (works fine in terminal)
+  if (!isProd) {
+    // In dev/test, write to stdout
     try {
       return pino({
         level: LOG_LEVEL,
         transport: { target: 'pino-pretty', options: { colorize: true } },
       });
     } catch {
-      // pino-pretty not installed, fall back to plain stdout
       return pino({ level: LOG_LEVEL });
     }
   }
 
   // In production, write to a file — bypasses the stdout/systemd/worker issue entirely
-  const dest = pino.destination({ dest: path.join(LOG_DIR, 'app.log'), mkdir: true, sync: false });
-  return pino({ level: LOG_LEVEL }, dest);
+  try {
+    const dest = pino.destination({
+      dest: path.join(LOG_DIR, 'app.log'),
+      mkdir: true,
+      sync: false,
+    });
+    return pino({ level: LOG_LEVEL }, dest);
+  } catch {
+    // Fall back to stdout if log dir isn't writable
+    return pino({ level: LOG_LEVEL });
+  }
 }
 
 export const logger = createLogger();
