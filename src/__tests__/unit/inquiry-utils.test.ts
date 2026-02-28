@@ -96,7 +96,7 @@ describe('anonymizeDealerName', () => {
 
 describe('formatPrice', () => {
   it('formats small prices correctly', () => {
-    expect(formatPrice(1000)).toBe('1\u00A0000');
+    expect(formatPrice(1000)).toBe('1\u00A0000 \u20BD');
   });
 
   it('formats typical car prices correctly', () => {
@@ -108,7 +108,7 @@ describe('formatPrice', () => {
   });
 
   it('handles zero', () => {
-    expect(formatPrice(0)).toBe('0');
+    expect(formatPrice(0)).toBe('0 \u20BD');
   });
 
   it('handles decimal numbers', () => {
