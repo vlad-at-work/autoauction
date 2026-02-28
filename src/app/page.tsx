@@ -170,7 +170,7 @@ export default function Home() {
           <h3 className="font-russo text-stone-700 text-2xl md:text-4xl text-center mb-3 md:mb-4">
             Миссия
           </h3>
-          <p className="font-raleway font-medium text-stone-600 text-base md:text-lg leading-relaxed text-center border-l-0 md:border-l-4 border-stone-400 pl-0 md:pl-6 ml-0 md:ml-4">
+          <p className="font-raleway font-medium text-stone-600 text-base md:text-lg leading-relaxed text-center border-l-0 md:border-l-4 border-stone-400 pl-0 md:pl-6 ml-0 md:ml-4 bg-white/80 md:bg-transparent rounded-lg p-3 md:p-0">
             Выбирая дилера через наш сервис Вы получаете специальную цену и другие предложения при
             покупке автомобиля, а дилеры направляют часть комиссии на реабилитацию ветеранов СВО и
             поддержку их семей.
