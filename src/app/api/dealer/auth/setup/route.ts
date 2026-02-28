@@ -79,7 +79,16 @@ export const POST = withLogging('dealer/auth/setup', async (request: Request) =>
         },
       });
 
-      log.info({ dealerId: dealer.id, userId: validation.userId, token }, 'dealer claimed');
+      log.info(
+        {
+          dealerId: dealer.id,
+          dealerName: dealer.name,
+          userId: validation.userId,
+          platform: platformEnum,
+          token,
+        },
+        '[DealerAuth] Dealer claimed via invite token'
+      );
     } else {
       dealer = await prisma.dealer.findFirst({
         where: {
@@ -99,6 +108,16 @@ export const POST = withLogging('dealer/auth/setup', async (request: Request) =>
       where: { id: dealer.id },
       data: { passwordHash },
     });
+
+    log.info(
+      {
+        dealerId: dealer.id,
+        dealerName: dealer.name,
+        platform: platformEnum,
+        isNewClaim: !!startParam,
+      },
+      '[DealerAuth] Dealer password set successfully'
+    );
 
     return NextResponse.json({ ok: true, dealerId: dealer.id });
   } catch (err) {

@@ -3,7 +3,11 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { inquiryCreateSchema } from '@/lib/schemas/inquiry';
-import { notifyDealerOfNewInquiryViaBot, notifyBuyer } from '@/lib/notifications';
+import {
+  notifyDealerOfNewInquiryViaBot,
+  notifyBuyer,
+  type NotifyResult,
+} from '@/lib/notifications';
 import { captureError } from '@/lib/hawk';
 import { logger, withLogging } from '@/lib/logger';
 
@@ -90,6 +94,8 @@ export const POST = withLogging('inquiries', async (request: Request) => {
 
     const platform = authPlatform === 'max' ? 'MAX' : 'TELEGRAM';
 
+    log.info({ platform, authUserId }, '[Inquiry] Creating inquiry for buyer');
+
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     const result = await prisma.$transaction(async (tx) => {
@@ -126,6 +132,10 @@ export const POST = withLogging('inquiries', async (request: Request) => {
       if (buyerWithLimit.inquiriesUsedThisMonth >= MAX_INQUIRIES_PER_MONTH) {
         const resetDate = new Date(buyerWithLimit.inquiryLimitResetAt);
 
+        log.warn(
+          { buyerId: buyerWithLimit.id, inquiriesUsed: buyerWithLimit.inquiriesUsedThisMonth },
+          '[Inquiry] Buyer hit inquiry limit'
+        );
         return {
           success: false,
           error: 'INQUIRY_LIMIT_REACHED',
@@ -193,8 +203,14 @@ export const POST = withLogging('inquiries', async (request: Request) => {
     const remainingInquiries = result.remainingInquiries!;
 
     log.info(
-      { inquiryId: inquiry.id, model: input.model, submodel: input.submodel },
-      'inquiry created'
+      {
+        inquiryId: inquiry.id,
+        buyerId: buyer.id,
+        platform,
+        model: input.model,
+        submodel: input.submodel,
+      },
+      '[Inquiry] Inquiry created successfully'
     );
 
     const dealers = await prisma.dealer.findMany({
@@ -221,6 +237,16 @@ export const POST = withLogging('inquiries', async (request: Request) => {
       } => Boolean(dealer.platform && dealer.platformUserId)
     );
 
+    log.info(
+      {
+        inquiryId: inquiry.id,
+        totalDealers: dealers.length,
+        claimedDealers: claimedDealers.length,
+        dealerPlatforms: claimedDealers.map((d) => d.platform),
+      },
+      '[Inquiry] Found dealers to notify'
+    );
+
     const remainingText =
       remainingInquiries > 0
         ? `\n\nОсталось заявок: ${remainingInquiries} из ${MAX_INQUIRIES_PER_MONTH}`
@@ -228,7 +254,12 @@ export const POST = withLogging('inquiries', async (request: Request) => {
 
     const commentText = input.comment ? `\nКомментарий: ${input.comment}` : '';
 
-    await Promise.allSettled([
+    log.info(
+      { inquiryId: inquiry.id, buyerPlatform: buyer.platform, dealerCount: claimedDealers.length },
+      '[Inquiry] Sending notifications'
+    );
+
+    const notificationResults = await Promise.allSettled([
       notifyBuyer(
         {
           platform: buyer.platform,
@@ -252,6 +283,22 @@ export const POST = withLogging('inquiries', async (request: Request) => {
         )
       ),
     ]);
+
+    const successfulNotifications = notificationResults.filter(
+      (r) => r.status === 'fulfilled' && (r.value as NotifyResult).success
+    ).length;
+    const failedNotifications = notificationResults.filter(
+      (r) => r.status === 'rejected' || !(r.value as NotifyResult).success
+    ).length;
+
+    log.info(
+      {
+        inquiryId: inquiry.id,
+        successful: successfulNotifications,
+        failed: failedNotifications,
+      },
+      '[Inquiry] Notifications completed'
+    );
 
     return NextResponse.json({
       id: inquiry.id,

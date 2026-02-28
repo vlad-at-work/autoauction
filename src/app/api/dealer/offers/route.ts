@@ -58,11 +58,17 @@ export const POST = withLogging('dealer/offers', async (request: Request) => {
     });
 
     if (!dealer || !dealer.passwordHash) {
-      log.warn('unauthorized - dealer not found or not set up');
+      log.warn(
+        { platform: platformEnum, userId: validation.userId },
+        '[DealerOffer] Unauthorized - dealer not found or not set up'
+      );
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    log.info({ dealerId: dealer.id, inquiryId, price }, 'submitting offer');
+    log.info(
+      { dealerId: dealer.id, dealerName: dealer.name, inquiryId, price, platform: platformEnum },
+      '[DealerOffer] Submitting offer'
+    );
 
     // Check inquiry exists and is active
     const inquiry = await prisma.inquiry.findFirst({
@@ -119,7 +125,10 @@ export const POST = withLogging('dealer/offers', async (request: Request) => {
       },
     });
 
-    log.info({ offerId: offer.id, dealerId: dealer.id, inquiryId }, 'offer created');
+    log.info(
+      { offerId: offer.id, dealerId: dealer.id, inquiryId, price: Math.round(price) },
+      '[DealerOffer] Offer created successfully'
+    );
 
     // Notify buyer of new offer
     try {
@@ -132,6 +141,17 @@ export const POST = withLogging('dealer/offers', async (request: Request) => {
         },
       });
 
+      const isFirstOffer = existingOfferCount === 0;
+      log.info(
+        {
+          offerId: offer.id,
+          buyerPlatform: inquiry.buyer.platform,
+          buyerId: inquiry.buyer.platformUserId,
+          isFirstOffer,
+        },
+        '[DealerOffer] Notifying buyer of new offer'
+      );
+
       const result = await notifyBuyerOfNewOffer(
         {
           platform: inquiry.buyer.platform,
@@ -143,16 +163,24 @@ export const POST = withLogging('dealer/offers', async (request: Request) => {
         inquiry.model,
         inquiry.submodel,
         Math.round(price),
-        existingOfferCount === 0,
+        isFirstOffer,
         dealer.name || undefined
       );
 
-      if (!result.success) {
-        log.error({ error: result.error }, 'failed to send buyer notification');
+      if (result.success) {
+        log.info(
+          { offerId: offer.id, buyerPlatform: inquiry.buyer.platform },
+          '[DealerOffer] Buyer notification sent'
+        );
+      } else {
+        log.error(
+          { offerId: offer.id, error: result.error },
+          '[DealerOffer] Failed to send buyer notification'
+        );
       }
     } catch (err) {
       captureError(err, { route: 'dealer/offers', action: 'notify-buyer' });
-      log.error({ err }, 'failed to send buyer notification');
+      log.error({ offerId: offer.id, err }, '[DealerOffer] Exception sending buyer notification');
     }
 
     return NextResponse.json({ offer });

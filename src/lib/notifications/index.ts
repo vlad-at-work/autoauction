@@ -5,10 +5,13 @@
  */
 
 import type { Platform } from '@prisma/client';
+import { logger } from '@/lib/logger';
 import { sendMaxMessage, type MaxButton } from './max';
 import { sendTelegramMessage, type TelegramButton } from './telegram';
 
-type NotifyResult = {
+const log = logger.child({ module: 'notifications' });
+
+export type NotifyResult = {
   success: boolean;
   error?: string;
 };
@@ -36,12 +39,44 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
  * Send plain text message
  */
 export async function notifyBuyer(buyer: BuyerInfo, text: string): Promise<NotifyResult> {
+  const logContext = {
+    flow: 'notify_buyer',
+    platform: buyer.platform,
+    userId: buyer.platformUserId,
+    hasChatId: !!buyer.platformChatId,
+  };
+
+  log.info(logContext, '[Notify] Sending buyer notification');
+
+  let result: NotifyResult;
+
   if (buyer.platform === 'MAX') {
-    return sendMaxMessage(buyer.platformUserId, text, undefined, 'customer');
+    log.info({ ...logContext, platform: 'MAX' }, '[Notify] Routing to MAX (customer bot)');
+    result = await sendMaxMessage(buyer.platformUserId, text, undefined, 'customer');
   } else if (buyer.platform === 'TELEGRAM') {
-    return sendTelegramMessage(buyer.platformUserId, text, undefined, 'customer');
+    log.info(
+      { ...logContext, platform: 'Telegram' },
+      '[Notify] Routing to Telegram (customer bot)'
+    );
+    result = await sendTelegramMessage(buyer.platformUserId, text, undefined, 'customer');
+  } else {
+    log.warn(
+      { ...logContext, platform: buyer.platform },
+      '[Notify] Unknown platform for buyer notification'
+    );
+    return { success: true };
   }
-  return { success: true };
+
+  if (result.success) {
+    log.info({ ...logContext, status: 'success' }, '[Notify] Buyer notification sent successfully');
+  } else {
+    log.error(
+      { ...logContext, status: 'failed', error: result.error },
+      '[Notify] Buyer notification failed'
+    );
+  }
+
+  return result;
 }
 
 /**
@@ -54,14 +89,29 @@ export async function notifyBuyerOfNewOffer(
   carModel: string,
   carSubmodel: string,
   price: number,
-  _isFirstOffer: boolean,
+  isFirstOffer: boolean,
   dealerName?: string
 ): Promise<NotifyResult> {
   const dealerDisplayName = dealerName || 'Дилер';
-  const text = `🚗 Предложение от ${dealerDisplayName}\n\n${carModel} ${carSubmodel}\n${price.toLocaleString('ru-RU')} \u20BD`;
+  const logContext = {
+    flow: 'notify_buyer_new_offer',
+    platform: buyer.platform,
+    userId: buyer.platformUserId,
+    inquiryId,
+    offerId,
+    dealerName: dealerDisplayName,
+    isFirstOffer,
+  };
+
+  log.info(logContext, '[Notify] Sending buyer new offer notification');
+
+  const text = `🚗 Предложение от ${dealerDisplayName}\n\n${carModel} ${carSubmodel}\n${price.toLocaleString('ru-RU')} ₽`;
   const payload = `offer_${inquiryId}_${offerId}`;
 
+  let result: NotifyResult;
+
   if (buyer.platform === 'MAX') {
+    log.info({ ...logContext, platform: 'MAX' }, '[Notify] Routing to MAX (customer bot)');
     const buttons: MaxButton[] = [
       {
         type: 'open_app',
@@ -70,8 +120,12 @@ export async function notifyBuyerOfNewOffer(
         payload,
       },
     ];
-    return sendMaxMessage(buyer.platformUserId, text, buttons, 'customer');
+    result = await sendMaxMessage(buyer.platformUserId, text, buttons, 'customer');
   } else if (buyer.platform === 'TELEGRAM') {
+    log.info(
+      { ...logContext, platform: 'Telegram' },
+      '[Notify] Routing to Telegram (customer bot)'
+    );
     const buttons: TelegramButton[] = [
       {
         text: 'Посмотреть предложение',
@@ -80,9 +134,25 @@ export async function notifyBuyerOfNewOffer(
         },
       },
     ];
-    return sendTelegramMessage(buyer.platformUserId, text, buttons, 'customer');
+    result = await sendTelegramMessage(buyer.platformUserId, text, buttons, 'customer');
+  } else {
+    log.warn(
+      { ...logContext, platform: buyer.platform },
+      '[Notify] Unknown buyer platform, skipping notification'
+    );
+    return { success: true };
   }
-  return { success: true };
+
+  if (result.success) {
+    log.info({ ...logContext, status: 'success' }, '[Notify] Buyer notified of new offer');
+  } else {
+    log.error(
+      { ...logContext, status: 'failed', error: result.error },
+      '[Notify] Failed to notify buyer of new offer'
+    );
+  }
+
+  return result;
 }
 
 /**
@@ -92,14 +162,49 @@ export async function sendDealerPasswordResetCode(
   dealer: DealerInfo,
   code: string
 ): Promise<NotifyResult> {
+  log.info(
+    {
+      flow: 'send_dealer_reset_code',
+      platform: dealer.platform,
+      userId: dealer.platformUserId,
+    },
+    '[Notify] Sending dealer password reset code'
+  );
+
   const text = `🔐 Код для сброса пароля: ${code}\n\nКод действителен 10 минут.`;
 
+  let result: NotifyResult;
+
   if (dealer.platform === 'MAX' && dealer.platformUserId) {
-    return sendMaxMessage(dealer.platformUserId, text, undefined, 'dealer');
+    result = await sendMaxMessage(dealer.platformUserId, text, undefined, 'dealer');
   } else if (dealer.platform === 'TELEGRAM' && dealer.platformUserId) {
-    return sendTelegramMessage(dealer.platformUserId, text, undefined, 'dealer');
+    result = await sendTelegramMessage(dealer.platformUserId, text, undefined, 'dealer');
+  } else {
+    log.warn(
+      { platform: dealer.platform, hasUserId: !!dealer.platformUserId },
+      '[Notify] Dealer platform not configured, cannot send reset code'
+    );
+    return { success: false, error: 'Dealer platform not configured' };
   }
-  return { success: true };
+
+  if (result.success) {
+    log.info(
+      { flow: 'send_dealer_reset_code', platform: dealer.platform, userId: dealer.platformUserId },
+      '[Notify] Dealer password reset code sent'
+    );
+  } else {
+    log.error(
+      {
+        flow: 'send_dealer_reset_code',
+        platform: dealer.platform,
+        userId: dealer.platformUserId,
+        error: result.error,
+      },
+      '[Notify] Failed to send dealer password reset code'
+    );
+  }
+
+  return result;
 }
 
 /**
@@ -113,10 +218,27 @@ export async function notifyDealerOfNewInquiryViaBot(
   transmission: string,
   color: string
 ): Promise<NotifyResult> {
+  log.info(
+    {
+      flow: 'notify_dealer_new_inquiry',
+      platform: dealer.platform,
+      userId: dealer.platformUserId,
+      inquiryId,
+      carModel,
+    },
+    '[Notify] Sending dealer new inquiry notification'
+  );
+
   const text = `🚗 Новая заявка!\n\n${carModel} ${carSubmodel}\nКПП: ${transmission}\nЦвет: ${color}`;
   const payload = `inquiry_${inquiryId}`;
 
+  let result: NotifyResult;
+
   if (dealer.platform === 'MAX' && dealer.platformUserId) {
+    log.info(
+      { platform: 'MAX', userId: dealer.platformUserId },
+      '[Notify] Routing to MAX (dealer bot)'
+    );
     const buttons: MaxButton[] = [
       {
         type: 'open_app',
@@ -125,8 +247,12 @@ export async function notifyDealerOfNewInquiryViaBot(
         payload,
       },
     ];
-    return sendMaxMessage(dealer.platformUserId, text, buttons, 'dealer');
+    result = await sendMaxMessage(dealer.platformUserId, text, buttons, 'dealer');
   } else if (dealer.platform === 'TELEGRAM' && dealer.platformUserId) {
+    log.info(
+      { platform: 'Telegram', userId: dealer.platformUserId },
+      '[Notify] Routing to Telegram (dealer bot)'
+    );
     const buttons: TelegramButton[] = [
       {
         text: 'Открыть заявку',
@@ -135,9 +261,39 @@ export async function notifyDealerOfNewInquiryViaBot(
         },
       },
     ];
-    return sendTelegramMessage(dealer.platformUserId, text, buttons, 'dealer');
+    result = await sendTelegramMessage(dealer.platformUserId, text, buttons, 'dealer');
+  } else {
+    log.warn(
+      { platform: dealer.platform, inquiryId },
+      '[Notify] Dealer platform not configured, skipping notification'
+    );
+    return { success: true };
   }
-  return { success: true };
+
+  if (result.success) {
+    log.info(
+      {
+        flow: 'notify_dealer_new_inquiry',
+        platform: dealer.platform,
+        userId: dealer.platformUserId,
+        inquiryId,
+      },
+      '[Notify] Dealer notified of new inquiry'
+    );
+  } else {
+    log.error(
+      {
+        flow: 'notify_dealer_new_inquiry',
+        platform: dealer.platform,
+        userId: dealer.platformUserId,
+        inquiryId,
+        error: result.error,
+      },
+      '[Notify] Failed to notify dealer of new inquiry'
+    );
+  }
+
+  return result;
 }
 
 /**
@@ -152,15 +308,28 @@ export async function notifyDealerOfAcceptedOfferViaBot(
   buyerName: string,
   buyerPhone: string
 ): Promise<NotifyResult> {
+  const logContext = {
+    flow: 'notify_dealer_offer_accepted',
+    platform: dealer.platform,
+    userId: dealer.platformUserId,
+    inquiryId,
+    carModel,
+  };
+
+  log.info(logContext, '[Notify] Sending dealer offer accepted notification');
+
   const text =
     `🎉 Ваше предложение принято!\n\n` +
     `${carModel} ${carSubmodel}\n` +
-    `${price.toLocaleString('ru-RU')} \u20BD\n\n` +
+    `${price.toLocaleString('ru-RU')} ₽\n\n` +
     `Покупатель: ${buyerName}\n` +
     `Телефон: ${buyerPhone}`;
   const payload = `accepted_${inquiryId}`;
 
+  let result: NotifyResult;
+
   if (dealer.platform === 'MAX' && dealer.platformUserId) {
+    log.info({ ...logContext, platform: 'MAX' }, '[Notify] Routing to MAX (dealer bot)');
     const buttons: MaxButton[] = [
       {
         type: 'open_app',
@@ -169,8 +338,9 @@ export async function notifyDealerOfAcceptedOfferViaBot(
         payload,
       },
     ];
-    return sendMaxMessage(dealer.platformUserId, text, buttons, 'dealer');
+    result = await sendMaxMessage(dealer.platformUserId, text, buttons, 'dealer');
   } else if (dealer.platform === 'TELEGRAM' && dealer.platformUserId) {
+    log.info({ ...logContext, platform: 'Telegram' }, '[Notify] Routing to Telegram (dealer bot)');
     const buttons: TelegramButton[] = [
       {
         text: 'Открыть сделку',
@@ -179,7 +349,23 @@ export async function notifyDealerOfAcceptedOfferViaBot(
         },
       },
     ];
-    return sendTelegramMessage(dealer.platformUserId, text, buttons, 'dealer');
+    result = await sendTelegramMessage(dealer.platformUserId, text, buttons, 'dealer');
+  } else {
+    log.warn(
+      { ...logContext, platform: dealer.platform, hasUserId: !!dealer.platformUserId },
+      '[Notify] Dealer platform not configured, skipping acceptance notification'
+    );
+    return { success: true };
   }
-  return { success: true };
+
+  if (result.success) {
+    log.info({ ...logContext, status: 'success' }, '[Notify] Dealer notified of accepted offer');
+  } else {
+    log.error(
+      { ...logContext, status: 'failed', error: result.error },
+      '[Notify] Failed to notify dealer of accepted offer'
+    );
+  }
+
+  return result;
 }

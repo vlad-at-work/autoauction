@@ -6,7 +6,7 @@
 
 import { logger } from '@/lib/logger';
 
-const log = logger.child({ module: 'notifications/telegram' });
+const log = logger.child({ module: 'platform/Telegram' });
 
 const TG_API_BASE = 'https://api.telegram.org';
 const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN || '';
@@ -24,9 +24,20 @@ export async function sendTelegramMessage(
   botType: 'customer' | 'dealer' = 'customer'
 ): Promise<{ success: boolean; error?: string }> {
   const token = botType === 'dealer' ? TG_BOT_TOKEN_DEALER : TG_BOT_TOKEN;
+  const logContext = {
+    platform: 'Telegram',
+    botType,
+    chatId: String(chatId),
+    hasButtons: !!buttons?.length,
+  };
+
+  log.info(logContext, '[Telegram] Sending message');
 
   if (!token) {
-    log.warn({ botType }, 'bot token not configured');
+    log.warn(
+      { ...logContext, reason: 'token_missing' },
+      '[Telegram] Send failed: bot token not configured'
+    );
     return { success: false, error: 'Bot token not configured' };
   }
 
@@ -52,6 +63,8 @@ export async function sendTelegramMessage(
   }
 
   try {
+    log.debug({ ...logContext, url, textLength: text.length }, '[Telegram] POST request');
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -62,13 +75,17 @@ export async function sendTelegramMessage(
 
     if (!response.ok) {
       const errorText = await response.text();
-      log.error({ status: response.status, errorText }, 'send failed');
+      log.error(
+        { ...logContext, status: response.status, errorText },
+        '[Telegram] Send failed: HTTP error'
+      );
       return { success: false, error: `HTTP ${response.status}: ${errorText}` };
     }
 
+    log.info({ ...logContext, status: response.status }, '[Telegram] Message sent successfully');
     return { success: true };
   } catch (err) {
-    log.error({ err }, 'send error');
+    log.error({ ...logContext, err: String(err) }, '[Telegram] Send failed: exception');
     return { success: false, error: String(err) };
   }
 }

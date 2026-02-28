@@ -127,8 +127,10 @@ export const POST = withLogging('transactions', async (request: Request) => {
         offerId,
         dealerId: offer.dealerId,
         inquiryId: offer.inquiryId,
+        buyerPlatform: offer.inquiry.buyer.platform,
+        price: offer.price,
       },
-      'transaction created'
+      '[Transaction] Transaction created (offer accepted)'
     );
 
     const formattedPhone = formatPhoneRU(offer.inquiry.phone);
@@ -144,10 +146,16 @@ ${offer.price.toLocaleString('ru-RU')} \u20BD
 
 ${remainingAcceptances > 0 ? `Вы можете принять ещё ${remainingAcceptances} предложение${remainingAcceptances === 1 ? '' : remainingAcceptances < 5 ? 'я' : 'ий'}.` : `Вы использовали все доступные принятия для этой заявки.`}`;
 
-    log.info(
-      { buyerPlatform: offer.inquiry.buyer.platform, buyerId: offer.inquiry.buyer.platformUserId },
-      'sending acceptance notification'
-    );
+    const buyerLogContext = {
+      platform: offer.inquiry.buyer.platform,
+      userId: offer.inquiry.buyer.platformUserId,
+    };
+    const dealerLogContext = {
+      platform: offer.dealer.platform,
+      userId: offer.dealer.platformUserId,
+    };
+
+    log.info(buyerLogContext, '[Transaction] Sending buyer acceptance notification');
 
     const notifications: Array<Promise<unknown>> = [
       notifyBuyer(
@@ -161,6 +169,7 @@ ${remainingAcceptances > 0 ? `Вы можете принять ещё ${remainin
     ];
 
     if (offer.dealer.platform && offer.dealer.platformUserId) {
+      log.info(dealerLogContext, '[Transaction] Sending dealer acceptance notification');
       notifications.push(
         notifyDealerOfAcceptedOfferViaBot(
           {
@@ -178,12 +187,26 @@ ${remainingAcceptances > 0 ? `Вы можете принять ещё ${remainin
       );
     } else {
       log.warn(
-        { dealerId: offer.dealerId },
-        'skipping dealer notification: platform not configured'
+        {
+          dealerId: offer.dealerId,
+          platform: offer.dealer.platform,
+          hasUserId: !!offer.dealer.platformUserId,
+        },
+        '[Transaction] Skipping dealer notification: platform not configured'
       );
     }
 
-    await Promise.allSettled(notifications);
+    const notificationResults = await Promise.allSettled(notifications);
+
+    const successful = notificationResults.filter(
+      (r) => r.status === 'fulfilled' && (r.value as { success?: boolean })?.success !== false
+    ).length;
+    const failed = notificationResults.length - successful;
+
+    log.info(
+      { transactionId: transaction.id, successful, failed },
+      '[Transaction] Acceptance notifications completed'
+    );
 
     return NextResponse.json({
       id: transaction.id,

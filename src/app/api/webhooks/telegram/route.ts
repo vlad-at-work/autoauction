@@ -55,7 +55,16 @@ export const POST = withLogging('webhooks/telegram', async (request: Request) =>
     const firstName = message.from?.first_name || 'User';
     const text = message.text || '';
 
-    log.info({ botType, chatId, userId, text: text.substring(0, 50) }, 'webhook received');
+    const logContext = {
+      platform: 'Telegram',
+      botType,
+      chatId: String(chatId),
+      userId: String(userId),
+      firstName,
+      text: text.substring(0, 50),
+    };
+
+    log.info(logContext, '[Webhook/Telegram] Received');
 
     // Handle /start command
     if (text.startsWith('/start')) {
@@ -68,8 +77,13 @@ export const POST = withLogging('webhooks/telegram', async (request: Request) =>
       if (botType === 'dealer' && param) {
         // Support both old format (setup_xxx) and new format (6-digit code)
         if (param.startsWith('setup_') || /^\d{6}$/.test(param)) {
+          log.info(
+            { ...logContext, inviteParam: param },
+            '[Webhook/Telegram] Processing dealer invite'
+          );
           await handleDealerInviteTelegram(chatId, firstName, param);
         } else {
+          log.info({ ...logContext }, '[Webhook/Telegram] Sending dealer welcome (no invite)');
           await sendTelegramMessage(
             chatId,
             `👋 Добро пожаловать в панель дилера, ${firstName}!\n\nОткройте мини-приложение из меню бота.`,
@@ -78,6 +92,7 @@ export const POST = withLogging('webhooks/telegram', async (request: Request) =>
           );
         }
       } else if (botType === 'dealer') {
+        log.info({ ...logContext }, '[Webhook/Telegram] Sending dealer welcome');
         await sendTelegramMessage(
           chatId,
           `👋 Добро пожаловать в панель дилера, ${firstName}!\n\nОткройте мини-приложение из меню бота.`,
@@ -85,6 +100,7 @@ export const POST = withLogging('webhooks/telegram', async (request: Request) =>
           'dealer'
         );
       } else {
+        log.info({ ...logContext }, '[Webhook/Telegram] Sending customer welcome');
         await sendTelegramMessage(
           chatId,
           `👋 Добро пожаловать в Свои Авто, ${firstName}!\n\nНажмите кнопку ниже, чтобы создать заявку.`,
@@ -119,17 +135,27 @@ async function handleDealerInviteTelegram(chatId: number, firstName: string, par
     token = param; // 6-digit code
   }
 
+  log.info(
+    { platform: 'Telegram', chatId, token },
+    '[Webhook/Telegram] Looking up dealer by invite token'
+  );
+
   const dealer = await prisma.dealer.findFirst({
     where: { inviteToken: token, deletedAt: null },
     select: { id: true, name: true, inviteTokenExpiresAt: true },
   });
 
   if (!dealer) {
+    log.warn({ platform: 'Telegram', chatId, token }, '[Webhook/Telegram] Invalid invite token');
     await sendTelegramMessage(chatId, '❌ Код приглашения недействителен.', undefined, 'dealer');
     return;
   }
 
   if (!isInviteTokenValid(dealer.inviteTokenExpiresAt)) {
+    log.warn(
+      { platform: 'Telegram', chatId, dealerId: dealer.id },
+      '[Webhook/Telegram] Invite token expired'
+    );
     await sendTelegramMessage(
       chatId,
       '❌ Срок действия кода приглашения истек.',
@@ -138,6 +164,11 @@ async function handleDealerInviteTelegram(chatId: number, firstName: string, par
     );
     return;
   }
+
+  log.info(
+    { platform: 'Telegram', chatId, dealerId: dealer.id, dealerName: dealer.name },
+    '[Webhook/Telegram] Valid invite, sending welcome'
+  );
 
   const text = `Добро пожаловать, ${firstName}!\n\nВаш код активации для ${dealer.name}: ${token}\n\nНажмите кнопку ниже, чтобы открыть приложение.`;
 

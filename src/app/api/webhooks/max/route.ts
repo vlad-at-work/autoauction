@@ -37,7 +37,16 @@ export const POST = withLogging('webhooks/max', async (request: Request) => {
         ?.first_name as string) ||
       'User';
 
-    log.info({ updateType, botType, userId, startPayload }, 'webhook received');
+    const logContext = {
+      platform: 'MAX',
+      updateType,
+      botType,
+      userId: String(userId),
+      firstName,
+      startPayload: startPayload || null,
+    };
+
+    log.info(logContext, '[Webhook/MAX] Received');
 
     if (updateType === 'bot_started') {
       if (!userId) {
@@ -50,8 +59,10 @@ export const POST = withLogging('webhooks/max', async (request: Request) => {
       if (botType === 'dealer' && param) {
         // Support both old format (setup_xxx) and new format (6-digit code)
         if (param.startsWith('setup_') || /^\d{6}$/.test(param)) {
+          log.info({ ...logContext, inviteParam: param }, '[Webhook/MAX] Processing dealer invite');
           await handleDealerInvite(Number(userId), firstName, param);
         } else {
+          log.info({ ...logContext }, '[Webhook/MAX] Sending dealer welcome (no invite)');
           await sendMaxMessage(
             Number(userId),
             `👋 Добро пожаловать в панель дилера, ${firstName}!\n\nОткройте мини-приложение из меню ниже.`,
@@ -60,6 +71,7 @@ export const POST = withLogging('webhooks/max', async (request: Request) => {
           );
         }
       } else if (botType === 'dealer') {
+        log.info({ ...logContext }, '[Webhook/MAX] Sending dealer welcome');
         await sendMaxMessage(
           Number(userId),
           `👋 Добро пожаловать в панель дилера, ${firstName}!\n\nОткройте мини-приложение из меню ниже.`,
@@ -67,6 +79,7 @@ export const POST = withLogging('webhooks/max', async (request: Request) => {
           'dealer'
         );
       } else {
+        log.info({ ...logContext }, '[Webhook/MAX] Sending customer welcome');
         const customerBotName =
           process.env.MAX_BOT_NAME || process.env.NEXT_PUBLIC_MAX_BOT_NAME || '';
         await sendMaxMessage(
@@ -103,20 +116,32 @@ async function handleDealerInvite(userId: number, firstName: string, param: stri
     token = param; // 6-digit code
   }
 
+  log.info({ platform: 'MAX', userId, token }, '[Webhook/MAX] Looking up dealer by invite token');
+
   const dealer = await prisma.dealer.findFirst({
     where: { inviteToken: token, deletedAt: null },
     select: { id: true, name: true, inviteTokenExpiresAt: true },
   });
 
   if (!dealer) {
+    log.warn({ platform: 'MAX', userId, token }, '[Webhook/MAX] Invalid invite token');
     await sendMaxMessage(userId, 'Ссылка недействительна.', [], 'dealer');
     return;
   }
 
   if (!isInviteTokenValid(dealer.inviteTokenExpiresAt)) {
+    log.warn(
+      { platform: 'MAX', userId, dealerId: dealer.id },
+      '[Webhook/MAX] Invite token expired'
+    );
     await sendMaxMessage(userId, 'Срок действия ссылки истек.', [], 'dealer');
     return;
   }
+
+  log.info(
+    { platform: 'MAX', userId, dealerId: dealer.id, dealerName: dealer.name },
+    '[Webhook/MAX] Valid invite, sending welcome'
+  );
 
   const botName =
     process.env.MAX_BOT_NAME_DEALER || process.env.NEXT_PUBLIC_MAX_BOT_NAME_DEALER || '';
