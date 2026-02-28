@@ -1,9 +1,8 @@
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { Check, MessageSquare, ArrowRight } from 'lucide-react';
+import { Check, ChevronRight, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { CountdownTimer } from '@/components/countdown-timer';
 import { cn } from '@/lib/utils';
@@ -30,47 +29,34 @@ export function InquiryCard({ inquiry }: InquiryCardProps) {
   return (
     <Link href={`/app/inquiry/${inquiry.id}`}>
       <Card className={cn('transition-colors hover:border-primary', isExpired && 'opacity-60')}>
-        <CardContent className="flex flex-col gap-4 p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h3 className="text-lg font-semibold leading-tight">
+        <CardContent className="flex items-center gap-4 p-4">
+          {/* Left: main info */}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <h3 className="truncate text-lg font-semibold leading-tight">
                 {inquiry.model} {inquiry.submodel !== inquiry.model && inquiry.submodel}
               </h3>
-              <p className="text-muted-foreground mt-1.5 text-base">
-                {format(new Date(inquiry.createdAt), 'd MMM', { locale: ru })}
-              </p>
-            </div>
-            <div className="flex flex-col items-end gap-1.5">
-              {isExpired && (
-                <span className="bg-muted text-muted-foreground rounded-full px-3 py-1.5 text-sm font-medium">
-                  Истекло
+              {transactionCount > 0 && (
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
+                  <Check className="size-3" />
+                  {transactionCount}
                 </span>
               )}
-              {transactionCount > 0 && (
-                <Badge
-                  variant="outline"
-                  className="border-green-200 bg-green-50 text-green-700 text-sm"
-                >
-                  <Check className="mr-1 size-4" />
-                  {transactionCount} принято
-                </Badge>
-              )}
+            </div>
+            <div className="text-muted-foreground mt-1.5 flex items-center gap-3 text-sm">
+              <span>{format(new Date(inquiry.createdAt), 'd MMM', { locale: ru })}</span>
+              <span className="text-muted-foreground/40">·</span>
+              <CountdownTimer expiresAt={inquiry.expiresAt} isExpired={isExpired} />
+              <span className="text-muted-foreground/40">·</span>
+              <span className="flex items-center gap-1">
+                <MessageSquare className="size-3.5" />
+                {offerCount === 0 ? 'нет' : offerCount}
+              </span>
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-base">
-            <CountdownTimer expiresAt={inquiry.expiresAt} isExpired={isExpired} />
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="size-5" />
-                <span>{offerCount === 0 ? 'Нет предложений' : `${offerCount} предл.`}</span>
-              </div>
-              <div className="flex items-center gap-1.5 rounded bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground">
-                Смотреть
-                <ArrowRight className="size-4" />
-              </div>
-            </div>
-          </div>
+          {/* Right: chevron */}
+          <ChevronRight className="text-muted-foreground/50 size-5 shrink-0" />
         </CardContent>
       </Card>
     </Link>

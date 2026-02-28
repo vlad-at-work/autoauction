@@ -38,11 +38,11 @@ export function CountdownTimer({ expiresAt, isExpired }: CountdownTimerProps) {
   }, [expiresAt]);
 
   return (
-    <div
-      className={`flex items-center gap-1.5 text-base ${isExpired ? 'text-muted-foreground' : 'text-foreground'}`}
+    <span
+      className={`inline-flex items-center gap-1 ${isExpired ? 'text-muted-foreground' : 'text-foreground'}`}
     >
-      <Clock className="size-5" />
-      <span>{isExpired ? 'Истекло' : timeLeft}</span>
-    </div>
+      <Clock className="size-3.5" />
+      {isExpired ? 'истекло' : timeLeft}
+    </span>
   );
 }
