@@ -1,10 +1,21 @@
 import pino from 'pino';
+import fs from 'fs';
 import path from 'path';
 
 const LOG_DIR = process.env.LOG_DIR || '/var/log/autoauction';
 const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
 
 const isProd = process.env.NODE_ENV === 'production';
+
+function canWriteToDir(dir: string): boolean {
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+    fs.accessSync(dir, fs.constants.W_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 function createLogger() {
   if (!isProd) {
@@ -20,17 +31,17 @@ function createLogger() {
   }
 
   // In production, write to a file — bypasses the stdout/systemd/worker issue entirely
-  try {
+  if (canWriteToDir(LOG_DIR)) {
     const dest = pino.destination({
       dest: path.join(LOG_DIR, 'app.log'),
-      mkdir: true,
+      mkdir: false,
       sync: false,
     });
     return pino({ level: LOG_LEVEL }, dest);
-  } catch {
-    // Fall back to stdout if log dir isn't writable
-    return pino({ level: LOG_LEVEL });
   }
+
+  // Fall back to stdout if log dir isn't writable
+  return pino({ level: LOG_LEVEL });
 }
 
 export const logger = createLogger();
