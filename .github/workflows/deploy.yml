@@ -27,6 +27,9 @@ jobs:
           NEXT_PUBLIC_TELEGRAM_BOT_NAME: ${{ secrets.NEXT_PUBLIC_TELEGRAM_BOT_NAME }}
           NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
 
+      - name: Copy request-logger into standalone
+        run: cp request-logger.js .next/standalone/
+
       - name: Deploy standalone build
         uses: easingthemes/ssh-deploy@main
         with:
