@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2 } from 'lucide-react';
+import { CheckCircle2, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -556,9 +556,22 @@ function MiniAppInquiryFormPageInner() {
                 type="submit"
                 size="lg"
                 className="text-base"
-                disabled={submitState.status === 'submitting' || !form.formState.isValid}
+                disabled={
+                  submitState.status === 'submitting' ||
+                  submitState.status === 'success' ||
+                  !form.formState.isValid
+                }
               >
-                {submitState.status === 'submitting' ? 'Отправляем…' : 'Отправить'}
+                {submitState.status === 'submitting' ? (
+                  'Отправляем…'
+                ) : submitState.status === 'success' ? (
+                  <>
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Заявка отправлена!
+                  </>
+                ) : (
+                  'Отправить'
+                )}
               </Button>
 
               <Button asChild variant="outline" size="lg" type="button" className="text-base">

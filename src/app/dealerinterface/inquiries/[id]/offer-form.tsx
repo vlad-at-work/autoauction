@@ -17,8 +17,8 @@ import { Textarea } from '@/components/ui/textarea';
 
 const offerFormSchema = z.object({
   price: z.string().min(1, 'Укажите цену'),
-  configuration: z.string().max(500).optional(),
-  deliveryTime: z.string().max(200).optional(),
+  configuration: z.string().min(1, 'Укажите комплектацию').max(500),
+  deliveryTime: z.string().min(1, 'Укажите сроки поставки').max(200),
   additionalComments: z.string().max(1000).optional(),
   confirmedMatch: z.boolean().refine((val) => val === true, {
     message: 'Необходимо подтвердить совпадение с требованиями',
@@ -27,8 +27,8 @@ const offerFormSchema = z.object({
 
 const offerSchema = z.object({
   price: z.coerce.number().int().positive().max(2000000000, 'Цена слишком большая'),
-  configuration: z.string().max(500).optional(),
-  deliveryTime: z.string().max(200).optional(),
+  configuration: z.string().min(1).max(500),
+  deliveryTime: z.string().min(1).max(200),
   additionalComments: z.string().max(1000).optional(),
   confirmedMatch: z.boolean(),
 });
@@ -129,6 +129,9 @@ export function OfferForm({
       additionalComments: '',
       confirmedMatch: false,
     });
+
+    // Reset success state after a delay so button becomes active again
+    setTimeout(() => setIsSuccess(false), 2000);
 
     if (onOfferSubmitted) {
       onOfferSubmitted();

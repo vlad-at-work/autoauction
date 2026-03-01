@@ -8,7 +8,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { AnimatedList } from '@/components/animated-list';
 import { CountdownTimer } from '@/components/countdown-timer';
 import { PageTransition } from '@/components/page-transition';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TopBar } from '@/components/ui/top-bar';
@@ -180,23 +179,33 @@ export default function InquiryDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Acceptance limits banner */}
-          <div className="mt-4 flex items-center justify-between rounded-lg border bg-zinc-50 px-5 py-4">
+          {/* Acceptance limits */}
+          <div className="mt-4 rounded-lg border bg-zinc-50 px-5 py-4">
             <div className="text-base">
-              <span className="text-muted-foreground">Принятых предложений: </span>
-              <span className="font-medium">
-                {acceptanceLimits.used} из {acceptanceLimits.max}
-              </span>
+              {acceptanceLimits.remaining > 0 ? (
+                <span>
+                  Вы можете принять ещё{' '}
+                  <span className="font-medium">
+                    {acceptanceLimits.remaining}{' '}
+                    {acceptanceLimits.remaining === 1
+                      ? 'предложение'
+                      : acceptanceLimits.remaining < 5
+                        ? 'предложения'
+                        : 'предложений'}
+                  </span>
+                  {acceptanceLimits.used > 0 && (
+                    <span className="text-muted-foreground">
+                      {' '}
+                      (принято {acceptanceLimits.used} из {acceptanceLimits.max})
+                    </span>
+                  )}
+                </span>
+              ) : (
+                <span className="text-muted-foreground">
+                  Все {acceptanceLimits.max} предложения приняты
+                </span>
+              )}
             </div>
-            {acceptanceLimits.remaining > 0 ? (
-              <Badge variant="outline" className="text-sm">
-                Осталось: {acceptanceLimits.remaining}
-              </Badge>
-            ) : (
-              <Badge variant="secondary" className="text-sm">
-                Лимит исчерпан
-              </Badge>
-            )}
           </div>
 
           <div className="mt-6">
