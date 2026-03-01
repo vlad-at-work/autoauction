@@ -1,0 +1,31 @@
+[Unit]
+Description=AutoAuction Next.js App
+After=network.target
+
+[Service]
+Type=simple
+User=autoauction
+WorkingDirectory=/home/autoauction/app
+
+# Use script to allocate pseudo-TTY (fixes worker stdout) + tee to capture to file
+ExecStart=/bin/bash -c 'exec /usr/bin/script -q -c "/usr/bin/node --require ./request-logger.js server.js" /dev/null 2>&1 | tee -a /var/log/autoauction/app.log'
+
+# Alternative: just use script and let request-logger handle file logging
+# ExecStart=/usr/bin/script -q -c "/usr/bin/node --require ./request-logger.js server.js" /dev/null
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=autoauction
+
+Environment="NODE_ENV=production"
+Environment="PORT=3000"
+Environment="LOG_DIR=/var/log/autoauction"
+Environment="LOG_LEVEL=info"
+Environment="NODE_NO_WARNINGS=1"
+Environment="UV_USE_IO_URING=0"
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

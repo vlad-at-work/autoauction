@@ -103,7 +103,26 @@ Format: `Bearer {platform}:{botType}:{initData}`
 
 ### Critical: Next.js Standalone Mode
 
-Next.js `output: 'standalone'` does NOT auto-run `instrumentation.ts` at runtime (only during build). For server-side libraries that need initialization (Hawk, Sentry, etc.), call `init()` at module level in the lib file, not just in `instrumentation.ts`. Server secrets must be written to the VPS `.env` file during deploy via SSH step in `deploy.yml` - they don't transfer automatically from build environment.
+**1. Environment Variables Are EMBEDDED at Build Time**
+
+Next.js `output: 'standalone'` **inlines** all environment variables from `.env.local` into the compiled server bundle at **build time**. You do NOT need to set these in systemd:
+
+- ❌ `TG_BOT_TOKEN`, `TG_BOT_TOKEN_DEALER`
+- ❌ `MAX_BOT_TOKEN`, `MAX_BOT_TOKEN_DEALER`
+- ❌ `TG_WEBHOOK_SECRET`, `TG_DEALER_WEBHOOK_SECRET`
+- ❌ Database URLs, session secrets, admin passwords
+- ❌ All other API keys and tokens
+
+**Only runtime/system env vars go in systemd**:
+
+- ✅ `PORT`, `NODE_ENV`
+- ✅ `LOG_DIR`, `LOG_LEVEL` (if runtime configurable)
+
+Systemd service only needs minimal env vars - the app has secrets compiled in.
+
+**2. Instrumentation.ts Does Not Run in Standalone**
+
+`instrumentation.ts` only runs during build, not at runtime. For server-side libraries that need initialization (Hawk, Sentry, etc.), call `init()` at module level in the lib file, not just in `instrumentation.ts`.
 
 ---
 

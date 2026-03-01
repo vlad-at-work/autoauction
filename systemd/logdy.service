@@ -1,0 +1,12 @@
+[Unit]
+Description=Logdy Log Viewer
+After=autoauction.service
+
+[Service]
+ExecStart=/bin/bash -c 'tail -F /var/log/autoauction/app.log | /usr/local/bin/logdy --ui-pass ${LOGDY_PASS} --port 8080 --ui-ip 0.0.0.0'
+EnvironmentFile=/etc/logdy.env
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

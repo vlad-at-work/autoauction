@@ -132,7 +132,7 @@ Do not commit secrets; this list is names/meaning only.
 5. Buyer accepts an offer → `POST /api/transactions`
    - Cap: 3 accepted offers per inquiry.
    - Creates transaction with immutable snapshots + reveals buyer contact data to the dealer.
-   - Notifies dealer (accepted) via dealer bot with “Open inquiry” button.
+   - Notifies dealer (accepted) via dealer bot with "Open inquiry" button.
 
 ### Dealer flow (pre-created dealer → claim → password → offers)
 
@@ -159,11 +159,11 @@ Fallback behavior:
 
 Buyer notifications (customer bots):
 
-- Offer notifications include an “Open offers” button using `startapp=inquiry:<inquiryId>`.
+- Offer notifications include an "Open offers" button using `startapp=inquiry:<inquiryId>`.
 
 Dealer notifications (dealer bots):
 
-- New inquiry + acceptance notifications include “Open inquiry” button using `startapp=inquiry:<inquiryId>`.
+- New inquiry + acceptance notifications include "Open inquiry" button using `startapp=inquiry:<inquiryId>`.
 
 MAX caveat:
 
@@ -325,8 +325,8 @@ Authorization: Bearer mock:<platform>:<botType>:<userId>
 
 ## Troubleshooting
 
-- Dealer sees “not registered”: admin must create dealer and/or send invite link; dealer can also share their platform ID to admin.
-- Dealer sees “needs invite”: there are multiple unclaimed dealers; use invite link from admin dealer detail.
+- Dealer sees "not registered": admin must create dealer and/or send invite link; dealer can also share their platform ID to admin.
+- Dealer sees "needs invite": there are multiple unclaimed dealers; use invite link from admin dealer detail.
 - Buttons open wrong domain: set `NEXT_PUBLIC_APP_URL` to your production domain.
 - Notifications missing: ensure dealer is claimed (`platform`, `platformUserId` set) and bot tokens are configured.
 
@@ -402,3 +402,65 @@ gzip /var/log/autoauction/app.log  # Compress current
 # OR: > /var/log/autoauction/app.log  # Truncate (data loss)
 systemctl start autoauction
 ```
+
+---
+
+## Server Configuration (Versioned)
+
+All server configs live in the repo for disaster recovery. These are **reference copies** of the configs running on the VPS.
+
+```
+systemd/
+├── autoauction.service   # Main app service (port 3000)
+├── logdy.service         # Log viewer service (port 8080)
+└── logrotate.conf        # Log rotation config
+
+nginx/
+├── autoauction.conf      # Site config (reverse proxy + SSL)
+└── nginx.conf            # Stock nginx config (for reference)
+```
+
+### Setup from Scratch
+
+If rebuilding the server:
+
+```bash
+# 1. Create user and install Node.js
+useradd -m -s /bin/bash autoauction
+usermod -aG sudo autoauction
+# Install Node.js 22 via NVM...
+
+# 2. Create log directory
+mkdir -p /var/log/autoauction
+chown autoauction:autoauction /var/log/autoauction
+
+# 3. Copy systemd configs
+sudo cp systemd/*.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable autoauction logdy
+
+# 4. Copy logrotate config
+sudo cp systemd/logrotate.conf /etc/logrotate.d/autoauction
+
+# 5. Setup nginx
+sudo cp nginx/autoauction.conf /etc/nginx/sites-available/
+sudo ln -s /etc/nginx/sites-available/autoauction /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+
+# 6. Get SSL certificate
+sudo certbot --nginx -d svoauto.ru
+
+# 7. Create /etc/logdy.env with password
+sudo chmod 600 /etc/logdy.env
+
+# 8. Deploy app (via GitHub Actions or manually)
+# 9. Create .env file on server with secrets
+```
+
+**Secrets that remain manual** (not in repo):
+
+- `/home/autoauction/app/.env` — app secrets (DB, bot tokens, etc.)
+- `/etc/logdy.env` — Logdy web UI password
+- SSL certificates (managed by certbot)
+
+**Note**: The actual running configs are still on the server. The repo copies are for reference and disaster recovery only.
