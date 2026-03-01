@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { INTERNAL_ERROR_MESSAGE } from '@/lib/errors';
+import { pluralize } from '@/lib/utils';
 import { z } from 'zod';
 
 import { prisma } from '@/lib/db';
@@ -148,7 +149,7 @@ ${offer.price.toLocaleString('ru-RU')} \u20BD
 
 Дилер скоро свяжется с вами по номеру ${formattedPhone}.
 
-${remainingAcceptances > 0 ? `Вы можете принять ещё ${remainingAcceptances} предложение${remainingAcceptances === 1 ? '' : remainingAcceptances < 5 ? 'я' : 'ий'}.` : `Вы использовали все доступные принятия для этой заявки.`}`;
+${remainingAcceptances > 0 ? `Вы можете принять ещё ${remainingAcceptances} ${pluralize(remainingAcceptances, 'предложение', 'предложения', 'предложений')}.` : `Вы использовали все доступные принятия для этой заявки.`}`;
 
     const buyerLogContext = {
       platform: offer.inquiry.buyer.platform,

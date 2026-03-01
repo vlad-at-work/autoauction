@@ -16,6 +16,7 @@ import { TopBar } from '@/components/ui/top-bar';
 import { useWebApp } from '@/hooks/use-webapp';
 import { detectPlatform, getWebApp } from '@/app/app/webapp-ready';
 import { formatPrice } from '@/lib/inquiry-utils';
+import { pluralize } from '@/lib/utils';
 
 type OfferDetail = {
   id: string;
@@ -172,7 +173,7 @@ export default function OfferDetailPage() {
       `Цена: ${formatPrice(offer.price)}\n\n` +
       `Ваши контактные данные будут переданы дилеру.\n\n` +
       (remainingAfter > 0
-        ? `После этого вы сможете принять ещё ${remainingAfter} предложение${remainingAfter === 1 ? '' : remainingAfter < 5 ? 'я' : 'ий'}.`
+        ? `После этого вы сможете принять ещё ${remainingAfter} ${pluralize(remainingAfter, 'предложение', 'предложения', 'предложений')}.`
         : `Это будет ваше последнее принятое предложение по этой заявке.`);
 
     if (!window.confirm(confirmMessage)) {

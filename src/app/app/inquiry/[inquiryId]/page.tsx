@@ -15,6 +15,7 @@ import { usePolling } from '@/hooks/use-polling';
 import { useWebApp } from '@/hooks/use-webapp';
 import { detectPlatform, getWebApp } from '@/app/app/webapp-ready';
 import { formatPrice, formatRelativeTime } from '@/lib/inquiry-utils';
+import { pluralize } from '@/lib/utils';
 
 type DealerOfferGroup = {
   dealerId: string;
@@ -187,11 +188,12 @@ export default function InquiryDetailPage() {
                   Вы можете принять ещё{' '}
                   <span className="font-medium">
                     {acceptanceLimits.remaining}{' '}
-                    {acceptanceLimits.remaining === 1
-                      ? 'предложение'
-                      : acceptanceLimits.remaining < 5
-                        ? 'предложения'
-                        : 'предложений'}
+                    {pluralize(
+                      acceptanceLimits.remaining,
+                      'предложение',
+                      'предложения',
+                      'предложений'
+                    )}
                   </span>
                   {acceptanceLimits.used > 0 && (
                     <span className="text-muted-foreground">
