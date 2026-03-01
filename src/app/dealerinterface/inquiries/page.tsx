@@ -225,7 +225,9 @@ export default function DealerInquiriesPage() {
         <div className="text-lg font-bold">Предыдущие заявки</div>
         <div className="flex flex-col gap-3">
           {previousInquiries.length === 0 ? (
-            <p className="text-muted-foreground text-sm">Нет предыдущих заявок.</p>
+            <p className="text-muted-foreground text-sm">
+              Заявки с истёкшим сроком (24ч) появятся здесь в течение сессии.
+            </p>
           ) : (
             <ul className="flex flex-col gap-2">
               {previousInquiries.map((inquiry) => {
