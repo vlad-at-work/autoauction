@@ -8,6 +8,16 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import Link from 'next/link';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { PageTransition } from '@/components/page-transition';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -109,6 +119,7 @@ export default function OfferDetailPage() {
   const [data, setData] = useState<OfferPageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [limits, setLimits] = useState<InquiryLimits | null>(null);
 
   const inquiryId = params.inquiryId as string;
@@ -149,42 +160,31 @@ export default function OfferDetailPage() {
     loadData();
   }, [loadData]);
 
-  const handleAcceptOffer = async () => {
+  const handleAcceptClick = () => {
     if (!data) return;
 
-    const { inquiry, offer, dealerHasTransaction } = data;
+    const { inquiry, dealerHasTransaction } = data;
 
-    // Prevent accepting if dealer already has transaction
     if (dealerHasTransaction) {
       toast.info('Вы уже приняли предложение от этого дилера');
       return;
     }
 
-    // Prevent accepting if limit reached
     if (inquiry.acceptanceLimits.remaining <= 0) {
       toast.error('Вы достигли лимита принятых предложений');
       return;
     }
 
-    // Check if expired
     if (new Date(inquiry.expiresAt) < new Date()) {
       toast.error('Заявка истекла');
       return;
     }
 
-    const remainingAfter = inquiry.acceptanceLimits.remaining - 1;
-    const confirmMessage =
-      `Вы уверены, что хотите принять это предложение?\n\n` +
-      `Дилер: ${offer.dealerName}\n` +
-      `Цена: ${formatPrice(offer.price)}\n\n` +
-      `Ваши контактные данные будут переданы дилеру.\n\n` +
-      (remainingAfter > 0
-        ? `После этого вы сможете принять ещё ${remainingAfter} ${pluralize(remainingAfter, 'предложение', 'предложения', 'предложений')}.`
-        : `Это будет ваше последнее принятое предложение по этой заявке.`);
+    setShowConfirm(true);
+  };
 
-    if (!window.confirm(confirmMessage)) {
-      return;
-    }
+  const handleConfirmAccept = async () => {
+    setShowConfirm(false);
 
     const webApp = getWebApp();
     const platform = detectPlatform();
@@ -220,7 +220,6 @@ export default function OfferDetailPage() {
           toast.error(result.error || 'Ошибка при принятии предложения');
         }
         hapticNotification('error');
-        // Reload to get fresh state
         await loadData();
         return;
       }
@@ -228,7 +227,6 @@ export default function OfferDetailPage() {
       hapticNotification('success');
       toast.success('Предложение принято! Дилер скоро свяжется с вами.');
 
-      // Reload to show updated state
       await loadData();
     } catch (error) {
       console.error('Error accepting offer:', error);
@@ -391,7 +389,7 @@ export default function OfferDetailPage() {
                 </div>
               ) : (
                 <Button
-                  onClick={handleAcceptOffer}
+                  onClick={handleAcceptClick}
                   disabled={accepting}
                   size="lg"
                   className="w-full"
@@ -420,6 +418,51 @@ export default function OfferDetailPage() {
           </div>
         </div>
       </div>
+
+      <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Принять предложение?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {data && (
+                <>
+                  Дилер: {offer.dealerName}
+                  <br />
+                  Цена: {formatPrice(offer.price)}
+                  <br />
+                  <br />
+                  Ваши контактные данные будут переданы дилеру.
+                  {inquiry.acceptanceLimits.remaining - 1 > 0 ? (
+                    <>
+                      <br />
+                      <br />
+                      После этого вы сможете принять ещё {inquiry.acceptanceLimits.remaining -
+                        1}{' '}
+                      {pluralize(
+                        inquiry.acceptanceLimits.remaining - 1,
+                        'предложение',
+                        'предложения',
+                        'предложений'
+                      )}
+                      .
+                    </>
+                  ) : (
+                    <>
+                      <br />
+                      <br />
+                      Это будет ваше последнее принятое предложение по этой заявке.
+                    </>
+                  )}
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmAccept}>Принять</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageTransition>
   );
 }
