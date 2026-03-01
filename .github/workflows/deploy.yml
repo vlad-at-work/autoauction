@@ -12,21 +12,30 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
 
-      - name: Cache dependencies and Next.js build
+      - name: Cache node_modules
+        id: cache-nm
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.bun/install/cache
-            .next/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lockb') }}
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('bun.lock', 'prisma/schema.prisma') }}
           restore-keys: |
-            ${{ runner.os }}-bun-
+            ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: bun install
+        if: steps.cache-nm.outputs.cache-hit != 'true'
+        run: bun install --frozen-lockfile
 
       - name: Generate Prisma client
+        if: steps.cache-nm.outputs.cache-hit != 'true'
         run: bunx prisma generate
+
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-
 
       - name: Build
         run: bun run build
