@@ -23,7 +23,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.cache-nm.outputs.cache-hit != 'true'
-        run: bun install --frozen-lockfile
+        run: bun install
 
       - name: Generate Prisma client
         if: steps.cache-nm.outputs.cache-hit != 'true'
