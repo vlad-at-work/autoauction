@@ -173,46 +173,52 @@ export default function DealerInquiryPage() {
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-4 px-4 py-4">
       {/* Inquiry header */}
-      <div className="rounded-lg border bg-white p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-bold leading-tight">
-              {inquiry.model} · {inquiry.submodel}
-            </h1>
-            <div className="text-muted-foreground mt-1 flex items-center gap-2 text-sm">
-              {isExpired ? (
-                <span className="text-orange-600 font-medium">Истекла</span>
-              ) : (
-                <span>~{hoursLeft}ч</span>
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between gap-3">
+            <CardTitle className="text-xl leading-tight">
+              <div>{inquiry.model}</div>
+              {inquiry.submodel !== inquiry.model && (
+                <div className="text-lg text-muted-foreground">{inquiry.submodel}</div>
               )}
-              <span className="text-muted-foreground/40">·</span>
-              <span>{inquiry.transactionCount} принято</span>
+            </CardTitle>
+            <span
+              className={`shrink-0 rounded px-2 py-1 text-xs font-mono font-medium ${colorClass.bg} ${colorClass.text} border ${colorClass.border}`}
+            >
+              {shortId}
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <div className="grid gap-3 text-base">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Коробка:</span>
+              <span className="font-medium">{inquiry.transmission}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Цвет:</span>
+              <span className="font-medium">{inquiry.color}</span>
+            </div>
+            {inquiry.comment && (
+              <div className="flex flex-col gap-1">
+                <span className="text-muted-foreground">Комментарий:</span>
+                <span className="font-medium">{inquiry.comment}</span>
+              </div>
+            )}
+            <div className="border-border mt-2 border-t pt-2">
+              <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                {isExpired ? (
+                  <span className="text-orange-600 font-medium">Истекла</span>
+                ) : (
+                  <span>~{hoursLeft}ч осталось</span>
+                )}
+                <span className="text-muted-foreground/40">·</span>
+                <span>{inquiry.transactionCount} принято</span>
+              </div>
             </div>
           </div>
-          <span
-            className={`shrink-0 rounded px-2 py-1 text-xs font-mono font-medium ${colorClass.bg} ${colorClass.text} border ${colorClass.border}`}
-          >
-            {shortId}
-          </span>
-        </div>
-
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t pt-3 text-sm">
-          <div>
-            <span className="text-muted-foreground">Коробка:</span>{' '}
-            <span className="font-medium">{inquiry.transmission}</span>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Цвет:</span>{' '}
-            <span className="font-medium">{inquiry.color}</span>
-          </div>
-          {inquiry.comment && (
-            <div className="basis-full">
-              <span className="text-muted-foreground">Комментарий:</span>{' '}
-              <span className="font-medium">{inquiry.comment}</span>
-            </div>
-          )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* My transaction status */}
       {myTransaction && (

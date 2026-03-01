@@ -228,23 +228,24 @@ export default function DealerInquiriesPage() {
                       href={`/dealerinterface/inquiries/${inquiry.id}`}
                       className="hover:bg-muted/40 flex flex-col gap-1 rounded-lg border px-4 py-3 transition-colors"
                     >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`rounded px-1.5 py-0.5 text-xs font-mono font-medium ${colorClass.bg} ${colorClass.text} border ${colorClass.border}`}
-                          >
-                            {shortId}
-                          </span>
-                          <span className="font-medium">
-                            {inquiry.model} • {inquiry.submodel}
-                          </span>
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="font-medium leading-tight">{inquiry.model}</div>
+                          {inquiry.submodel !== inquiry.model && (
+                            <div className="text-sm text-muted-foreground">{inquiry.submodel}</div>
+                          )}
                         </div>
-                        <div className="text-muted-foreground text-xs">~{hoursLeft}ч осталось</div>
+                        <span
+                          className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-mono font-medium ${colorClass.bg} ${colorClass.text} border ${colorClass.border}`}
+                        >
+                          {shortId}
+                        </span>
                       </div>
                       <div className="text-muted-foreground text-sm">
                         {inquiry.transmission} • {inquiry.color}
                       </div>
                       <div className="flex flex-wrap items-center gap-2 text-sm">
+                        <span className="text-muted-foreground text-xs">~{hoursLeft}ч</span>
                         {totalOfferCount > 0 && (
                           <Badge variant="secondary">{totalOfferCount} предложений</Badge>
                         )}
@@ -323,38 +324,39 @@ export default function DealerInquiriesPage() {
                       href={`/dealerinterface/inquiries/${inquiry.id}`}
                       className="hover:bg-muted/40 flex flex-col gap-1 rounded-lg border px-4 py-3 transition-colors"
                     >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`rounded px-1.5 py-0.5 text-xs font-mono font-medium ${colorClass.bg} ${colorClass.text} border ${colorClass.border}`}
-                          >
-                            {shortId}
-                          </span>
-                          <span className="font-medium">
-                            {inquiry.model} • {inquiry.submodel}
-                          </span>
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="font-medium leading-tight">{inquiry.model}</div>
+                          {inquiry.submodel !== inquiry.model && (
+                            <div className="text-sm text-muted-foreground">{inquiry.submodel}</div>
+                          )}
                         </div>
+                        <span
+                          className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-mono font-medium ${colorClass.bg} ${colorClass.text} border ${colorClass.border}`}
+                        >
+                          {shortId}
+                        </span>
+                      </div>
+                      <div className="text-muted-foreground text-sm">
+                        {inquiry.transmission} • {inquiry.color}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 text-sm">
                         <Badge
                           variant="outline"
                           className="border-green-200 bg-green-50 text-green-700"
                         >
                           ✓ Принято
                         </Badge>
-                      </div>
-                      <div className="text-muted-foreground text-sm">
-                        {inquiry.transmission} • {inquiry.color}
-                      </div>
-                      <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
                         {latestMyOffer && (
                           <span className="font-medium">{formatPrice(latestMyOffer.price)}</span>
                         )}
-                        {transaction?.buyerName && (
-                          <span className="text-muted-foreground">{transaction.buyerName}</span>
-                        )}
-                        {transaction?.buyerPhone && (
-                          <span className="text-muted-foreground">{transaction.buyerPhone}</span>
-                        )}
                       </div>
+                      {(transaction?.buyerName || transaction?.buyerPhone) && (
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3 text-sm text-muted-foreground">
+                          {transaction.buyerName && <span>{transaction.buyerName}</span>}
+                          {transaction.buyerPhone && <span>{transaction.buyerPhone}</span>}
+                        </div>
+                      )}
                     </Link>
                   </li>
                 );
