@@ -329,3 +329,76 @@ Authorization: Bearer mock:<platform>:<botType>:<userId>
 - Dealer sees “needs invite”: there are multiple unclaimed dealers; use invite link from admin dealer detail.
 - Buttons open wrong domain: set `NEXT_PUBLIC_APP_URL` to your production domain.
 - Notifications missing: ensure dealer is claimed (`platform`, `platformUserId` set) and bot tokens are configured.
+
+---
+
+## Production Logging & Monitoring
+
+Structured JSON logging to `/var/log/autoauction/app.log`:
+
+```bash
+# View live logs
+tail -f /var/log/autoauction/app.log | jq '.'
+
+# Search specific flows
+grep "[MAX]" /var/log/autoauction/app.log           # MAX platform
+grep "[Telegram]" /var/log/autoauction/app.log      # Telegram platform
+grep "[Notify]" /var/log/autoauction/app.log        # Notification flows
+grep '"level":50' /var/log/autoauction/app.log      # Errors only
+```
+
+### Logdy Web UI
+
+Real-time log viewer at `http://your-server:8080`:
+
+- Filter by platform (MAX/Telegram)
+- Filter by module (notifications, http, etc.)
+- Search by user ID, inquiry ID, etc.
+- JSON expansion for structured logs
+
+### Documentation
+
+- **Full deployment guide**: `docs/DEPLOYMENT_LOGGING_SETUP.md`
+- **Logging reference**: `docs/LOGGING_REFERENCE.md`
+
+### Common Issues
+
+- **No logs in `/var/log/autoauction/`**: Check `LOG_DIR` env var and directory permissions (should be `autoauction:autoauction`).
+- **Logdy not accessible**: Check firewall (port 8080) and service status (`systemctl status logdy`).
+
+### Log Safety (Disk Usage)
+
+Log rotation prevents disk fill-up. Config: `/etc/logrotate.d/autoauction`
+
+```bash
+/var/log/autoauction/app.log {
+    daily              # Rotate every day
+    rotate 30          # Keep 30 days
+    compress           # Gzip old logs (~90% reduction)
+    delaycompress      # Keep today+yesterday uncompressed
+    missingok          # Don't error if log missing
+    notifempty         # Don't rotate empty logs
+    create 0644 autoauction autoauction
+}
+```
+
+**Max disk usage**: ~2 days uncompressed + 28 days compressed  
+**Example**: 100 MB/day logs → max ~220 MB disk usage
+
+**Check status**:
+
+```bash
+ls -lh /var/log/autoauction/              # Current log size
+ls -lt /var/log/autoauction/ | head -5   # Rotation history
+du -sh /var/log/autoauction/              # Total directory size
+logrotate -f /etc/logrotate.d/autoauction # Force rotation now
+```
+
+**Emergency cleanup** (if disk full):
+
+```bash
+systemctl stop autoauction
+gzip /var/log/autoauction/app.log  # Compress current
+# OR: > /var/log/autoauction/app.log  # Truncate (data loss)
+systemctl start autoauction
+```
