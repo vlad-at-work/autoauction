@@ -271,10 +271,10 @@ function DealerOfferCard({
           <div className="text-2xl font-bold text-gray-900">{formatPrice(latestOffer.price)}</div>
 
           {isAccepted ? (
-            <div className="inline-flex items-center px-4 py-2 rounded-md bg-green-600 text-white text-sm font-medium">
+            <span className="inline-flex items-center text-sm font-medium text-green-700">
               <Check className="mr-1 size-4" />
               Принято
-            </div>
+            </span>
           ) : canAccept ? (
             <Button
               asChild
