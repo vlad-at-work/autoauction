@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react';
 
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { getShortId, getIdColorClass, formatPrice } from '@/lib/inquiry-utils';
 
 type Inquiry = {
@@ -25,6 +26,8 @@ type Inquiry = {
   transactions: Array<{
     id: string;
     dealerId: string;
+    buyerName?: string;
+    buyerPhone?: string;
   }>;
   _count: {
     offers: number;
@@ -32,12 +35,19 @@ type Inquiry = {
   };
 };
 
+type Tab = 'active' | 'archive';
+
 export default function DealerInquiriesPage() {
+  const [activeTab, setActiveTab] = useState<Tab>('active');
   const [inquiries, setInquiries] = useState<Inquiry[] | null>(null);
+  const [archivedInquiries, setArchivedInquiries] = useState<Inquiry[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [archiveLoading, setArchiveLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dealerId, setDealerId] = useState<string | null>(null);
+  const [authHeader, setAuthHeader] = useState<string | null>(null);
 
+  // Load active inquiries on mount
   useEffect(() => {
     let cancelled = false;
 
@@ -53,10 +63,11 @@ export default function DealerInquiriesPage() {
           return;
         }
 
+        const header = `Bearer ${platform}:dealer:${initData}`;
+        setAuthHeader(header);
+
         const response = await fetch('/api/dealer/inquiries', {
-          headers: {
-            Authorization: `Bearer ${platform}:dealer:${initData}`,
-          },
+          headers: { Authorization: header },
         });
 
         if (cancelled) return;
@@ -96,6 +107,45 @@ export default function DealerInquiriesPage() {
     };
   }, []);
 
+  // Load archived inquiries when archive tab is first opened
+  useEffect(() => {
+    if (activeTab !== 'archive' || archivedInquiries !== null || !authHeader) return;
+
+    let cancelled = false;
+    setArchiveLoading(true);
+
+    async function loadArchived() {
+      try {
+        const response = await fetch('/api/dealer/inquiries/archived', {
+          headers: { Authorization: authHeader! },
+        });
+
+        if (cancelled) return;
+
+        if (response.ok) {
+          const data = await response.json();
+          setArchivedInquiries(data.inquiries);
+          // Extract dealerId from archived if we don't have it yet
+          if (!dealerId && data.inquiries.length > 0 && data.inquiries[0].offers.length > 0) {
+            setDealerId(data.inquiries[0].offers[0].dealerId);
+          }
+        } else {
+          setArchivedInquiries([]);
+        }
+      } catch {
+        setArchivedInquiries([]);
+      } finally {
+        if (!cancelled) setArchiveLoading(false);
+      }
+    }
+
+    loadArchived();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, archivedInquiries, authHeader, dealerId]);
+
   if (loading) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center px-4">
@@ -117,16 +167,40 @@ export default function DealerInquiriesPage() {
 
   const now = new Date();
   const activeInquiries = inquiries?.filter((i) => new Date(i.expiresAt) > now) || [];
-  const previousInquiries = inquiries?.filter((i) => new Date(i.expiresAt) <= now) || [];
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-6">
-      {/* Active inquiries section */}
-      <div className="flex flex-col gap-3">
-        <div className="text-lg font-bold">Активные заявки (24 часа)</div>
+    <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-4 px-4 py-6">
+      {/* Tabs */}
+      <div className="flex gap-1 border-b">
+        <button
+          className={cn(
+            'px-4 py-2 text-sm font-medium transition-colors -mb-px',
+            activeTab === 'active'
+              ? 'border-b-2 border-foreground text-foreground'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+          onClick={() => setActiveTab('active')}
+        >
+          Заявки
+        </button>
+        <button
+          className={cn(
+            'px-4 py-2 text-sm font-medium transition-colors -mb-px',
+            activeTab === 'archive'
+              ? 'border-b-2 border-foreground text-foreground'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+          onClick={() => setActiveTab('archive')}
+        >
+          Архив
+        </button>
+      </div>
+
+      {/* Active tab */}
+      {activeTab === 'active' && (
         <div className="flex flex-col gap-3">
           {activeInquiries.length === 0 ? (
-            <p className="text-muted-foreground text-sm">Нет активных заявок.</p>
+            <p className="text-muted-foreground text-sm py-8 text-center">Нет активных заявок.</p>
           ) : (
             <ul className="flex flex-col gap-2">
               {activeInquiries.map((inquiry) => {
@@ -218,24 +292,27 @@ export default function DealerInquiriesPage() {
             </ul>
           )}
         </div>
-      </div>
+      )}
 
-      {/* Previous inquiries section */}
-      <div className="flex flex-col gap-3">
-        <div className="text-lg font-bold">Предыдущие заявки</div>
+      {/* Archive tab */}
+      {activeTab === 'archive' && (
         <div className="flex flex-col gap-3">
-          {previousInquiries.length === 0 ? (
-            <p className="text-muted-foreground text-sm">
-              Заявки с истёкшим сроком (24ч) появятся здесь в течение сессии.
+          {archiveLoading ? (
+            <div className="flex w-full items-center justify-center py-12">
+              <Loader2 className="text-muted-foreground size-8 animate-spin" />
+            </div>
+          ) : (archivedInquiries ?? []).length === 0 ? (
+            <p className="text-muted-foreground text-sm py-8 text-center">
+              Здесь будут заявки, в которых ваше предложение было принято покупателем.
             </p>
           ) : (
             <ul className="flex flex-col gap-2">
-              {previousInquiries.map((inquiry) => {
+              {(archivedInquiries ?? []).map((inquiry) => {
                 const myOffers = dealerId
                   ? inquiry.offers.filter((o) => o.dealerId === dealerId)
                   : [];
                 const latestMyOffer = myOffers[0];
-                const myTransaction = inquiry.transactions.find((t) => t.dealerId === dealerId);
+                const transaction = inquiry.transactions[0];
 
                 const colorClass = getIdColorClass(inquiry.id);
                 const shortId = getShortId(inquiry.id);
@@ -244,7 +321,7 @@ export default function DealerInquiriesPage() {
                   <li key={inquiry.id}>
                     <Link
                       href={`/dealerinterface/inquiries/${inquiry.id}`}
-                      className="hover:bg-muted/40 flex flex-col gap-1 rounded-lg border px-4 py-3 opacity-70 transition-colors"
+                      className="hover:bg-muted/40 flex flex-col gap-1 rounded-lg border px-4 py-3 transition-colors"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
@@ -257,34 +334,27 @@ export default function DealerInquiriesPage() {
                             {inquiry.model} • {inquiry.submodel}
                           </span>
                         </div>
-                        <Badge variant="secondary">Истекла</Badge>
+                        <Badge
+                          variant="outline"
+                          className="border-green-200 bg-green-50 text-green-700"
+                        >
+                          ✓ Принято
+                        </Badge>
                       </div>
                       <div className="text-muted-foreground text-sm">
                         {inquiry.transmission} • {inquiry.color}
                       </div>
-                      {myTransaction ? (
-                        <div className="mt-1 flex items-center gap-2 text-sm">
-                          <Badge
-                            variant="outline"
-                            className="border-green-200 bg-green-50 text-green-700"
-                          >
-                            ✓ Принято
-                          </Badge>
-                          {latestMyOffer && (
-                            <span className="text-muted-foreground">
-                              {formatPrice(latestMyOffer.price)}
-                            </span>
-                          )}
-                        </div>
-                      ) : latestMyOffer ? (
-                        <div className="flex items-center gap-2 text-sm">
-                          <span>
-                            Предложение:{' '}
-                            <span className="font-medium">{formatPrice(latestMyOffer.price)}</span>
-                          </span>
-                          <Badge variant="secondary">Без ответа</Badge>
-                        </div>
-                      ) : null}
+                      <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                        {latestMyOffer && (
+                          <span className="font-medium">{formatPrice(latestMyOffer.price)}</span>
+                        )}
+                        {transaction?.buyerName && (
+                          <span className="text-muted-foreground">{transaction.buyerName}</span>
+                        )}
+                        {transaction?.buyerPhone && (
+                          <span className="text-muted-foreground">{transaction.buyerPhone}</span>
+                        )}
+                      </div>
                     </Link>
                   </li>
                 );
@@ -292,7 +362,7 @@ export default function DealerInquiriesPage() {
             </ul>
           )}
         </div>
-      </div>
+      )}
     </div>
   );
 }
