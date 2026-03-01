@@ -17,6 +17,7 @@ import { useWebApp } from '@/hooks/use-webapp';
 import { detectPlatform, getWebApp } from '@/app/app/webapp-ready';
 import { formatPrice } from '@/lib/inquiry-utils';
 import { pluralize } from '@/lib/utils';
+import { getInquiryLimits, type InquiryLimits } from '@/lib/api/inquiries';
 
 type OfferDetail = {
   id: string;
@@ -108,6 +109,7 @@ export default function OfferDetailPage() {
   const [data, setData] = useState<OfferPageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
+  const [limits, setLimits] = useState<InquiryLimits | null>(null);
 
   const inquiryId = params.inquiryId as string;
   const offerId = params.offerId as string;
@@ -137,6 +139,10 @@ export default function OfferDetailPage() {
 
     setData(result);
     setLoading(false);
+
+    // Also fetch limits for the TopBar
+    const limitsResult = await getInquiryLimits(initData, platform);
+    setLimits(limitsResult);
   }, [inquiryId, offerId, router]);
 
   useEffect(() => {
@@ -256,7 +262,7 @@ export default function OfferDetailPage() {
   return (
     <PageTransition>
       <div className="min-h-screen w-full">
-        <TopBar />
+        <TopBar disableNewInquiry={limits ? limits.remaining <= 0 : false} />
         <div className="mx-auto max-w-2xl px-4 py-6">
           {/* Acceptance limits banner */}
           <div className="mb-4 flex items-center justify-between rounded-lg border bg-zinc-50 px-4 py-3">

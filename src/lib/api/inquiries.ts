@@ -103,3 +103,32 @@ export async function getInquiryById(
     return null;
   }
 }
+
+export async function getInquiryLimits(
+  initData: string,
+  platform: 'max' | 'telegram'
+): Promise<InquiryLimits | null> {
+  try {
+    const res = await fetch('/api/buyers/me/inquiries', {
+      headers: {
+        Authorization: `Bearer ${platform}:customer:${initData}`,
+      },
+    });
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const data = (await res.json()) as InquiriesResponse;
+
+    // Handle legacy response format (array of inquiries)
+    if (Array.isArray(data)) {
+      return { used: 0, max: 2, remaining: 2, resetsAt: null };
+    }
+
+    return data.limits;
+  } catch (error) {
+    console.error('Get inquiry limits error:', error);
+    return null;
+  }
+}

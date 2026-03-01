@@ -16,6 +16,7 @@ import { useWebApp } from '@/hooks/use-webapp';
 import { detectPlatform, getWebApp } from '@/app/app/webapp-ready';
 import { formatPrice, formatRelativeTime } from '@/lib/inquiry-utils';
 import { pluralize } from '@/lib/utils';
+import { getInquiryLimits, type InquiryLimits } from '@/lib/api/inquiries';
 
 type DealerOfferGroup = {
   dealerId: string;
@@ -131,6 +132,13 @@ export default function InquiryDetailPage() {
     enabled: ready && !!platformUserId && !!platform && !!initData,
   });
 
+  // Fetch inquiry limits
+  const [limits, setLimits] = useState<InquiryLimits | null>(null);
+  useEffect(() => {
+    if (!platform || !initData) return;
+    getInquiryLimits(initData, platform).then(setLimits);
+  }, [initData, platform]);
+
   if (!ready || loading || !inquiry) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center">
@@ -146,7 +154,7 @@ export default function InquiryDetailPage() {
   return (
     <PageTransition>
       <div className="min-h-screen w-full">
-        <TopBar />
+        <TopBar disableNewInquiry={limits ? limits.remaining <= 0 : false} />
         <div className="mx-auto max-w-2xl px-4 py-6">
           <Card>
             <CardHeader>
