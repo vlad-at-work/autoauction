@@ -45,12 +45,14 @@ export default function Home() {
                   src="/sponsor1.jpeg"
                   alt="Совет ветеранов СВО ФПСР"
                   className="h-16 md:h-20 lg:h-24 w-auto object-contain drop-shadow-lg rounded-[25%] opacity-90"
+                  fetchPriority="high"
                 />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/sponsor2.png"
                   alt="Ассоциация ветеранов СВО г.о. Дубна"
                   className="h-16 md:h-20 lg:h-24 w-auto object-contain drop-shadow-lg rounded-[25%] opacity-90"
+                  fetchPriority="high"
                 />
               </div>
             </div>
