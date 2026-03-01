@@ -356,21 +356,16 @@ export default function DealerInquiriesPage() {
                       </div>
                       {(transaction?.buyerName ||
                         transaction?.buyerPhone ||
-                        transaction?.buyerPlatformHandle ||
-                        (transaction?.buyerPlatform && transaction?.buyerPlatformUserId)) && (
+                        transaction?.buyerPlatformHandle) && (
                         <div className="mt-1 flex flex-wrap items-center gap-x-3 text-sm text-muted-foreground">
                           {transaction.buyerName && <span>{transaction.buyerName}</span>}
                           {transaction.buyerPhone && <span>{transaction.buyerPhone}</span>}
-                          {transaction.buyerPlatform &&
-                            (transaction.buyerPlatformHandle ||
-                              transaction.buyerPlatformUserId) && (
-                              <span>
-                                {transaction.buyerPlatform === 'MAX' ? 'MAX' : 'TG'}:{' '}
-                                {transaction.buyerPlatformHandle
-                                  ? `@${transaction.buyerPlatformHandle}`
-                                  : `ID ${transaction.buyerPlatformUserId}`}
-                              </span>
-                            )}
+                          {transaction.buyerPlatform && transaction.buyerPlatformHandle && (
+                            <span>
+                              {transaction.buyerPlatform === 'MAX' ? 'MAX' : 'TG'}: @
+                              {transaction.buyerPlatformHandle}
+                            </span>
+                          )}
                         </div>
                       )}
                     </Link>

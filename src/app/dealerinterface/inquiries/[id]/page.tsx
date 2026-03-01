@@ -255,30 +255,25 @@ export default function DealerInquiryPage() {
                   </a>
                 </div>
               )}
-              {myTransaction.buyerPlatform &&
-                (myTransaction.buyerPlatformHandle || myTransaction.buyerPlatformUserId) && (
-                  <div>
-                    <span className="font-medium">
-                      {myTransaction.buyerPlatform === 'MAX' ? 'MAX' : 'Telegram'}:
-                    </span>{' '}
-                    {myTransaction.buyerPlatformHandle ? (
-                      myTransaction.buyerPlatform === 'TELEGRAM' ? (
-                        <a
-                          href={`https://t.me/${myTransaction.buyerPlatformHandle}`}
-                          className="text-blue-600 underline"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          @{myTransaction.buyerPlatformHandle}
-                        </a>
-                      ) : (
-                        <span>@{myTransaction.buyerPlatformHandle}</span>
-                      )
-                    ) : (
-                      <span>ID {myTransaction.buyerPlatformUserId}</span>
-                    )}
-                  </div>
-                )}
+              {myTransaction.buyerPlatform && myTransaction.buyerPlatformHandle && (
+                <div>
+                  <span className="font-medium">
+                    {myTransaction.buyerPlatform === 'MAX' ? 'MAX' : 'Telegram'}:
+                  </span>{' '}
+                  {myTransaction.buyerPlatform === 'TELEGRAM' ? (
+                    <a
+                      href={`https://t.me/${myTransaction.buyerPlatformHandle}`}
+                      className="text-blue-600 underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      @{myTransaction.buyerPlatformHandle}
+                    </a>
+                  ) : (
+                    <span>@{myTransaction.buyerPlatformHandle}</span>
+                  )}
+                </div>
+              )}
               <div className="text-muted-foreground mt-2 text-xs">
                 Принято: {new Date(myTransaction.acceptedAt).toLocaleString('ru-RU')}
               </div>
