@@ -10,6 +10,7 @@ import { PageTransition } from '@/components/page-transition';
 import { TopBar } from '@/components/ui/top-bar';
 import { usePolling } from '@/hooks/use-polling';
 import { getMyInquiries, type Inquiry, type InquiryLimits } from '@/lib/api/inquiries';
+import { pluralize } from '@/lib/utils';
 import { detectPlatform, getWebApp } from '@/app/app/webapp-ready';
 
 type DashboardData = {
@@ -116,16 +117,11 @@ export default function DashboardPage() {
                 {limits.remaining > 0 ? (
                   <span>
                     <span className="font-medium">
-                      {limits.remaining}{' '}
-                      {limits.remaining === 1
-                        ? 'заявка'
-                        : limits.remaining < 5
-                          ? 'заявки'
-                          : 'заявок'}
+                      {limits.remaining} {pluralize(limits.remaining, 'заявка', 'заявки', 'заявок')}
                     </span>
                     <span className="text-muted-foreground">
                       {' '}
-                      {limits.remaining === 1 ? 'осталась' : 'осталось'}
+                      {pluralize(limits.remaining, 'осталась', 'осталось', 'осталось')}
                     </span>
                   </span>
                 ) : limits.resetsAt && daysUntilReset != null ? (
@@ -146,7 +142,7 @@ export default function DashboardPage() {
             <div className="text-muted-foreground flex flex-col items-center justify-center py-12 text-center">
               <p className="text-lg">Нет заявок</p>
               <p className="mt-2 text-base">
-                Используйте кнопку + в правом верхнем углу, чтобы создать первую заявку
+                Нажмите «Оставить Заявку», чтобы создать первую заявку
               </p>
             </div>
           ) : (

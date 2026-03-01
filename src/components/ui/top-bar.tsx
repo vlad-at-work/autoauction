@@ -1,4 +1,4 @@
-import { Plus, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
@@ -10,17 +10,17 @@ export function TopBar({ disableNewInquiry = false }: { disableNewInquiry?: bool
       <img src="/logo3.png" alt="" className="h-10 w-auto object-contain" />
       {disableNewInquiry ? (
         <Button
-          size="icon"
-          className="rounded-full size-12 bg-gray-300 hover:bg-gray-300 cursor-not-allowed"
+          className="rounded-full bg-gray-300 px-4 py-2 text-sm font-medium text-white hover:bg-gray-300 cursor-not-allowed"
           disabled
         >
-          <Plus className="size-6" />
+          Оставить Заявку
         </Button>
       ) : (
-        <Button asChild size="icon" className="rounded-full size-12">
-          <Link href="/app/form?new=1">
-            <Plus className="size-6" />
-          </Link>
+        <Button
+          asChild
+          className="rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 shadow-sm"
+        >
+          <Link href="/app/form?new=1">Оставить Заявку</Link>
         </Button>
       )}
     </div>
@@ -58,17 +58,17 @@ export function TopBarWithBack({
         <img src="/logo3.png" alt="" className="h-10 w-auto object-contain" />
         {disableNewInquiry ? (
           <Button
-            size="icon"
-            className="rounded-full size-12 bg-gray-300 hover:bg-gray-300 cursor-not-allowed"
+            className="rounded-full bg-gray-300 px-4 py-2 text-sm font-medium text-white hover:bg-gray-300 cursor-not-allowed"
             disabled
           >
-            <Plus className="size-6" />
+            Оставить Заявку
           </Button>
         ) : (
-          <Button asChild size="icon" className="rounded-full size-12">
-            <Link href="/app/form?new=1">
-              <Plus className="size-6" />
-            </Link>
+          <Button
+            asChild
+            className="rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 shadow-sm"
+          >
+            <Link href="/app/form?new=1">Оставить Заявку</Link>
           </Button>
         )}
       </div>
