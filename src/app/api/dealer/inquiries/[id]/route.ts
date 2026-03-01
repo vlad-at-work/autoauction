@@ -82,6 +82,7 @@ export const GET = withLogging(
               acceptedAt: true,
               buyerPlatform: true,
               buyerPlatformUserId: true,
+              buyerPlatformHandle: true,
             },
           },
           _count: {

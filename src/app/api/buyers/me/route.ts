@@ -79,6 +79,7 @@ export const POST = withLogging('buyers/me', async (request: Request) => {
 
     const body = (await request.json()) as {
       platformUserName?: string;
+      platformHandle?: string;
     };
     const platformEnum = validation.platform === 'max' ? 'MAX' : 'TELEGRAM';
 
@@ -100,12 +101,14 @@ export const POST = withLogging('buyers/me', async (request: Request) => {
       },
       update: {
         platformUserName: body.platformUserName,
+        platformHandle: body.platformHandle,
         deletedAt: null,
       },
       create: {
         platform: platformEnum,
         platformUserId: validation.userId,
         platformUserName: body.platformUserName,
+        platformHandle: body.platformHandle,
         deletedAt: null,
       },
       select: {

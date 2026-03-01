@@ -11,6 +11,7 @@ export const inquiryCreateSchema = z
     platformUserId: z.string().min(1, 'Требуется ID пользователя'),
     platformChatId: z.string().optional(), // Chat ID for bot notifications
     platformUserName: z.string().optional(),
+    platformHandle: z.string().optional(),
     name: z.string().min(2, 'Имя должно содержать минимум 2 символа'),
     email: z.string().email('Неверный формат электронной почты').optional().or(z.literal('')),
     phone: z.string().regex(/^\d{11}$/, 'Номер телефона должен состоять из 11 цифр'),

@@ -18,6 +18,7 @@ model Buyer {
   platformUserId   String
   platformChatId   String?  // Chat ID for sending bot notifications
   platformUserName String?
+  platformHandle   String?  // @username handle on the platform
 
   // Inquiry limits: 2 per month, resets every 15 days
   inquiriesUsedThisMonth Int      @default(0)
@@ -158,8 +159,9 @@ model Transaction {
   buyerName           String
   buyerEmail          String?
   buyerPhone          String
-  buyerPlatform       Platform?
-  buyerPlatformUserId String?
+  buyerPlatform        Platform?
+  buyerPlatformUserId  String?
+  buyerPlatformHandle  String?
 
   // Immutable snapshots for billing/invoices (not all fields may exist for legacy rows)
   offerPrice          Int?

@@ -63,6 +63,7 @@ function MiniAppInquiryFormPageInner() {
       platformUserId: undefined,
       platformChatId: undefined,
       platformUserName: undefined,
+      platformHandle: undefined,
       name: undefined,
       email: undefined,
       phone: undefined,
@@ -93,6 +94,7 @@ function MiniAppInquiryFormPageInner() {
       const platformUserId = webApp?.initDataUnsafe?.user?.id?.toString();
       const platformUserName =
         webApp?.initDataUnsafe?.user?.name || webApp?.initDataUnsafe?.user?.first_name;
+      const platformHandle = webApp?.initDataUnsafe?.user?.username;
       const platformChatId = webApp?.initDataUnsafe?.chat?.id?.toString() || platformUserId;
 
       if (platform) {
@@ -109,6 +111,10 @@ function MiniAppInquiryFormPageInner() {
 
       if (platformUserName) {
         form.setValue('platformUserName', platformUserName);
+      }
+
+      if (platformHandle) {
+        form.setValue('platformHandle', platformHandle);
       }
 
       // Mark as ready once we have user data or after timeout
@@ -274,6 +280,7 @@ function MiniAppInquiryFormPageInner() {
             <input type="hidden" {...form.register('platformUserId')} />
             <input type="hidden" {...form.register('platformChatId')} />
             <input type="hidden" {...form.register('platformUserName')} />
+            <input type="hidden" {...form.register('platformHandle')} />
 
             <FieldGroup>
               <Field

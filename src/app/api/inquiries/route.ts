@@ -110,6 +110,7 @@ export const POST = withLogging('inquiries', async (request: Request) => {
         },
         update: {
           platformUserName: input.platformUserName,
+          platformHandle: input.platformHandle,
           deletedAt: null,
           ...(input.platformChatId && { platformChatId: input.platformChatId }),
         },
@@ -118,6 +119,7 @@ export const POST = withLogging('inquiries', async (request: Request) => {
           platformUserId: authUserId,
           platformChatId: input.platformChatId,
           platformUserName: input.platformUserName,
+          platformHandle: input.platformHandle,
           inquiriesUsedThisMonth: 0,
           inquiryLimitResetAt: new Date(
             Date.now() + INQUIRY_LIMIT_RESET_DAYS * 24 * 60 * 60 * 1000

@@ -82,6 +82,7 @@ export const GET = withLogging('dealer/inquiries/archived', async (request: Requ
             offerId: true,
             buyerPlatform: true,
             buyerPlatformUserId: true,
+            buyerPlatformHandle: true,
           },
         },
         _count: {
