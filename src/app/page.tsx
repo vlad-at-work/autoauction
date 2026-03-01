@@ -34,7 +34,7 @@ export default function Home() {
             {/* Partners */}
             <div className="flex flex-col items-center">
               <p
-                className="text-xs md:text-sm font-raleway font-semibold text-white/60 mb-1 md:mb-1.5 tracking-wide uppercase"
+                className="text-xs md:text-sm font-golos font-semibold text-white/60 mb-1 md:mb-1.5 tracking-wide uppercase"
                 style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}
               >
                 При поддержке
@@ -101,7 +101,7 @@ export default function Home() {
                   />
                 </a>
               </div>
-              <p className="mt-3 text-center text-sm sm:text-base font-raleway font-normal text-white/50">
+              <p className="mt-3 text-center text-sm sm:text-base font-golos font-normal text-white/50">
                 Сервис предоставляется бесплатно
               </p>
             </div>
@@ -133,7 +133,7 @@ export default function Home() {
               <span className="shrink-0 w-10 h-10 rounded-full bg-stone-700 text-white font-russo text-lg flex items-center justify-center">
                 1
               </span>
-              <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed pt-1.5">
+              <p className="font-golos font-medium text-stone-700 text-base md:text-lg leading-relaxed pt-1.5">
                 Анонимно размещаете заявку на автомобиль через Telegram или Max.
               </p>
             </div>
@@ -141,7 +141,7 @@ export default function Home() {
               <span className="shrink-0 w-10 h-10 rounded-full bg-stone-700 text-white font-russo text-lg flex items-center justify-center">
                 2
               </span>
-              <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed pt-1.5">
+              <p className="font-golos font-medium text-stone-700 text-base md:text-lg leading-relaxed pt-1.5">
                 Мы торгуемся за Вас и собираем предложения от дилеров по Московской области.
               </p>
             </div>
@@ -149,7 +149,7 @@ export default function Home() {
               <span className="shrink-0 w-10 h-10 rounded-full bg-stone-700 text-white font-russo text-lg flex items-center justify-center">
                 3
               </span>
-              <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed pt-1.5">
+              <p className="font-golos font-medium text-stone-700 text-base md:text-lg leading-relaxed pt-1.5">
                 Выбираете предложение и решаете покупать автомобиль или нет.
               </p>
             </div>
@@ -170,7 +170,7 @@ export default function Home() {
           <h3 className="font-russo text-stone-700 text-2xl md:text-4xl text-center mb-3 md:mb-4">
             Миссия
           </h3>
-          <p className="font-raleway font-medium text-stone-600 text-base md:text-lg leading-relaxed text-center border-l-0 md:border-l-4 border-stone-400 pl-0 md:pl-6 ml-0 md:ml-4 bg-white/80 md:bg-transparent rounded-lg p-3 md:p-0">
+          <p className="font-golos font-medium text-stone-600 text-base md:text-lg leading-relaxed text-center border-l-0 md:border-l-4 border-stone-400 pl-0 md:pl-6 ml-0 md:ml-4 bg-white/80 md:bg-transparent rounded-lg p-3 md:p-0">
             Выбирая дилера через наш сервис Вы получаете специальную цену и другие предложения при
             покупке автомобиля, а дилеры направляют часть комиссии на реабилитацию ветеранов СВО и
             поддержку их семей.
@@ -187,27 +187,27 @@ export default function Home() {
           <ul className="space-y-3 md:space-y-5 max-w-2xl mx-auto">
             <li className="flex gap-4 items-start">
               <span className="shrink-0 text-stone-500 mt-0.5">&#x2714;</span>
-              <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed">
+              <p className="font-golos font-medium text-stone-700 text-base md:text-lg leading-relaxed">
                 Вы экономите деньги на покупке.
               </p>
             </li>
             <li className="flex gap-4 items-start">
               <span className="shrink-0 text-stone-500 mt-0.5">&#x2714;</span>
-              <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed">
+              <p className="font-golos font-medium text-stone-700 text-base md:text-lg leading-relaxed">
                 Вы экономите время на поиске лучшего предложения. Мы будем для вас хорошим
                 помощником, независимо от того, любите вы торговаться сами или нет.
               </p>
             </li>
             <li className="flex gap-4 items-start">
               <span className="shrink-0 text-stone-500 mt-0.5">&#x2714;</span>
-              <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed">
+              <p className="font-golos font-medium text-stone-700 text-base md:text-lg leading-relaxed">
                 Вы защищены от спама. Ваши личные данные, например, номер мобильного, передаются
                 магазинам, только если предложение Вам понравилось.
               </p>
             </li>
             <li className="flex gap-4 items-start">
               <span className="shrink-0 text-stone-500 mt-0.5">&#x2714;</span>
-              <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed">
+              <p className="font-golos font-medium text-stone-700 text-base md:text-lg leading-relaxed">
                 Вы снижаете риск стать жертвой мошенников.
               </p>
             </li>
@@ -257,7 +257,7 @@ export default function Home() {
               />
             </a>
           </div>
-          <p className="mt-3 text-center text-sm sm:text-base font-raleway font-normal text-stone-400">
+          <p className="mt-3 text-center text-sm sm:text-base font-golos font-normal text-stone-400">
             Сервис предоставляется бесплатно
           </p>
         </div>
@@ -266,17 +266,17 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-stone-800 py-5 md:py-8">
         <div className="max-w-6xl mx-auto px-6 md:px-12 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="font-raleway text-stone-400 text-sm">Все права защищены 🇷🇺</p>
+          <p className="font-golos text-stone-400 text-sm">Все права защищены 🇷🇺</p>
           <div className="flex gap-6">
             <a
               href="/about"
-              className="font-raleway text-stone-400 text-sm hover:text-stone-300 transition-colors"
+              className="font-golos text-stone-400 text-sm hover:text-stone-300 transition-colors"
             >
               О проекте
             </a>
             <a
               href="/contact"
-              className="font-raleway text-stone-400 text-sm hover:text-stone-300 transition-colors"
+              className="font-golos text-stone-400 text-sm hover:text-stone-300 transition-colors"
             >
               Связаться
             </a>

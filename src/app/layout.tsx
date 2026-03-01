@@ -1,14 +1,14 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
-import { Raleway, Russo_One } from 'next/font/google';
+import { Golos_Text, Russo_One } from 'next/font/google';
 import { Toaster } from 'sonner';
 
 import './globals.css';
 import { GlobalLoading } from '@/components/global-loading';
 
-const raleway = Raleway({
+const golosText = Golos_Text({
   subsets: ['latin', 'cyrillic'],
-  variable: '--font-raleway',
+  variable: '--font-golos',
   display: 'swap',
 });
 
@@ -79,7 +79,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" suppressHydrationWarning>
-      <body className={`${raleway.variable} ${russoOne.variable} font-raleway antialiased`}>
+      <body className={`${golosText.variable} ${russoOne.variable} font-golos antialiased`}>
         <GlobalLoading />
         {children}
         <Toaster />

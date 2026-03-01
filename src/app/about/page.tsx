@@ -37,7 +37,7 @@ export default function AboutPage() {
             {/* Partners */}
             <div className="flex flex-col items-center">
               <p
-                className="text-xs md:text-sm font-raleway font-semibold text-white/60 mb-1 md:mb-1.5 tracking-wide uppercase"
+                className="text-xs md:text-sm font-golos font-semibold text-white/60 mb-1 md:mb-1.5 tracking-wide uppercase"
                 style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}
               >
                 При поддержке
@@ -104,7 +104,7 @@ export default function AboutPage() {
                   />
                 </a>
               </div>
-              <p className="mt-3 text-center text-sm sm:text-base font-raleway font-normal text-white/50">
+              <p className="mt-3 text-center text-sm sm:text-base font-golos font-normal text-white/50">
                 Сервис предоставляется бесплатно
               </p>
             </div>
@@ -118,30 +118,30 @@ export default function AboutPage() {
           <h3 className="font-russo text-stone-700 text-2xl md:text-4xl text-center mb-3 md:mb-4">
             О проекте
           </h3>
-          <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center">
+          <p className="font-golos font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center">
             {'\u00AB'}Свои Авто{'\u00BB'} — социальный проект команды добровольцев из Дубны при
             поддержке совета ветеранов СВО Дубны и совета ветеранов ФПСР (федерация практической
             стрельбы России).
           </p>
-          <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center mt-4">
+          <p className="font-golos font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center mt-4">
             Мы поддерживаем:
           </p>
           <ul className="mt-3 space-y-2 max-w-2xl mx-auto">
             <li className="flex gap-4 items-start">
               <span className="shrink-0 text-stone-500 mt-0.5">&#x2714;</span>
-              <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed">
+              <p className="font-golos font-medium text-stone-700 text-base md:text-lg leading-relaxed">
                 ветеранов СВО и их семьи;
               </p>
             </li>
             <li className="flex gap-4 items-start">
               <span className="shrink-0 text-stone-500 mt-0.5">&#x2714;</span>
-              <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed">
+              <p className="font-golos font-medium text-stone-700 text-base md:text-lg leading-relaxed">
                 отечественный автопром;
               </p>
             </li>
             <li className="flex gap-4 items-start">
               <span className="shrink-0 text-stone-500 mt-0.5">&#x2714;</span>
-              <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed">
+              <p className="font-golos font-medium text-stone-700 text-base md:text-lg leading-relaxed">
                 российские интернет-платформы (мессенджер MAX).
               </p>
             </li>
@@ -155,7 +155,7 @@ export default function AboutPage() {
           <h3 className="font-russo text-stone-700 text-2xl md:text-4xl text-center mb-3 md:mb-4">
             Как мы работаем
           </h3>
-          <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center">
+          <p className="font-golos font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center">
             Мы ничего не просим и не принимаем никаких пожертвований. У нас есть модель взаимного
             сотрудничества с коммерческими компаниями, которая заключается в том, что мы помогаем им
             найти покупателей, а они в свою очередь в ответ помогают нашим парням, вернувшимся с
@@ -171,7 +171,7 @@ export default function AboutPage() {
           <h3 className="font-russo text-stone-700 text-2xl md:text-4xl text-center mb-3 md:mb-4">
             Главная цель
           </h3>
-          <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center">
+          <p className="font-golos font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center">
             Самая главная цель проекта, это поддержка парней, которые приходят с передовой и которым
             нужно помогать адаптироваться к гражданской жизни. Для начала мы хотели бы помочь
             проекту
@@ -188,7 +188,7 @@ export default function AboutPage() {
           <h3 className="font-russo text-stone-700 text-2xl md:text-4xl text-center mb-3 md:mb-4">
             Поддержка отечественного автопрома
           </h3>
-          <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center">
+          <p className="font-golos font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center">
             Проект взаимодействует с маркой Лада и мы хотели бы, чтобы люди больше гордились
             отечественным продуктом и выбирали его в качестве основного средства передвижения.
           </p>
@@ -201,7 +201,7 @@ export default function AboutPage() {
           <h3 className="font-russo text-stone-700 text-2xl md:text-4xl text-center mb-3 md:mb-4">
             Поддержка отечественных сервисов
           </h3>
-          <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center">
+          <p className="font-golos font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center">
             Проект и все данные пользователей находятся на территории Российской Федерации, в
             соответствии с требованиями законодательства. Мы помогаем продвигать новую платформу
             мессенджера Макс и в первую очередь адоптировали проект под неё.
@@ -215,14 +215,14 @@ export default function AboutPage() {
           <h3 className="font-russo text-stone-700 text-2xl md:text-4xl text-center mb-3 md:mb-4">
             Персональные данные
           </h3>
-          <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center">
+          <p className="font-golos font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center">
             Мы обрабатываем ваши персональные данные в соответствии с требованиями Федерального
             закона от 27 июля 2006 года №152-ФЗ «О персональных данных». В частности, часть 5 статьи
             18 этого закона обязывает нас обеспечивать запись, систематизацию, накопление, хранение,
             уточнение и извлечение персональных данных граждан РФ с использованием баз данных,
             расположенных на территории России.
           </p>
-          <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center mt-4">
+          <p className="font-golos font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center mt-4">
             Все наши серверы и базы данных размещены в России, в дата-центре reg.ru (Москва). Это
             гарантирует соблюдение требований законодательства о локализации данных и защите вашей
             информации.
@@ -236,13 +236,13 @@ export default function AboutPage() {
           <h3 className="font-russo text-stone-700 text-2xl md:text-4xl text-center mb-3 md:mb-4">
             Связь
           </h3>
-          <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center">
+          <p className="font-golos font-medium text-stone-700 text-base md:text-lg leading-relaxed text-center">
             По вопросам сотрудничества и другим, пишите на почту или группу в ВК:
           </p>
           <div className="mt-4 flex flex-col items-center gap-2">
             <a
               href="mailto:gleb@ub.am"
-              className="font-raleway font-medium text-base md:text-lg text-blue-600 hover:text-blue-700 underline transition-colors"
+              className="font-golos font-medium text-base md:text-lg text-blue-600 hover:text-blue-700 underline transition-colors"
             >
               gleb@ub.am
             </a>
@@ -250,7 +250,7 @@ export default function AboutPage() {
               href="https://vk.com/svoauto"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-raleway font-medium text-base md:text-lg text-blue-600 hover:text-blue-700 underline transition-colors"
+              className="font-golos font-medium text-base md:text-lg text-blue-600 hover:text-blue-700 underline transition-colors"
             >
               Подписывайтесь на нас в VK
             </a>
@@ -261,17 +261,17 @@ export default function AboutPage() {
       {/* Footer */}
       <footer className="bg-stone-800 py-5 md:py-8">
         <div className="max-w-6xl mx-auto px-6 md:px-12 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="font-raleway text-stone-400 text-sm">Все права защищены 🇷🇺</p>
+          <p className="font-golos text-stone-400 text-sm">Все права защищены 🇷🇺</p>
           <div className="flex gap-6">
             <a
               href="/about"
-              className="font-raleway text-stone-400 text-sm hover:text-stone-300 transition-colors"
+              className="font-golos text-stone-400 text-sm hover:text-stone-300 transition-colors"
             >
               О проекте
             </a>
             <a
               href="/contact"
-              className="font-raleway text-stone-400 text-sm hover:text-stone-300 transition-colors"
+              className="font-golos text-stone-400 text-sm hover:text-stone-300 transition-colors"
             >
               Связаться
             </a>

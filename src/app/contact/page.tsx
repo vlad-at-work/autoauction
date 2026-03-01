@@ -37,7 +37,7 @@ export default function ContactPage() {
             {/* Partners */}
             <div className="flex flex-col items-center">
               <p
-                className="text-xs md:text-sm font-raleway font-semibold text-white/60 mb-1 md:mb-1.5 tracking-wide uppercase"
+                className="text-xs md:text-sm font-golos font-semibold text-white/60 mb-1 md:mb-1.5 tracking-wide uppercase"
                 style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}
               >
                 При поддержке
@@ -104,7 +104,7 @@ export default function ContactPage() {
                   />
                 </a>
               </div>
-              <p className="mt-3 text-center text-sm sm:text-base font-raleway font-normal text-white/50">
+              <p className="mt-3 text-center text-sm sm:text-base font-golos font-normal text-white/50">
                 Сервис предоставляется бесплатно
               </p>
             </div>
@@ -119,10 +119,10 @@ export default function ContactPage() {
             Связь
           </h2>
           <div className="space-y-4 md:space-y-6">
-            <p className="font-raleway font-medium text-stone-700 text-base md:text-lg leading-relaxed">
+            <p className="font-golos font-medium text-stone-700 text-base md:text-lg leading-relaxed">
               По вопросам сотрудничества и другим вопросам пишите на почту или в группу ВК:
             </p>
-            <p className="font-raleway font-medium text-base md:text-lg leading-relaxed">
+            <p className="font-golos font-medium text-base md:text-lg leading-relaxed">
               <a
                 href="mailto:gleb@ub.am"
                 className="text-blue-600 hover:text-blue-700 underline transition-colors"
@@ -130,7 +130,7 @@ export default function ContactPage() {
                 gleb@ub.am
               </a>
             </p>
-            <p className="font-raleway font-medium text-base md:text-lg leading-relaxed">
+            <p className="font-golos font-medium text-base md:text-lg leading-relaxed">
               <a
                 href="https://vk.com/svoauto"
                 target="_blank"
@@ -147,17 +147,17 @@ export default function ContactPage() {
       {/* Footer */}
       <footer className="bg-stone-800 py-5 md:py-8">
         <div className="max-w-6xl mx-auto px-6 md:px-12 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="font-raleway text-stone-400 text-sm">Все права защищены 🇷🇺</p>
+          <p className="font-golos text-stone-400 text-sm">Все права защищены 🇷🇺</p>
           <div className="flex gap-6">
             <a
               href="/about"
-              className="font-raleway text-stone-400 text-sm hover:text-stone-300 transition-colors"
+              className="font-golos text-stone-400 text-sm hover:text-stone-300 transition-colors"
             >
               О проекте
             </a>
             <a
               href="/contact"
-              className="font-raleway text-stone-400 text-sm hover:text-stone-300 transition-colors"
+              className="font-golos text-stone-400 text-sm hover:text-stone-300 transition-colors"
             >
               Связаться
             </a>
