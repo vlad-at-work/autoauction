@@ -155,9 +155,11 @@ model Transaction {
   dealerId String
 
   // Buyer info revealed to dealer upon acceptance
-  buyerName  String
-  buyerEmail String?
-  buyerPhone String
+  buyerName           String
+  buyerEmail          String?
+  buyerPhone          String
+  buyerPlatform       Platform?
+  buyerPlatformUserId String?
 
   // Immutable snapshots for billing/invoices (not all fields may exist for legacy rows)
   offerPrice          Int?

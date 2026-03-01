@@ -28,6 +28,8 @@ type Inquiry = {
     dealerId: string;
     buyerName?: string;
     buyerPhone?: string;
+    buyerPlatform?: 'MAX' | 'TELEGRAM' | null;
+    buyerPlatformUserId?: string | null;
   }>;
   _count: {
     offers: number;
@@ -351,10 +353,18 @@ export default function DealerInquiriesPage() {
                           <span className="font-medium">{formatPrice(latestMyOffer.price)}</span>
                         )}
                       </div>
-                      {(transaction?.buyerName || transaction?.buyerPhone) && (
+                      {(transaction?.buyerName ||
+                        transaction?.buyerPhone ||
+                        (transaction?.buyerPlatform && transaction?.buyerPlatformUserId)) && (
                         <div className="mt-1 flex flex-wrap items-center gap-x-3 text-sm text-muted-foreground">
                           {transaction.buyerName && <span>{transaction.buyerName}</span>}
                           {transaction.buyerPhone && <span>{transaction.buyerPhone}</span>}
+                          {transaction.buyerPlatform && transaction.buyerPlatformUserId && (
+                            <span>
+                              {transaction.buyerPlatform === 'MAX' ? 'MAX' : 'TG'} ID:{' '}
+                              {transaction.buyerPlatformUserId}
+                            </span>
+                          )}
                         </div>
                       )}
                     </Link>

@@ -78,6 +78,8 @@ export const GET = withLogging(
               buyerEmail: true,
               buyerPhone: true,
               acceptedAt: true,
+              buyerPlatform: true,
+              buyerPlatformUserId: true,
             },
           },
           _count: {

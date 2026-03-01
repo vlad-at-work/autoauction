@@ -40,6 +40,8 @@ type Transaction = {
   buyerEmail: string | null;
   buyerPhone: string;
   acceptedAt: string;
+  buyerPlatform: 'MAX' | 'TELEGRAM' | null;
+  buyerPlatformUserId: string | null;
 };
 
 type InquiryData = {
@@ -250,6 +252,14 @@ export default function DealerInquiryPage() {
                   >
                     {myTransaction.buyerEmail}
                   </a>
+                </div>
+              )}
+              {myTransaction.buyerPlatform && myTransaction.buyerPlatformUserId && (
+                <div>
+                  <span className="font-medium">
+                    {myTransaction.buyerPlatform === 'MAX' ? 'MAX' : 'Telegram'} ID:
+                  </span>{' '}
+                  {myTransaction.buyerPlatformUserId}
                 </div>
               )}
               <div className="text-muted-foreground mt-2 text-xs">

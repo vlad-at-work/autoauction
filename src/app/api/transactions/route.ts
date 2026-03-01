@@ -106,6 +106,8 @@ export const POST = withLogging('transactions', async (request: Request) => {
         buyerName: offer.inquiry.name,
         buyerEmail: offer.inquiry.email,
         buyerPhone: offer.inquiry.phone,
+        buyerPlatform: offer.inquiry.buyer.platform,
+        buyerPlatformUserId: offer.inquiry.buyer.platformUserId,
         offerPrice: offer.price,
         inquiryModel: offer.inquiry.model,
         inquirySubmodel: offer.inquiry.submodel,
