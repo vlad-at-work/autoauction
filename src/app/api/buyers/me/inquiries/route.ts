@@ -103,7 +103,10 @@ export const GET = withLogging('buyers/me/inquiries', async (request: Request) =
     captureError(error, { route: 'buyers/me/inquiries' });
     log.error({ err: error }, 'error');
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Внутренняя ошибка' },
+      {
+        error:
+          error instanceof Error ? error.message : 'Что-то пошло не так. Мы уже работаем над этим.',
+      },
       { status: 500 }
     );
   }

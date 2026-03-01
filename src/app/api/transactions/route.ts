@@ -232,7 +232,10 @@ ${remainingAcceptances > 0 ? `Вы можете принять ещё ${remainin
     captureError(err, { route: 'transactions' });
     log.error({ err }, 'transaction creation error');
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Внутренняя ошибка' },
+      {
+        error:
+          err instanceof Error ? err.message : 'Что-то пошло не так. Мы уже работаем над этим.',
+      },
       { status: 500 }
     );
   }

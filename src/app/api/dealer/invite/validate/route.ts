@@ -52,6 +52,9 @@ export const POST = withLogging('dealer/invite/validate', async (request: Reques
   } catch (err) {
     captureError(err, { route: 'dealer/invite/validate' });
     log.error({ err }, 'error');
-    return NextResponse.json({ valid: false, error: 'Внутренняя ошибка' }, { status: 500 });
+    return NextResponse.json(
+      { valid: false, error: 'Что-то пошло не так. Мы уже работаем над этим.' },
+      { status: 500 }
+    );
   }
 });

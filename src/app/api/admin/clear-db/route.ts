@@ -28,7 +28,11 @@ export const POST = withLogging('admin/clear-db', async (_request: Request) => {
   } catch (err) {
     log.error({ err }, 'clear DB error');
     return NextResponse.json(
-      { success: false, error: err instanceof Error ? err.message : 'Внутренняя ошибка' },
+      {
+        success: false,
+        error:
+          err instanceof Error ? err.message : 'Что-то пошло не так. Мы уже работаем над этим.',
+      },
       { status: 500 }
     );
   }

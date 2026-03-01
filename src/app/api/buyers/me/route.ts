@@ -56,7 +56,10 @@ export const GET = withLogging('buyers/me', async (request: Request) => {
   } catch (error) {
     captureError(error, { route: 'buyers/me', method: 'GET' });
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Внутренняя ошибка' },
+      {
+        error:
+          error instanceof Error ? error.message : 'Что-то пошло не так. Мы уже работаем над этим.',
+      },
       { status: 500 }
     );
   }
@@ -114,7 +117,10 @@ export const POST = withLogging('buyers/me', async (request: Request) => {
     captureError(error, { route: 'buyers/me', method: 'POST' });
     log.error({ err: error }, 'create buyer error');
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Внутренняя ошибка' },
+      {
+        error:
+          error instanceof Error ? error.message : 'Что-то пошло не так. Мы уже работаем над этим.',
+      },
       { status: 500 }
     );
   }

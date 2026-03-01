@@ -310,7 +310,10 @@ export const POST = withLogging('inquiries', async (request: Request) => {
     captureError(err, { route: 'inquiries' });
     log.error({ err }, 'inquiry creation error');
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Внутренняя ошибка' },
+      {
+        error:
+          err instanceof Error ? err.message : 'Что-то пошло не так. Мы уже работаем над этим.',
+      },
       { status: 500 }
     );
   }

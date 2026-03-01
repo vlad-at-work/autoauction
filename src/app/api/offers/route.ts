@@ -153,7 +153,10 @@ export const POST = withLogging('offers', async (request: Request) => {
   } catch (err) {
     captureError(err, { route: 'offers' });
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Внутренняя ошибка' },
+      {
+        error:
+          err instanceof Error ? err.message : 'Что-то пошло не так. Мы уже работаем над этим.',
+      },
       { status: 500 }
     );
   }

@@ -101,6 +101,9 @@ export const GET = withLogging('dealer/inquiries/archived', async (request: Requ
   } catch (err) {
     captureError(err, { route: 'dealer/inquiries/archived' });
     log.error({ err }, 'error');
-    return NextResponse.json({ error: 'Внутренняя ошибка' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Что-то пошло не так. Мы уже работаем над этим.' },
+      { status: 500 }
+    );
   }
 });
