@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+import { INTERNAL_ERROR_MESSAGE } from '@/lib/errors';
+
 import { prisma } from '@/lib/db';
 import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { captureError } from '@/lib/hawk';
@@ -168,8 +170,7 @@ export const GET = withLogging('inquiries/[id]', async (request: Request, contex
     log.error({ err: error }, 'error');
     return NextResponse.json(
       {
-        error:
-          error instanceof Error ? error.message : 'Что-то пошло не так. Мы уже работаем над этим.',
+        error: error instanceof Error ? error.message : INTERNAL_ERROR_MESSAGE,
       },
       { status: 500 }
     );

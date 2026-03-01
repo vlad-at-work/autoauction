@@ -3,6 +3,8 @@
  */
 
 import { NextResponse } from 'next/server';
+
+import { INTERNAL_ERROR_MESSAGE } from '@/lib/errors';
 import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { prisma } from '@/lib/db';
 import { captureError } from '@/lib/hawk';
@@ -101,9 +103,6 @@ export const GET = withLogging('dealer/inquiries/archived', async (request: Requ
   } catch (err) {
     captureError(err, { route: 'dealer/inquiries/archived' });
     log.error({ err }, 'error');
-    return NextResponse.json(
-      { error: 'Что-то пошло не так. Мы уже работаем над этим.' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: INTERNAL_ERROR_MESSAGE }, { status: 500 });
   }
 });

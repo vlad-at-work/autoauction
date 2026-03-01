@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+
+import { INTERNAL_ERROR_MESSAGE } from '@/lib/errors';
 import { z } from 'zod';
 
 import { prisma } from '@/lib/db';
@@ -233,8 +235,7 @@ ${remainingAcceptances > 0 ? `Вы можете принять ещё ${remainin
     log.error({ err }, 'transaction creation error');
     return NextResponse.json(
       {
-        error:
-          err instanceof Error ? err.message : 'Что-то пошло не так. Мы уже работаем над этим.',
+        error: err instanceof Error ? err.message : INTERNAL_ERROR_MESSAGE,
       },
       { status: 500 }
     );

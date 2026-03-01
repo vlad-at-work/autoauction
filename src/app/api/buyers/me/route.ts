@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+import { INTERNAL_ERROR_MESSAGE } from '@/lib/errors';
+
 import { prisma } from '@/lib/db';
 import { validateWebAppRequest, isPlatformUserDealer } from '@/lib/auth/webapp-validation';
 import { captureError } from '@/lib/hawk';
@@ -57,8 +59,7 @@ export const GET = withLogging('buyers/me', async (request: Request) => {
     captureError(error, { route: 'buyers/me', method: 'GET' });
     return NextResponse.json(
       {
-        error:
-          error instanceof Error ? error.message : 'Что-то пошло не так. Мы уже работаем над этим.',
+        error: error instanceof Error ? error.message : INTERNAL_ERROR_MESSAGE,
       },
       { status: 500 }
     );
@@ -118,8 +119,7 @@ export const POST = withLogging('buyers/me', async (request: Request) => {
     log.error({ err: error }, 'create buyer error');
     return NextResponse.json(
       {
-        error:
-          error instanceof Error ? error.message : 'Что-то пошло не так. Мы уже работаем над этим.',
+        error: error instanceof Error ? error.message : INTERNAL_ERROR_MESSAGE,
       },
       { status: 500 }
     );

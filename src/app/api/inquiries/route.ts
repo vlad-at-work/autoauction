@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+import { INTERNAL_ERROR_MESSAGE } from '@/lib/errors';
+
 import { prisma } from '@/lib/db';
 import { validateWebAppRequest } from '@/lib/auth/webapp-validation';
 import { inquiryCreateSchema } from '@/lib/schemas/inquiry';
@@ -311,8 +313,7 @@ export const POST = withLogging('inquiries', async (request: Request) => {
     log.error({ err }, 'inquiry creation error');
     return NextResponse.json(
       {
-        error:
-          err instanceof Error ? err.message : 'Что-то пошло не так. Мы уже работаем над этим.',
+        error: err instanceof Error ? err.message : INTERNAL_ERROR_MESSAGE,
       },
       { status: 500 }
     );

@@ -6,6 +6,8 @@
  */
 
 import { NextResponse } from 'next/server';
+
+import { INTERNAL_ERROR_MESSAGE } from '@/lib/errors';
 import { prisma } from '@/lib/db';
 import { isInviteTokenValid } from '@/lib/auth/dealer-invite';
 import { captureError } from '@/lib/hawk';
@@ -52,9 +54,6 @@ export const POST = withLogging('dealer/invite/validate', async (request: Reques
   } catch (err) {
     captureError(err, { route: 'dealer/invite/validate' });
     log.error({ err }, 'error');
-    return NextResponse.json(
-      { valid: false, error: 'Что-то пошло не так. Мы уже работаем над этим.' },
-      { status: 500 }
-    );
+    return NextResponse.json({ valid: false, error: INTERNAL_ERROR_MESSAGE }, { status: 500 });
   }
 });

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+import { INTERNAL_ERROR_MESSAGE } from '@/lib/errors';
+
 import { prisma } from '@/lib/db';
 import { logger, withLogging } from '@/lib/logger';
 
@@ -30,8 +32,7 @@ export const POST = withLogging('admin/clear-db', async (_request: Request) => {
     return NextResponse.json(
       {
         success: false,
-        error:
-          err instanceof Error ? err.message : 'Что-то пошло не так. Мы уже работаем над этим.',
+        error: err instanceof Error ? err.message : INTERNAL_ERROR_MESSAGE,
       },
       { status: 500 }
     );

@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+
+import { INTERNAL_ERROR_MESSAGE } from '@/lib/errors';
 import { z } from 'zod';
 
 import { prisma } from '@/lib/db';
@@ -154,8 +156,7 @@ export const POST = withLogging('offers', async (request: Request) => {
     captureError(err, { route: 'offers' });
     return NextResponse.json(
       {
-        error:
-          err instanceof Error ? err.message : 'Что-то пошло не так. Мы уже работаем над этим.',
+        error: err instanceof Error ? err.message : INTERNAL_ERROR_MESSAGE,
       },
       { status: 500 }
     );
