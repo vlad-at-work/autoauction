@@ -244,17 +244,6 @@ export default function DealerInquiryPage() {
                   {formatPhoneRU(myTransaction.buyerPhone)}
                 </a>
               </div>
-              {myTransaction.buyerEmail && (
-                <div>
-                  <span className="font-medium">Эл. почта:</span>{' '}
-                  <a
-                    href={`mailto:${myTransaction.buyerEmail}`}
-                    className="text-blue-600 underline"
-                  >
-                    {myTransaction.buyerEmail}
-                  </a>
-                </div>
-              )}
               {myTransaction.buyerPlatform && myTransaction.buyerPlatformHandle && (
                 <div>
                   <span className="font-medium">

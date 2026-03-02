@@ -114,7 +114,7 @@ export const POST = withLogging('webhooks/max', async (request: Request) => {
 
         await sendMaxMessage(
           Number(userId),
-          `Пожалуйста, подтвердите ваш номер телефона чтобы оставить заявку. Ваша информация передастся только выбранному вами дилеру.`,
+          `👋 Добро пожаловать в Свои Авто, ${firstName}! Пожалуйста, поделитесь вашим номером телефона прямо здесь в Max перед тем как оставить заявку.\nВаши данные скрыты и передаются только выбранному вами дилеру.`,
           [[{ type: 'request_contact', text: '📱 Поделиться номером' }]],
           'customer'
         );
@@ -227,7 +227,7 @@ export const POST = withLogging('webhooks/max', async (request: Request) => {
 
             await sendMaxMessage(
               Number(userId),
-              `Номер телефона подтвержден, нажмите на кнопку ниже чтобы продолжить:`,
+              `Отлично! Теперь нажмите на кнопку ниже, чтобы начать:`,
               [
                 [
                   {
