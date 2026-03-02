@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Loader2 } from 'lucide-react';
+import { Loader2, RefreshCw } from 'lucide-react';
 
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 import { Badge } from '@/components/ui/badge';
@@ -46,6 +46,7 @@ export default function DealerInquiriesPage() {
   const [archivedInquiries, setArchivedInquiries] = useState<Inquiry[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [archiveLoading, setArchiveLoading] = useState(false);
+  const [refreshLoading, setRefreshLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dealerId, setDealerId] = useState<string | null>(null);
   const [authHeader, setAuthHeader] = useState<string | null>(null);
@@ -149,6 +150,44 @@ export default function DealerInquiriesPage() {
     };
   }, [activeTab, archivedInquiries, authHeader, dealerId]);
 
+  const handleRefresh = async () => {
+    if (!authHeader) return;
+
+    setRefreshLoading(true);
+
+    try {
+      if (activeTab === 'active') {
+        const response = await fetch('/api/dealer/inquiries', {
+          headers: { Authorization: authHeader },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setInquiries(data.inquiries);
+          if (data.inquiries.length > 0 && data.inquiries[0].offers.length > 0) {
+            setDealerId(data.inquiries[0].offers[0].dealerId);
+          }
+        }
+      } else if (activeTab === 'archive') {
+        const response = await fetch('/api/dealer/inquiries/archived', {
+          headers: { Authorization: authHeader },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setArchivedInquiries(data.inquiries);
+          if (data.inquiries.length > 0 && data.inquiries[0].offers.length > 0) {
+            setDealerId(data.inquiries[0].offers[0].dealerId);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Refresh error:', err);
+    } finally {
+      setRefreshLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center px-4">
@@ -203,97 +242,123 @@ export default function DealerInquiriesPage() {
       {activeTab === 'active' && (
         <div className="flex flex-col gap-3">
           {activeInquiries.length === 0 ? (
-            <p className="text-muted-foreground text-sm py-8 text-center">Нет активных заявок.</p>
+            <div className="flex flex-col items-center gap-4">
+              <p className="text-muted-foreground text-sm py-8 text-center">Нет активных заявок.</p>
+              <button
+                onClick={handleRefresh}
+                disabled={refreshLoading}
+                className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <RefreshCw className={`size-4 ${refreshLoading ? 'animate-spin' : ''}`} />
+                обновить список
+              </button>
+            </div>
           ) : (
-            <ul className="flex flex-col gap-2">
-              {activeInquiries.map((inquiry) => {
-                const myOffers = dealerId
-                  ? inquiry.offers.filter((o) => o.dealerId === dealerId)
-                  : [];
-                const latestMyOffer = myOffers[0];
-                const totalOfferCount = inquiry._count.offers;
-                const acceptedCount = inquiry._count.transactions;
-                const myTransaction = inquiry.transactions.find((t) => t.dealerId === dealerId);
+            <>
+              <ul className="flex flex-col gap-2">
+                {activeInquiries.map((inquiry) => {
+                  const myOffers = dealerId
+                    ? inquiry.offers.filter((o) => o.dealerId === dealerId)
+                    : [];
+                  const latestMyOffer = myOffers[0];
+                  const totalOfferCount = inquiry._count.offers;
+                  const acceptedCount = inquiry._count.transactions;
+                  const myTransaction = inquiry.transactions.find((t) => t.dealerId === dealerId);
 
-                const hoursLeft = Math.max(
-                  0,
-                  Math.ceil(
-                    (new Date(inquiry.expiresAt).getTime() - now.getTime()) / (60 * 60 * 1000)
-                  )
-                );
+                  const hoursLeft = Math.max(
+                    0,
+                    Math.ceil(
+                      (new Date(inquiry.expiresAt).getTime() - now.getTime()) / (60 * 60 * 1000)
+                    )
+                  );
 
-                const colorClass = getIdColorClass(inquiry.id);
-                const shortId = getShortId(inquiry.id);
+                  const colorClass = getIdColorClass(inquiry.id);
+                  const shortId = getShortId(inquiry.id);
 
-                return (
-                  <li key={inquiry.id}>
-                    <Link
-                      href={`/dealerinterface/inquiries/${inquiry.id}`}
-                      className="hover:bg-muted/40 flex flex-col gap-1 rounded-lg border px-4 py-3 transition-colors"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <div className="font-medium leading-tight">{inquiry.model}</div>
-                          {inquiry.submodel !== inquiry.model && (
-                            <div className="text-sm text-muted-foreground">{inquiry.submodel}</div>
-                          )}
-                        </div>
-                        <span
-                          className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-mono font-medium ${colorClass.bg} ${colorClass.text} border ${colorClass.border}`}
-                        >
-                          {shortId}
-                        </span>
-                      </div>
-                      <div className="text-muted-foreground text-sm">
-                        {inquiry.transmission} • {inquiry.color}
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2 text-sm">
-                        <span className="text-muted-foreground text-xs">~{hoursLeft}ч</span>
-                        {totalOfferCount > 0 && (
-                          <Badge variant="secondary">{totalOfferCount} предложений</Badge>
-                        )}
-                        {acceptedCount > 0 && (
-                          <Badge
-                            variant="outline"
-                            className="border-green-200 bg-green-50 text-green-700"
+                  return (
+                    <li key={inquiry.id}>
+                      <Link
+                        href={`/dealerinterface/inquiries/${inquiry.id}`}
+                        className="hover:bg-muted/40 flex flex-col gap-1 rounded-lg border px-4 py-3 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <div className="font-medium leading-tight">{inquiry.model}</div>
+                            {inquiry.submodel !== inquiry.model && (
+                              <div className="text-sm text-muted-foreground">
+                                {inquiry.submodel}
+                              </div>
+                            )}
+                          </div>
+                          <span
+                            className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-mono font-medium ${colorClass.bg} ${colorClass.text} border ${colorClass.border}`}
                           >
-                            {acceptedCount} принято
-                          </Badge>
-                        )}
-                      </div>
-                      {myTransaction ? (
-                        <div className="mt-1 flex items-center gap-2 text-sm">
-                          <Badge
-                            variant="outline"
-                            className="border-green-200 bg-green-50 text-green-700"
-                          >
-                            ✓ Ваше предложение принято
-                          </Badge>
-                          {latestMyOffer && (
-                            <span className="text-muted-foreground">
-                              {formatPrice(latestMyOffer.price)}
-                            </span>
-                          )}
-                        </div>
-                      ) : latestMyOffer ? (
-                        <div className="mt-1 flex items-center gap-2 text-sm">
-                          <span>
-                            Ваше предложение:{' '}
-                            <span className="font-medium">{formatPrice(latestMyOffer.price)}</span>
+                            {shortId}
                           </span>
-                          <Badge
-                            variant="outline"
-                            className="border-blue-200 bg-blue-50 text-blue-700"
-                          >
-                            ⏳ Ожидает
-                          </Badge>
                         </div>
-                      ) : null}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
+                        <div className="text-muted-foreground text-sm">
+                          {inquiry.transmission} • {inquiry.color}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 text-sm">
+                          <span className="text-muted-foreground text-xs">~{hoursLeft}ч</span>
+                          {totalOfferCount > 0 && (
+                            <Badge variant="secondary">{totalOfferCount} предложений</Badge>
+                          )}
+                          {acceptedCount > 0 && (
+                            <Badge
+                              variant="outline"
+                              className="border-green-200 bg-green-50 text-green-700"
+                            >
+                              {acceptedCount} принято
+                            </Badge>
+                          )}
+                        </div>
+                        {myTransaction ? (
+                          <div className="mt-1 flex items-center gap-2 text-sm">
+                            <Badge
+                              variant="outline"
+                              className="border-green-200 bg-green-50 text-green-700"
+                            >
+                              ✓ Ваше предложение принято
+                            </Badge>
+                            {latestMyOffer && (
+                              <span className="text-muted-foreground">
+                                {formatPrice(latestMyOffer.price)}
+                              </span>
+                            )}
+                          </div>
+                        ) : latestMyOffer ? (
+                          <div className="mt-1 flex items-center gap-2 text-sm">
+                            <span>
+                              Ваше предложение:{' '}
+                              <span className="font-medium">
+                                {formatPrice(latestMyOffer.price)}
+                              </span>
+                            </span>
+                            <Badge
+                              variant="outline"
+                              className="border-blue-200 bg-blue-50 text-blue-700"
+                            >
+                              ⏳ Ожидает
+                            </Badge>
+                          </div>
+                        ) : null}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+              <div className="flex justify-center pt-4">
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshLoading}
+                  className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <RefreshCw className={`size-4 ${refreshLoading ? 'animate-spin' : ''}`} />
+                  обновить список
+                </button>
+              </div>
+            </>
           )}
         </div>
       )}
@@ -306,73 +371,97 @@ export default function DealerInquiriesPage() {
               <Loader2 className="text-muted-foreground size-8 animate-spin" />
             </div>
           ) : (archivedInquiries ?? []).length === 0 ? (
-            <p className="text-muted-foreground text-sm py-8 text-center">
-              Здесь будут заявки, в которых ваше предложение было принято покупателем.
-            </p>
+            <div className="flex flex-col items-center gap-4">
+              <p className="text-muted-foreground text-sm py-8 text-center">
+                Здесь будут заявки, в которых ваше предложение было принято покупателем.
+              </p>
+              <button
+                onClick={handleRefresh}
+                disabled={refreshLoading}
+                className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <RefreshCw className={`size-4 ${refreshLoading ? 'animate-spin' : ''}`} />
+                обновить список
+              </button>
+            </div>
           ) : (
-            <ul className="flex flex-col gap-2">
-              {(archivedInquiries ?? []).map((inquiry) => {
-                const myOffers = dealerId
-                  ? inquiry.offers.filter((o) => o.dealerId === dealerId)
-                  : [];
-                const latestMyOffer = myOffers[0];
-                const transaction = inquiry.transactions[0];
+            <>
+              <ul className="flex flex-col gap-2">
+                {(archivedInquiries ?? []).map((inquiry) => {
+                  const myOffers = dealerId
+                    ? inquiry.offers.filter((o) => o.dealerId === dealerId)
+                    : [];
+                  const latestMyOffer = myOffers[0];
+                  const transaction = inquiry.transactions[0];
 
-                const colorClass = getIdColorClass(inquiry.id);
-                const shortId = getShortId(inquiry.id);
+                  const colorClass = getIdColorClass(inquiry.id);
+                  const shortId = getShortId(inquiry.id);
 
-                return (
-                  <li key={inquiry.id}>
-                    <Link
-                      href={`/dealerinterface/inquiries/${inquiry.id}`}
-                      className="hover:bg-muted/40 flex flex-col gap-1 rounded-lg border px-4 py-3 transition-colors"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <div className="font-medium leading-tight">{inquiry.model}</div>
-                          {inquiry.submodel !== inquiry.model && (
-                            <div className="text-sm text-muted-foreground">{inquiry.submodel}</div>
+                  return (
+                    <li key={inquiry.id}>
+                      <Link
+                        href={`/dealerinterface/inquiries/${inquiry.id}`}
+                        className="hover:bg-muted/40 flex flex-col gap-1 rounded-lg border px-4 py-3 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <div className="font-medium leading-tight">{inquiry.model}</div>
+                            {inquiry.submodel !== inquiry.model && (
+                              <div className="text-sm text-muted-foreground">
+                                {inquiry.submodel}
+                              </div>
+                            )}
+                          </div>
+                          <span
+                            className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-mono font-medium ${colorClass.bg} ${colorClass.text} border ${colorClass.border}`}
+                          >
+                            {shortId}
+                          </span>
+                        </div>
+                        <div className="text-muted-foreground text-sm">
+                          {inquiry.transmission} • {inquiry.color}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 text-sm">
+                          <Badge
+                            variant="outline"
+                            className="border-green-200 bg-green-50 text-green-700"
+                          >
+                            ✓ Принято
+                          </Badge>
+                          {latestMyOffer && (
+                            <span className="font-medium">{formatPrice(latestMyOffer.price)}</span>
                           )}
                         </div>
-                        <span
-                          className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-mono font-medium ${colorClass.bg} ${colorClass.text} border ${colorClass.border}`}
-                        >
-                          {shortId}
-                        </span>
-                      </div>
-                      <div className="text-muted-foreground text-sm">
-                        {inquiry.transmission} • {inquiry.color}
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2 text-sm">
-                        <Badge
-                          variant="outline"
-                          className="border-green-200 bg-green-50 text-green-700"
-                        >
-                          ✓ Принято
-                        </Badge>
-                        {latestMyOffer && (
-                          <span className="font-medium">{formatPrice(latestMyOffer.price)}</span>
+                        {(transaction?.buyerName ||
+                          transaction?.buyerPhone ||
+                          transaction?.buyerPlatformHandle) && (
+                          <div className="mt-1 flex flex-wrap items-center gap-x-3 text-sm text-muted-foreground">
+                            {transaction.buyerName && <span>{transaction.buyerName}</span>}
+                            {transaction.buyerPhone && <span>{transaction.buyerPhone}</span>}
+                            {transaction.buyerPlatform && transaction.buyerPlatformHandle && (
+                              <span>
+                                {transaction.buyerPlatform === 'MAX' ? 'MAX' : 'TG'}: @
+                                {transaction.buyerPlatformHandle}
+                              </span>
+                            )}
+                          </div>
                         )}
-                      </div>
-                      {(transaction?.buyerName ||
-                        transaction?.buyerPhone ||
-                        transaction?.buyerPlatformHandle) && (
-                        <div className="mt-1 flex flex-wrap items-center gap-x-3 text-sm text-muted-foreground">
-                          {transaction.buyerName && <span>{transaction.buyerName}</span>}
-                          {transaction.buyerPhone && <span>{transaction.buyerPhone}</span>}
-                          {transaction.buyerPlatform && transaction.buyerPlatformHandle && (
-                            <span>
-                              {transaction.buyerPlatform === 'MAX' ? 'MAX' : 'TG'}: @
-                              {transaction.buyerPlatformHandle}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+              <div className="flex justify-center pt-4">
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshLoading}
+                  className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <RefreshCw className={`size-4 ${refreshLoading ? 'animate-spin' : ''}`} />
+                  обновить список
+                </button>
+              </div>
+            </>
           )}
         </div>
       )}
