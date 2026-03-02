@@ -161,12 +161,30 @@ export const POST = withLogging('webhooks/max', async (request: Request) => {
 
       if (contactAttachment && userId) {
         const payload = contactAttachment.payload as Record<string, unknown> | undefined;
+
+        log.info(
+          { ...logContext, payloadKeys: Object.keys(payload ?? {}), payload },
+          '[Webhook/MAX] contact payload'
+        );
+
         const phone = payload?.phone as string | undefined;
 
-        log.info({ ...logContext, rawPhone: phone ?? null }, '[Webhook/MAX] raw phone');
+        // Fall back to vcf_info parsing if phone field is absent/null
+        let resolvedPhone: string | null = phone ?? null;
+        if (!resolvedPhone && payload?.vcf_info) {
+          const vcf = payload.vcf_info as string;
+          const match = vcf.match(/^TEL[^:]*:(.+)$/m);
+          if (match) resolvedPhone = match[1].trim();
+          log.info(
+            { ...logContext, vcfPhone: resolvedPhone },
+            '[Webhook/MAX] vcf_info phone parse'
+          );
+        }
 
-        if (phone) {
-          const normalizedPhone = normalizePhone(phone);
+        log.info({ ...logContext, rawPhone: resolvedPhone }, '[Webhook/MAX] raw phone');
+
+        if (resolvedPhone) {
+          const normalizedPhone = normalizePhone(resolvedPhone);
 
           log.info(
             { ...logContext, normalizedPhone: normalizedPhone ?? null },

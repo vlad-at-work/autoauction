@@ -26,7 +26,6 @@ jobs:
         run: bun install
 
       - name: Generate Prisma client
-        if: steps.cache-nm.outputs.cache-hit != 'true'
         run: bunx prisma generate
 
       - name: Cache Next.js build
