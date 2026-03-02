@@ -138,7 +138,8 @@ export const POST = withLogging('webhooks/max', async (request: Request) => {
     // Handle contact sharing (message_created with contact attachment)
     if (updateType === 'message_created' && botType === 'customer') {
       const message = update.message as Record<string, unknown> | undefined;
-      const attachments = (message?.attachments as Array<Record<string, unknown>>) || [];
+      const body = message?.body as Record<string, unknown> | undefined;
+      const attachments = (body?.attachments as Array<Record<string, unknown>>) || [];
 
       // Look for contact attachment
       const contactAttachment = attachments.find((att) => att.type === 'contact');
@@ -151,8 +152,16 @@ export const POST = withLogging('webhooks/max', async (request: Request) => {
           const normalizedPhone = normalizePhone(phone);
 
           if (normalizedPhone) {
+            // Check if buyer already has this phone verified (dedup guard for duplicate subscriptions)
+            const existingBuyer = await prisma.buyer.findFirst({
+              where: { platform: 'MAX', platformUserId: String(userId) },
+              select: { phone: true, phoneVerified: true },
+            });
+            const alreadySaved =
+              existingBuyer?.phoneVerified && existingBuyer.phone === normalizedPhone;
+
             log.info(
-              { ...logContext, phone: normalizedPhone },
+              { ...logContext, phone: normalizedPhone, alreadySaved },
               '[Webhook/MAX] Contact shared, updating buyer'
             );
 
@@ -178,7 +187,11 @@ export const POST = withLogging('webhooks/max', async (request: Request) => {
               },
             });
 
-            // Send confirmation message with open_app button
+            // Send confirmation only once (guard against duplicate subscription delivery)
+            if (alreadySaved) {
+              return NextResponse.json({ ok: true });
+            }
+
             const customerBotName =
               process.env.MAX_BOT_NAME || process.env.NEXT_PUBLIC_MAX_BOT_NAME || '';
 

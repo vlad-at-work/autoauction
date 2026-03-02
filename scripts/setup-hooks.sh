@@ -21,8 +21,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 ENV_FILE="$PROJECT_DIR/.env.local"
 
-# Default webhook base URL (Vercel production)
-DEFAULT_WEBHOOK_URL="https://autoauction-two.vercel.app"
+# Default webhook base URL (production)
+DEFAULT_WEBHOOK_URL="https://svoauto.ru"
 WEBHOOK_URL="${1:-$DEFAULT_WEBHOOK_URL}"
 
 echo "=========================================="
@@ -76,7 +76,7 @@ register_max_webhook() {
     "https://platform-api.max.ru/subscriptions" \
     -H "Content-Type: application/json" \
     -H "Authorization: $token" \
-    -d "{\"url\": \"$url\"}" 2>/dev/null || echo '{"error": "Connection failed"}')
+    -d "{\"url\": \"$url\", \"update_types\": [\"message_created\", \"bot_started\", \"message_callback\"]}" 2>/dev/null || echo '{"error": "Connection failed"}')
   
   # Check response
   if echo "$response" | jq -e '.success == true or .url' > /dev/null 2>&1; then

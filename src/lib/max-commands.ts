@@ -92,7 +92,10 @@ export async function registerMaxWebhook(
         Authorization: botToken,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ url: webhookUrl }),
+      body: JSON.stringify({
+        url: webhookUrl,
+        update_types: ['message_created', 'bot_started', 'message_callback'],
+      }),
     });
 
     const data = (await response.json()) as unknown;
