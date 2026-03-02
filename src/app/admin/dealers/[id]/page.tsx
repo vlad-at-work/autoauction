@@ -10,6 +10,7 @@ import { DeleteDialog } from '@/components/admin/delete-dialog';
 import { DealerEditForm } from '@/components/admin/dealer-edit-form';
 import { RestoreButton } from '@/components/admin/restore-button';
 import { DealerInviteSection } from '@/components/admin/dealer-invite-section';
+import { DealerPasswordResetSection } from '@/components/admin/dealer-password-reset-section';
 import { deleteDealer, restoreDealer } from '@/lib/admin/actions';
 import { formatPhoneRU } from '@/lib/format-phone';
 
@@ -150,6 +151,8 @@ export default async function DealerDetailPage({ params }: { params: Params }) {
             initialToken={dealer.inviteToken}
             initialExpiresAt={dealer.inviteTokenExpiresAt}
           />
+
+          <DealerPasswordResetSection dealerId={dealer.id} passwordSet={!!dealer.passwordHash} />
 
           <Card>
             <CardHeader>
