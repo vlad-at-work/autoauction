@@ -5,14 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 
-type AuthStatus =
-  | 'loading'
-  | 'not_found'
-  | 'needs_setup'
-  | 'authenticated'
-  | 'error'
-  | 'validating'
-  | 'success';
+type AuthStatus = 'loading' | 'not_found' | 'authenticated' | 'error' | 'validating' | 'success';
 
 function DealerEntryContent() {
   const router = useRouter();
@@ -110,10 +103,6 @@ function DealerEntryContent() {
                   // Already registered - redirect to inquiries
                   router.push('/dealerinterface/inquiries');
                   return;
-                } else if (authData.status === 'needs_setup') {
-                  // Needs password setup
-                  router.push('/dealerinterface/setup');
-                  return;
                 }
               }
             }
@@ -145,8 +134,6 @@ function DealerEntryContent() {
 
           if (data.status === 'not_found') {
             setStatus('not_found');
-          } else if (data.status === 'needs_setup') {
-            router.push('/dealerinterface/setup');
           } else if (data.status === 'authenticated') {
             router.push('/dealerinterface/inquiries');
           } else if (data.error) {

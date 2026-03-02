@@ -19,19 +19,6 @@ async function cleanupTestData() {
   for (const prefix of TEST_PREFIXES) {
     console.log(`Checking for data with prefix: "${prefix}"`);
 
-    // Delete password reset codes for test dealers
-    const resetCodes = await prisma.passwordResetCode.deleteMany({
-      where: {
-        dealer: {
-          OR: [{ username: { startsWith: prefix } }, { platformUserId: { startsWith: prefix } }],
-        },
-      },
-    });
-    if (resetCodes.count > 0) {
-      console.log(`  ✓ Deleted ${resetCodes.count} password reset codes`);
-      totalDeleted += resetCodes.count;
-    }
-
     // Delete transactions for test dealers
     const transactions = await prisma.transaction.deleteMany({
       where: {

@@ -81,9 +81,6 @@ model Dealer {
   platformUserId   String?
   platformChatId   String?  // Chat ID for sending bot notifications
 
-  // Authentication (bcrypt hash, set by dealer on first login)
-  passwordHash     String?
-
   // Invite token system for dealer claiming
   inviteToken          String?   @unique
   inviteTokenExpiresAt DateTime?
@@ -94,7 +91,6 @@ model Dealer {
 
   offers            Offer[]
   transactions      Transaction[]
-  passwordResetCodes PasswordResetCode[]
 
   @@unique([platform, platformUserId])
   @@index([deletedAt])
@@ -102,21 +98,6 @@ model Dealer {
   @@index([inviteToken])
 }
 
-// Time-limited password reset codes for dealers
-model PasswordResetCode {
-  id        String   @id @default(cuid())
-  dealer    Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
-  dealerId  String
-
-  code      String   // 6-digit code
-  expiresAt DateTime // Code expires after 10 minutes
-  usedAt    DateTime? // Null until used
-
-  createdAt DateTime @default(now())
-
-  @@index([dealerId])
-  @@index([expiresAt])
-}
 
 model Offer {
   id        String  @id @default(cuid())

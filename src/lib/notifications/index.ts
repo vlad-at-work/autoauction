@@ -156,58 +156,6 @@ export async function notifyBuyerOfNewOffer(
 }
 
 /**
- * Send password reset code to dealer (text only)
- */
-export async function sendDealerPasswordResetCode(
-  dealer: DealerInfo,
-  code: string
-): Promise<NotifyResult> {
-  log.info(
-    {
-      flow: 'send_dealer_reset_code',
-      platform: dealer.platform,
-      userId: dealer.platformUserId,
-    },
-    '[Notify] Sending dealer password reset code'
-  );
-
-  const text = `🔐 Код для сброса пароля: ${code}\n\nКод действителен 10 минут.`;
-
-  let result: NotifyResult;
-
-  if (dealer.platform === 'MAX' && dealer.platformUserId) {
-    result = await sendMaxMessage(dealer.platformUserId, text, undefined, 'dealer');
-  } else if (dealer.platform === 'TELEGRAM' && dealer.platformUserId) {
-    result = await sendTelegramMessage(dealer.platformUserId, text, undefined, 'dealer');
-  } else {
-    log.warn(
-      { platform: dealer.platform, hasUserId: !!dealer.platformUserId },
-      '[Notify] Dealer platform not configured, cannot send reset code'
-    );
-    return { success: false, error: 'Dealer platform not configured' };
-  }
-
-  if (result.success) {
-    log.info(
-      { flow: 'send_dealer_reset_code', platform: dealer.platform, userId: dealer.platformUserId },
-      '[Notify] Dealer password reset code sent'
-    );
-  } else {
-    log.error(
-      {
-        flow: 'send_dealer_reset_code',
-        platform: dealer.platform,
-        userId: dealer.platformUserId,
-        error: result.error,
-      },
-      '[Notify] Failed to send dealer password reset code'
-    );
-  }
-
-  return result;
-}
-
-/**
  * Notify dealer of new inquiry with deep link button
  */
 export async function notifyDealerOfNewInquiryViaBot(

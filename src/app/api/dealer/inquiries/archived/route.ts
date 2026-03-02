@@ -32,16 +32,11 @@ export const GET = withLogging('dealer/inquiries/archived', async (request: Requ
       },
       select: {
         id: true,
-        passwordHash: true,
       },
     });
 
     if (!dealer) {
       return NextResponse.json({ error: 'Дилер не найден' }, { status: 404 });
-    }
-
-    if (!dealer.passwordHash) {
-      return NextResponse.json({ error: 'Завершите настройку аккаунта' }, { status: 403 });
     }
 
     const inquiries = await prisma.inquiry.findMany({

@@ -57,10 +57,10 @@ export const POST = withLogging('dealer/offers', async (request: Request) => {
       },
     });
 
-    if (!dealer || !dealer.passwordHash) {
+    if (!dealer) {
       log.warn(
         { platform: platformEnum, userId: validation.userId },
-        '[DealerOffer] Unauthorized - dealer not found or not set up'
+        '[DealerOffer] Unauthorized - dealer not found'
       );
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

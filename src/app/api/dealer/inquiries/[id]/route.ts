@@ -37,15 +37,11 @@ export const GET = withLogging(
           deletedAt: null,
           active: true,
         },
-        select: { id: true, passwordHash: true },
+        select: { id: true },
       });
 
       if (!dealer) {
         return NextResponse.json({ error: 'Дилер не найден' }, { status: 404 });
-      }
-
-      if (!dealer.passwordHash) {
-        return NextResponse.json({ error: 'Завершите настройку аккаунта' }, { status: 403 });
       }
 
       const inquiry = await prisma.inquiry.findFirst({

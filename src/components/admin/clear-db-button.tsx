@@ -30,8 +30,7 @@ export function ClearDbButton() {
       }
 
       toast.success('✅ База данных очищена!');
-      // Reload the page to show updated stats
-      window.location.reload();
+      window.location.href = '/admin';
     } catch (error) {
       console.error('Clear DB error:', error);
       toast.error('Ошибка при очистке базы данных');

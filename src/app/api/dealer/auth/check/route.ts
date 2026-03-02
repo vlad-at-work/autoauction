@@ -35,7 +35,6 @@ export const POST = withLogging('dealer/auth/check', async (request: Request) =>
         username: true,
         name: true,
         active: true,
-        passwordHash: true,
       },
     });
 
@@ -45,14 +44,6 @@ export const POST = withLogging('dealer/auth/check', async (request: Request) =>
 
     if (!dealer.active) {
       return NextResponse.json({ error: 'Аккаунт дилера неактивен' }, { status: 403 });
-    }
-
-    if (!dealer.passwordHash) {
-      return NextResponse.json({
-        status: 'needs_setup',
-        dealerId: dealer.id,
-        dealerName: dealer.name,
-      });
     }
 
     return NextResponse.json({
