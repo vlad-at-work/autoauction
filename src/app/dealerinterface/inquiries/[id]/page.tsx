@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Shield } from 'lucide-react';
 
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 import { useWebApp } from '@/hooks/use-webapp';
@@ -235,14 +235,22 @@ export default function DealerInquiryPage() {
               <div>
                 <span className="font-medium">Имя:</span> {myTransaction.buyerName}
               </div>
-              <div>
-                <span className="font-medium">Телефон:</span>{' '}
-                <a
-                  href={`tel:${myTransaction.buyerPhone.replace(/\D/g, '')}`}
-                  className="text-blue-600 underline"
-                >
-                  {formatPhoneRU(myTransaction.buyerPhone)}
-                </a>
+              <div className="flex items-center gap-2">
+                <div>
+                  <span className="font-medium">Телефон:</span>{' '}
+                  <a
+                    href={`tel:${myTransaction.buyerPhone.replace(/\D/g, '')}`}
+                    className="text-blue-600 underline"
+                  >
+                    {formatPhoneRU(myTransaction.buyerPhone)}
+                  </a>
+                </div>
+                {myTransaction.buyerPlatform === 'MAX' && (
+                  <span className="inline-flex items-center gap-1 text-xs text-emerald-600 whitespace-nowrap">
+                    <Shield className="h-3 w-3" />
+                    подтверждён Max
+                  </span>
+                )}
               </div>
               {myTransaction.buyerPlatform && myTransaction.buyerPlatformHandle && (
                 <div>
