@@ -140,10 +140,7 @@ export default function DashboardPage() {
           {/* Inquiries list */}
           {inquiries.length === 0 ? (
             <div className="text-muted-foreground flex flex-col items-center justify-center py-12 text-center">
-              <p className="text-lg">Нет заявок</p>
-              <p className="mt-2 text-base">
-                Нажмите «Оставить Заявку», чтобы создать первую заявку
-              </p>
+              <p className="text-lg">Нет заявок. Оставьте первую!</p>
             </div>
           ) : (
             <AnimatedList

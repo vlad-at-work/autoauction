@@ -38,7 +38,7 @@ export async function checkBuyerExists(
       throw new Error(`Не удалось проверить покупателя: ${res.status} ${errorText}`);
     }
 
-    const data = (await res.json()) as { id: string };
+    const data = (await res.json()) as { id: string; phone?: string; phoneVerified?: boolean };
     console.log('[checkBuyerExists] Buyer found:', data.id);
     return { exists: true, data };
   } catch (error) {

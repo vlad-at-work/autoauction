@@ -10,7 +10,8 @@ export type NotificationContext =
   | 'offer' // Link to specific offer
   | 'transaction' // Link to accepted transaction
   | 'accepted' // Link to accepted offer (dealer notification)
-  | 'dashboard'; // Link to main dashboard
+  | 'dashboard' // Link to main dashboard
+  | 'form'; // Link to new inquiry form
 
 /**
  * Parse startapp parameter in the mini-app
@@ -46,6 +47,7 @@ export function parseStartParam(param?: string): {
     'transaction',
     'accepted',
     'dashboard',
+    'form',
   ];
 
   if (!validContexts.includes(context)) {
@@ -80,6 +82,8 @@ export function getInternalPath(context: NotificationContext, resourceId?: strin
       return resourceId ? `/app/dashboard?transaction=${resourceId}` : '/app/dashboard';
     case 'dashboard':
       return '/app/dashboard';
+    case 'form':
+      return '/app/form?new=1';
     default:
       return '/app/dashboard';
   }

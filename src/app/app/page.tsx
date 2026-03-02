@@ -1,6 +1,6 @@
 'use client';
 
-import { Loader2 } from 'lucide-react';
+import { Lock, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -8,7 +8,7 @@ import { checkBuyerExists } from '@/lib/api/buyers';
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 import { parseStartParam } from '@/lib/deeplinks';
 
-type LoadingState = 'loading' | 'checking' | 'redirect' | 'error';
+type LoadingState = 'loading' | 'checking' | 'redirect' | 'phone_required' | 'error';
 
 export default function MiniAppHomePage() {
   const router = useRouter();
@@ -66,11 +66,17 @@ export default function MiniAppHomePage() {
             );
 
             const checkPromise = checkBuyerExists(platformUserId, platform, initData);
-            const { exists } = await Promise.race([checkPromise, timeoutPromise]);
+            const { exists, data } = await Promise.race([checkPromise, timeoutPromise]);
 
-            console.log('[/app] Buyer exists:', exists);
+            console.log('[/app] Buyer exists:', exists, 'phoneVerified:', data?.phoneVerified);
 
             if (cancelled) return;
+
+            // MAX-only gate: require phone verification before entering the app
+            if (platform === 'max' && (!exists || !data?.phoneVerified)) {
+              setLoadingState('phone_required');
+              return;
+            }
 
             setLoadingState('redirect');
 
@@ -108,6 +114,12 @@ export default function MiniAppHomePage() {
               if (context === 'dashboard') {
                 console.log('[/app] Navigating to dashboard');
                 router.replace('/app/dashboard');
+                return;
+              }
+
+              if (context === 'form') {
+                console.log('[/app] Navigating to form');
+                router.replace('/app/form?new=1');
                 return;
               }
             }
@@ -153,6 +165,19 @@ export default function MiniAppHomePage() {
       cancelled = true;
     };
   }, [router]);
+
+  if (loadingState === 'phone_required') {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center px-6">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <Lock className="text-muted-foreground size-12" />
+          <p className="text-base font-medium">
+            Безопасно подтвердите ваш номер в чате с ботом чтобы оставить заявку
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center px-4">

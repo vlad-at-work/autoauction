@@ -195,8 +195,21 @@ function MiniAppInquiryFormPageInner() {
           },
         });
 
+        // MAX-only gate: if buyer not found or phone not verified, send back to entry point
+        if (platform === 'max' && (res.status === 404 || res.status === 403)) {
+          router.replace('/app');
+          return;
+        }
+
         if (res.ok) {
           const data = (await res.json()) as { phone?: string; phoneVerified?: boolean };
+
+          // MAX-only gate: phone must be verified to access the form
+          if (platform === 'max' && !data.phoneVerified) {
+            router.replace('/app');
+            return;
+          }
+
           if (data.phone && data.phoneVerified) {
             form.setValue('phone', data.phone, { shouldValidate: true });
             setVerifiedPhone(data.phone);
@@ -208,7 +221,7 @@ function MiniAppInquiryFormPageInner() {
     };
 
     fetchBuyerData();
-  }, [ready, form]);
+  }, [ready, form, router]);
 
   const submodels = useMemo(() => {
     if (!watchedModel) return [];

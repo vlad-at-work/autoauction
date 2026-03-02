@@ -109,27 +109,13 @@ export const POST = withLogging('webhooks/max', async (request: Request) => {
           'dealer'
         );
       } else {
-        // Customer bot: send welcome with request_contact + open_app buttons
+        // Customer bot: send welcome with request_contact only (app locked until phone verified)
         log.info({ ...logContext }, '[Webhook/MAX] Sending customer welcome with request_contact');
-        const customerBotName =
-          process.env.MAX_BOT_NAME || process.env.NEXT_PUBLIC_MAX_BOT_NAME || '';
 
         await sendMaxMessage(
           Number(userId),
-          `👋 Добро пожаловать в Свои Авто, ${firstName}!\n\n📱 Поделитесь номером телефона — тогда не придётся вводить его вручную при создании заявки.\n\nИли сразу создайте заявку:`,
-          [
-            // Row 1: request_contact button
-            [{ type: 'request_contact', text: '📱 Поделиться номером' }],
-            // Row 2: open_app button
-            [
-              {
-                type: 'open_app',
-                text: 'Создать заявку',
-                web_app: customerBotName,
-                payload: 'inquiry',
-              },
-            ],
-          ],
+          `Пожалуйста, подтвердите ваш номер телефона чтобы оставить заявку. Ваша информация передастся только выбранному вами дилеру.`,
+          [[{ type: 'request_contact', text: '📱 Поделиться номером' }]],
           'customer'
         );
       }
@@ -241,14 +227,16 @@ export const POST = withLogging('webhooks/max', async (request: Request) => {
 
             await sendMaxMessage(
               Number(userId),
-              `✅ Номер телефона сохранён: +${normalizedPhone}\n\nТеперь при создании заявки телефон будет подставляться автоматически.`,
+              `Номер телефона подтвержден, нажмите на кнопку ниже чтобы продолжить:`,
               [
-                {
-                  type: 'open_app',
-                  text: 'Создать заявку',
-                  web_app: customerBotName,
-                  payload: 'inquiry',
-                },
+                [
+                  {
+                    type: 'open_app',
+                    text: 'Создать заявку',
+                    web_app: customerBotName,
+                    payload: 'form',
+                  },
+                ],
               ],
               'customer'
             );
