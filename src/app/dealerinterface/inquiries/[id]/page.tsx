@@ -235,7 +235,7 @@ export default function DealerInquiryPage() {
               <div>
                 <span className="font-medium">Имя:</span> {myTransaction.buyerName}
               </div>
-              <div className="flex items-center gap-2">
+              <div>
                 <div>
                   <span className="font-medium">Телефон:</span>{' '}
                   <a
@@ -246,7 +246,7 @@ export default function DealerInquiryPage() {
                   </a>
                 </div>
                 {myTransaction.buyerPlatform === 'MAX' && (
-                  <span className="inline-flex items-center gap-1 text-xs text-emerald-600 whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1 text-xs text-emerald-600 mt-1">
                     <Shield className="h-3 w-3" />
                     подтверждён Max
                   </span>
