@@ -1,6 +1,6 @@
 'use client';
 
-import { Lock, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -170,7 +170,9 @@ export default function MiniAppHomePage() {
     return (
       <div className="flex min-h-screen w-full items-center justify-center px-6">
         <div className="flex flex-col items-center gap-4 text-center">
-          <Lock className="text-muted-foreground size-12" />
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
+            <span className="text-3xl">📱</span>
+          </div>
           <p className="text-base font-medium">
             Безопасно подтвердите ваш номер в чате с ботом чтобы оставить заявку
           </p>

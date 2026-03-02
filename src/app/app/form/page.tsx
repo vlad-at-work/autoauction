@@ -309,7 +309,7 @@ function MiniAppInquiryFormPageInner() {
             </p>
             <p className="text-muted-foreground text-center text-base">
               {/* <span className="font-bold"> */}
-              Мы храним ваши данные на серверах в РФ в соответствии с законодательством (152‑ФЗ)
+              Мы храним ваши данные в РФ в соответствии с законодательством (152‑ФЗ)
               {/* </span> */}
             </p>
           </div>
