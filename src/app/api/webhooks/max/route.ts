@@ -138,18 +138,40 @@ export const POST = withLogging('webhooks/max', async (request: Request) => {
     // Handle contact sharing (message_created with contact attachment)
     if (updateType === 'message_created' && botType === 'customer') {
       const message = update.message as Record<string, unknown> | undefined;
-      const body = message?.body as Record<string, unknown> | undefined;
-      const attachments = (body?.attachments as Array<Record<string, unknown>>) || [];
+      // Contact shares arrive at message.attachments (not message.body.attachments)
+      const directAttachments = (message?.attachments as Array<Record<string, unknown>>) ?? [];
+      const bodyAttachments =
+        ((message?.body as Record<string, unknown>)?.attachments as Array<
+          Record<string, unknown>
+        >) ?? [];
+      const allAttachments = directAttachments.length > 0 ? directAttachments : bodyAttachments;
+      const contactAttachment = allAttachments.find((att) => att.type === 'contact');
 
-      // Look for contact attachment
-      const contactAttachment = attachments.find((att) => att.type === 'contact');
+      log.info(
+        {
+          ...logContext,
+          directAttachmentCount: directAttachments.length,
+          directAttachmentTypes: directAttachments.map((a) => a.type),
+          bodyAttachmentCount: bodyAttachments.length,
+          bodyAttachmentTypes: bodyAttachments.map((a) => a.type),
+          contactFound: !!contactAttachment,
+        },
+        '[Webhook/MAX] message_created: attachments'
+      );
 
       if (contactAttachment && userId) {
         const payload = contactAttachment.payload as Record<string, unknown> | undefined;
         const phone = payload?.phone as string | undefined;
 
+        log.info({ ...logContext, rawPhone: phone ?? null }, '[Webhook/MAX] raw phone');
+
         if (phone) {
           const normalizedPhone = normalizePhone(phone);
+
+          log.info(
+            { ...logContext, normalizedPhone: normalizedPhone ?? null },
+            '[Webhook/MAX] normalized phone'
+          );
 
           if (normalizedPhone) {
             // Check if buyer already has this phone verified (dedup guard for duplicate subscriptions)
@@ -160,13 +182,10 @@ export const POST = withLogging('webhooks/max', async (request: Request) => {
             const alreadySaved =
               existingBuyer?.phoneVerified && existingBuyer.phone === normalizedPhone;
 
-            log.info(
-              { ...logContext, phone: normalizedPhone, alreadySaved },
-              '[Webhook/MAX] Contact shared, updating buyer'
-            );
+            log.info({ ...logContext, alreadySaved }, '[Webhook/MAX] dedup check');
 
             // Upsert buyer with phone and mark as verified
-            await prisma.buyer.upsert({
+            const upsertedBuyer = await prisma.buyer.upsert({
               where: {
                 platform_platformUserId: {
                   platform: 'MAX',
@@ -176,7 +195,7 @@ export const POST = withLogging('webhooks/max', async (request: Request) => {
               update: {
                 phone: normalizedPhone,
                 phoneVerified: true,
-                platformChatId: String(userId), // Ensure we have chat ID for notifications
+                platformChatId: String(userId),
               },
               create: {
                 platform: 'MAX',
@@ -185,10 +204,17 @@ export const POST = withLogging('webhooks/max', async (request: Request) => {
                 phone: normalizedPhone,
                 phoneVerified: true,
               },
+              select: { id: true },
             });
+
+            log.info({ ...logContext, buyerId: upsertedBuyer.id }, '[Webhook/MAX] buyer upserted');
 
             // Send confirmation only once (guard against duplicate subscription delivery)
             if (alreadySaved) {
+              log.info(
+                { ...logContext },
+                '[Webhook/MAX] duplicate delivery, skipping confirmation'
+              );
               return NextResponse.json({ ok: true });
             }
 
