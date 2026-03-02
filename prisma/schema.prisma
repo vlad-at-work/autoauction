@@ -20,6 +20,10 @@ model Buyer {
   platformUserName String?
   platformHandle   String?  // @username handle on the platform
 
+  // Phone verification via request_contact
+  phone            String?
+  phoneVerified    Boolean  @default(false)
+
   // Inquiry limits: 2 per month, resets every 15 days
   inquiriesUsedThisMonth Int      @default(0)
   inquiryLimitResetAt    DateTime @default(now())

@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CheckCircle2, Loader2 } from 'lucide-react';
+import { CheckCircle2, Loader2, Shield } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -55,6 +55,7 @@ function MiniAppInquiryFormPageInner() {
 
   const [submitState, setSubmitState] = useState<SubmitState>({ status: 'idle' });
   const [ready, setReady] = useState(false);
+  const [verifiedPhone, setVerifiedPhone] = useState<string | null>(null);
 
   const form = useForm<InquiryCreateInput>({
     resolver: zodResolver(inquiryCreateSchema),
@@ -175,6 +176,39 @@ function MiniAppInquiryFormPageInner() {
 
     checkLimits();
   }, [ready, router]);
+
+  // Fetch buyer data to check for verified phone
+  useEffect(() => {
+    if (!ready) return;
+
+    const fetchBuyerData = async () => {
+      const webApp = getWebApp();
+      const platform = detectPlatform();
+      const initData = webApp?.initData;
+
+      if (!initData || !platform) return;
+
+      try {
+        const res = await fetch('/api/buyers/me', {
+          headers: {
+            Authorization: `Bearer ${platform}:customer:${initData}`,
+          },
+        });
+
+        if (res.ok) {
+          const data = (await res.json()) as { phone?: string; phoneVerified?: boolean };
+          if (data.phone && data.phoneVerified) {
+            form.setValue('phone', data.phone, { shouldValidate: true });
+            setVerifiedPhone(data.phone);
+          }
+        }
+      } catch {
+        // Silently fail - phone field will remain editable
+      }
+    };
+
+    fetchBuyerData();
+  }, [ready, form]);
 
   const submodels = useMemo(() => {
     if (!watchedModel) return [];
@@ -302,7 +336,15 @@ function MiniAppInquiryFormPageInner() {
                 orientation="vertical"
                 data-invalid={!!form.formState.errors.phone && !!form.formState.touchedFields.phone}
               >
-                <FieldLabel htmlFor="phone">Телефон</FieldLabel>
+                <FieldLabel htmlFor="phone" className="flex items-center gap-2">
+                  Телефон
+                  {verifiedPhone && (
+                    <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
+                      <Shield className="h-3 w-3" />
+                      Подтверждён
+                    </span>
+                  )}
+                </FieldLabel>
                 <FieldContent>
                   <Input
                     id="phone"
@@ -310,6 +352,8 @@ function MiniAppInquiryFormPageInner() {
                     inputMode="numeric"
                     maxLength={11}
                     placeholder="79991234567"
+                    readOnly={!!verifiedPhone}
+                    className={verifiedPhone ? 'bg-muted' : ''}
                     {...form.register('phone', {
                       onChange: (e) => {
                         e.target.value = e.target.value.replace(/\D/g, '').slice(0, 11);

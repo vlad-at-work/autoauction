@@ -10,17 +10,14 @@ const MAX_API_BASE = 'https://platform-api.max.ru';
 const MAX_BOT_TOKEN = process.env.MAX_BOT_TOKEN || '';
 const MAX_BOT_TOKEN_DEALER = process.env.MAX_BOT_TOKEN_DEALER || '';
 
-export type MaxButton = {
-  type: 'open_app';
-  text: string;
-  web_app?: string | null;
-  payload?: string | null;
-};
+export type MaxButton =
+  | { type: 'open_app'; text: string; web_app?: string | null; payload?: string | null }
+  | { type: 'request_contact'; text: string };
 
 export async function sendMaxMessage(
   userId: number | string,
   text: string,
-  buttons?: MaxButton[],
+  buttons?: MaxButton[] | MaxButton[][],
   botType: 'customer' | 'dealer' = 'customer'
 ): Promise<{ success: boolean; error?: string }> {
   const token = botType === 'dealer' ? MAX_BOT_TOKEN_DEALER : MAX_BOT_TOKEN;
@@ -53,11 +50,17 @@ export async function sendMaxMessage(
     } = { text };
 
     if (buttons && buttons.length > 0) {
+      // Detect if buttons is 1D or 2D array at runtime
+      const is2DArray = Array.isArray(buttons[0]);
+      const buttonRows: MaxButton[][] = is2DArray
+        ? (buttons as MaxButton[][])
+        : [buttons as MaxButton[]];
+
       body.attachments = [
         {
           type: 'inline_keyboard',
           payload: {
-            buttons: [buttons],
+            buttons: buttonRows,
           },
         },
       ];

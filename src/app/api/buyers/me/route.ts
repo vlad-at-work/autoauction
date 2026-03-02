@@ -47,6 +47,8 @@ export const GET = withLogging('buyers/me', async (request: Request) => {
       where: { platform: platformEnum, platformUserId: validation.userId, deletedAt: null },
       select: {
         id: true,
+        phone: true,
+        phoneVerified: true,
       },
     });
 
