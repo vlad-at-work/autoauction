@@ -55,6 +55,7 @@ export async function sendTelegramContactRequest(
       keyboard: [[{ text: buttonText, request_contact: true }]],
       one_time_keyboard: true,
       resize_keyboard: true,
+      is_persistent: true,
     },
   };
 
