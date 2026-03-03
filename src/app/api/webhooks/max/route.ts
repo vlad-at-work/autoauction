@@ -184,13 +184,11 @@ export const POST = withLogging('webhooks/max', async (request: Request) => {
 
             log.info({ ...logContext, buyerId: upsertedBuyer.id }, '[Webhook/MAX] buyer upserted');
 
-            // Send confirmation only once (guard against duplicate subscription delivery)
             if (alreadySaved) {
               log.info(
                 { ...logContext },
-                '[Webhook/MAX] duplicate delivery, skipping confirmation'
+                '[Webhook/MAX] duplicate delivery, sending confirmation anyway'
               );
-              return NextResponse.json({ ok: true });
             }
 
             const customerBotName =

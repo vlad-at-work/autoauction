@@ -176,9 +176,8 @@ export const POST = withLogging('webhooks/telegram', async (request: Request) =>
         if (alreadySaved) {
           log.info(
             { ...logContext },
-            '[Webhook/Telegram] duplicate delivery, skipping confirmation'
+            '[Webhook/Telegram] duplicate delivery, sending confirmation anyway'
           );
-          return NextResponse.json({ ok: true });
         }
 
         await sendTelegramMessage(
