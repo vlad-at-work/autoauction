@@ -1,3 +1,7 @@
+# IMPORTANT
+
+- DO NOT EDIT .env files without permission
+
 # AutoAuction Project Context
 
 ## Package Manager

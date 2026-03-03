@@ -13,6 +13,7 @@ import { isInviteTokenValid } from '@/lib/auth/dealer-invite';
 import { captureError } from '@/lib/hawk';
 import { logger, withLogging } from '@/lib/logger';
 import { normalizePhone } from '@/lib/phone';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
@@ -72,6 +73,16 @@ export const POST = withLogging('webhooks/telegram', async (request: Request) =>
     };
 
     log.info(logContext, '[Webhook/Telegram] Received');
+
+    // Rate limit: 60 requests per minute per bot (using userId as identifier)
+    const rateLimitId = userId
+      ? `telegram_webhook:${botType}:${userId}`
+      : `telegram_webhook:${botType}:ip:${request.headers.get('x-forwarded-for') || 'unknown'}`;
+    const rateLimitResult = checkRateLimit(rateLimitId, 60, 60 * 1000);
+    if (!rateLimitResult.success) {
+      log.warn({ ...logContext, rateLimitResult }, '[Webhook/Telegram] Rate limited');
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
 
     // Handle /start command
     if (text.startsWith('/start')) {

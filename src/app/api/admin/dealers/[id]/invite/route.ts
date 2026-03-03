@@ -13,6 +13,7 @@ import { prisma } from '@/lib/db';
 import { createInviteTokenData } from '@/lib/auth/dealer-invite';
 import { captureError } from '@/lib/hawk';
 import { logger, withLogging } from '@/lib/logger';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const MAX_BOT_NAME_DEALER =
   process.env.MAX_BOT_NAME_DEALER || process.env.NEXT_PUBLIC_MAX_BOT_NAME_DEALER || '';
@@ -24,6 +25,12 @@ export const POST = withLogging(
   async (request: Request, context: unknown) => {
     try {
       const { id: dealerId } = await (context as { params: Promise<{ id: string }> }).params;
+
+      // Rate limit: 30 requests per minute per dealer
+      const rateLimitResult = checkRateLimit(`dealer_invite:${dealerId}`, 30, 60 * 1000);
+      if (!rateLimitResult.success) {
+        return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
+      }
 
       // Find dealer
       const dealer = await prisma.dealer.findUnique({

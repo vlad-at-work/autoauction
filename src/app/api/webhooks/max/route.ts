@@ -11,6 +11,7 @@ import { isInviteTokenValid } from '@/lib/auth/dealer-invite';
 import { captureError } from '@/lib/hawk';
 import { logger, withLogging } from '@/lib/logger';
 import { normalizePhone } from '@/lib/phone';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 type BotType = 'customer' | 'dealer';
 
@@ -48,6 +49,16 @@ export const POST = withLogging('webhooks/max', async (request: Request) => {
     };
 
     log.info(logContext, '[Webhook/MAX] Received');
+
+    // Rate limit: 60 requests per minute per bot (using userId as identifier)
+    const rateLimitId = userId
+      ? `max_webhook:${botType}:${userId}`
+      : `max_webhook:${botType}:ip:${request.headers.get('x-forwarded-for') || 'unknown'}`;
+    const rateLimitResult = checkRateLimit(rateLimitId, 60, 60 * 1000);
+    if (!rateLimitResult.success) {
+      log.warn({ ...logContext, rateLimitResult }, '[Webhook/MAX] Rate limited');
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
 
     if (updateType === 'bot_started') {
       if (!userId) {

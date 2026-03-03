@@ -67,7 +67,7 @@ register_max_webhook() {
   local token=$1
   local bot_type=$2
   local url="${WEBHOOK_URL}/api/webhooks/max?bot=${bot_type}"
-  
+
   echo -e "${BLUE}Registering MAX ${bot_type} bot...${NC}"
   echo "  URL: $url"
   

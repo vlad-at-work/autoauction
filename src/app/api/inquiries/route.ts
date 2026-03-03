@@ -12,6 +12,7 @@ import {
 } from '@/lib/notifications';
 import { captureError } from '@/lib/hawk';
 import { logger, withLogging } from '@/lib/logger';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const MAX_INQUIRIES_PER_MONTH = 2;
 const INQUIRY_LIMIT_RESET_DAYS = 15;
@@ -70,6 +71,20 @@ export const POST = withLogging('inquiries', async (request: Request) => {
     }
     const authUserId = validation.userId;
     const authPlatform = validation.platform;
+
+    // Rate limit: 10 requests per minute per user
+    const rateLimitResult = checkRateLimit(`inquiries:${authUserId}`, 10, 60 * 1000);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Слишком много запросов. Попробуйте позже.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000)),
+          },
+        }
+      );
+    }
 
     const body = await request.json();
     const parsed = inquiryCreateSchema.safeParse(body);
