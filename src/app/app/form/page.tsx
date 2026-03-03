@@ -195,8 +195,11 @@ function MiniAppInquiryFormPageInner() {
           },
         });
 
-        // MAX-only gate: if buyer not found or phone not verified, send back to entry point
-        if (platform === 'max' && (res.status === 404 || res.status === 403)) {
+        // Gate: if buyer not found or phone not verified, send back to entry point (MAX and Telegram)
+        if (
+          (platform === 'max' || platform === 'telegram') &&
+          (res.status === 404 || res.status === 403)
+        ) {
           router.replace('/app');
           return;
         }
@@ -204,8 +207,8 @@ function MiniAppInquiryFormPageInner() {
         if (res.ok) {
           const data = (await res.json()) as { phone?: string; phoneVerified?: boolean };
 
-          // MAX-only gate: phone must be verified to access the form
-          if (platform === 'max' && !data.phoneVerified) {
+          // Gate: phone must be verified to access the form (MAX and Telegram)
+          if ((platform === 'max' || platform === 'telegram') && !data.phoneVerified) {
             router.replace('/app');
             return;
           }

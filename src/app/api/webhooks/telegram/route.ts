@@ -7,11 +7,12 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
-import { sendTelegramMessage } from '@/lib/notifications/telegram';
+import { sendTelegramMessage, sendTelegramContactRequest } from '@/lib/notifications/telegram';
 import { prisma } from '@/lib/db';
 import { isInviteTokenValid } from '@/lib/auth/dealer-invite';
 import { captureError } from '@/lib/hawk';
 import { logger, withLogging } from '@/lib/logger';
+import { normalizePhone } from '@/lib/phone';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
@@ -39,9 +40,15 @@ export const POST = withLogging('webhooks/telegram', async (request: Request) =>
     const message = update.message as
       | {
           message_id: number;
-          from?: { id: number; first_name?: string };
+          from?: { id: number; first_name?: string; username?: string };
           chat?: { id: number };
           text?: string;
+          contact?: {
+            phone_number: string;
+            first_name: string;
+            last_name?: string;
+            user_id?: number;
+          };
         }
       | undefined;
 
@@ -100,18 +107,100 @@ export const POST = withLogging('webhooks/telegram', async (request: Request) =>
           'dealer'
         );
       } else {
-        log.info({ ...logContext }, '[Webhook/Telegram] Sending customer welcome');
+        // Customer bot: send welcome with request_contact (app locked until phone verified)
+        log.info(
+          { ...logContext },
+          '[Webhook/Telegram] Sending customer welcome with request_contact'
+        );
+        await sendTelegramContactRequest(
+          chatId,
+          `👋 Добро пожаловать в Свои Авто, ${firstName}!\n\nПожалуйста, поделитесь вашим номером телефона, нажав кнопку ниже, перед тем как оставить заявку.\n\nВаши данные скрыты и передаются только выбранному вами дилеру.`,
+          '📱 Поделиться номером',
+          'customer'
+        );
+      }
+    }
+
+    // Handle contact sharing (Telegram sends message.contact when user taps request_contact button)
+    if (message?.contact && botType === 'customer' && chatId && userId) {
+      const contact = message.contact;
+
+      log.info(
+        { ...logContext, contactUserId: contact.user_id },
+        '[Webhook/Telegram] Contact received'
+      );
+
+      const normalizedPhone = normalizePhone(contact.phone_number);
+
+      log.info(
+        { ...logContext, rawPhone: contact.phone_number, normalizedPhone },
+        '[Webhook/Telegram] Phone normalize'
+      );
+
+      if (normalizedPhone) {
+        // Dedup guard: check if buyer already has this phone verified
+        const existingBuyer = await prisma.buyer.findFirst({
+          where: { platform: 'TELEGRAM', platformUserId: String(userId) },
+          select: { phone: true, phoneVerified: true },
+        });
+        const alreadySaved =
+          existingBuyer?.phoneVerified && existingBuyer.phone === normalizedPhone;
+
+        log.info({ ...logContext, alreadySaved }, '[Webhook/Telegram] dedup check');
+
+        // Upsert buyer with verified phone
+        const upsertedBuyer = await prisma.buyer.upsert({
+          where: {
+            platform_platformUserId: {
+              platform: 'TELEGRAM',
+              platformUserId: String(userId),
+            },
+          },
+          update: {
+            phone: normalizedPhone,
+            phoneVerified: true,
+            platformChatId: String(chatId),
+          },
+          create: {
+            platform: 'TELEGRAM',
+            platformUserId: String(userId),
+            platformChatId: String(chatId),
+            phone: normalizedPhone,
+            phoneVerified: true,
+          },
+          select: { id: true },
+        });
+
+        log.info({ ...logContext, buyerId: upsertedBuyer.id }, '[Webhook/Telegram] buyer upserted');
+
+        if (alreadySaved) {
+          log.info(
+            { ...logContext },
+            '[Webhook/Telegram] duplicate delivery, skipping confirmation'
+          );
+          return NextResponse.json({ ok: true });
+        }
+
         await sendTelegramMessage(
           chatId,
-          `👋 Добро пожаловать в Свои Авто, ${firstName}!\n\nНажмите кнопку ниже, чтобы создать заявку.`,
-          [
-            {
-              text: 'Создать заявку',
-              web_app: {
-                url: `${APP_URL}/app?startapp=inquiry`,
-              },
-            },
-          ],
+          'Отлично! Теперь нажмите на кнопку ниже, чтобы начать:',
+          [{ text: 'Создать заявку', web_app: { url: `${APP_URL}/app?startapp=inquiry` } }],
+          'customer'
+        );
+
+        log.info(
+          { ...logContext, phone: normalizedPhone },
+          '[Webhook/Telegram] Contact shared confirmation sent'
+        );
+      } else {
+        log.warn(
+          { ...logContext, rawPhone: contact.phone_number },
+          '[Webhook/Telegram] Failed to normalize phone'
+        );
+        await sendTelegramMessage(
+          chatId,
+          'Не удалось распознать номер телефона. Пожалуйста, попробуйте ещё раз.',
+          undefined,
           'customer'
         );
       }

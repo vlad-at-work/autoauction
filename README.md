@@ -118,18 +118,23 @@ Do not commit secrets; this list is names/meaning only.
 
 ### Buyer flow (create inquiry → offers → accept)
 
-1. Buyer opens `/app` in Telegram/MAX WebView.
-2. App validates WebApp `initData` server-side and routes to:
+1. **Phone verification gate** (both MAX and Telegram):
+   - Buyer opens the customer bot for the first time → receives a welcome message with a native **"Share phone"** button (`request_contact`).
+   - Buyer taps the button → platform sends contact to the webhook → phone is normalized and stored on the `Buyer` record (`phoneVerified: true`).
+   - Bot replies with a "Create inquiry" button that opens the mini-app.
+   - If buyer opens `/app` without a verified phone, they see a gate screen instructing them to confirm their number in the bot chat first.
+2. Buyer opens `/app` in Telegram/MAX WebView (phone already verified).
+3. App validates WebApp `initData` server-side and routes to:
    - `/app/form` (first time) or
    - `/app/dashboard` (existing buyer).
-3. Buyer submits inquiry → `POST /api/inquiries`
+4. Buyer submits inquiry → `POST /api/inquiries`
    - Upserts buyer, checks rolling limit, creates inquiry with 24h expiry.
    - Sends buyer confirmation notification.
    - Notifies all **active + claimed** dealers (platform bound) via dealer bots.
-4. Dealer submits offer(s) → `POST /api/dealerinterface/offer`
+5. Dealer submits offer(s) → `POST /api/dealerinterface/offer`
    - Cap: 5 offers per dealer per inquiry.
    - Buyer gets a notification with a button to open offers (`/app?startapp=inquiry:<id>`).
-5. Buyer accepts an offer → `POST /api/transactions`
+6. Buyer accepts an offer → `POST /api/transactions`
    - Cap: 3 accepted offers per inquiry.
    - Creates transaction with immutable snapshots + reveals buyer contact data to the dealer.
    - Notifies dealer (accepted) via dealer bot with "Open inquiry" button.
@@ -318,10 +323,12 @@ Authorization: Bearer mock:<platform>:<botType>:<userId>
 
 ### Phone 2 (Buyer)
 
-1. Open customer bot → open mini-app → create inquiry.
-2. Confirm inquiry appears on buyer dashboard and offer notifications arrive.
-3. Open offers from notification (or dashboard) → accept best offer.
-4. Confirm UI updates: accepted offer marked, other offers disabled for that dealer, acceptance counter increments.
+1. Open customer bot → tap **"Share phone"** button → confirm in native dialog.
+2. Bot replies with "Create inquiry" button → tap to open mini-app.
+3. Create inquiry in the form (phone field pre-filled and read-only from verified contact).
+4. Confirm inquiry appears on buyer dashboard and offer notifications arrive.
+5. Open offers from notification (or dashboard) → accept best offer.
+6. Confirm UI updates: accepted offer marked, other offers disabled for that dealer, acceptance counter increments.
 
 ## Troubleshooting
 
@@ -329,6 +336,7 @@ Authorization: Bearer mock:<platform>:<botType>:<userId>
 - Dealer sees "needs invite": there are multiple unclaimed dealers; use invite link from admin dealer detail.
 - Buttons open wrong domain: set `NEXT_PUBLIC_APP_URL` to your production domain.
 - Notifications missing: ensure dealer is claimed (`platform`, `platformUserId` set) and bot tokens are configured.
+- Buyer sees "confirm your number in bot chat": buyer needs to go to the customer bot chat and share their phone via the `request_contact` button. Existing users (before phone verification was added) must type `/start` in the bot chat to trigger the button again.
 
 ---
 

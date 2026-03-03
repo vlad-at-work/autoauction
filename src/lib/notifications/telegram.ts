@@ -17,6 +17,71 @@ export type TelegramButton = {
   web_app: { url: string };
 };
 
+/**
+ * Send a message with a ReplyKeyboardMarkup request_contact button.
+ * Used to request the user's phone number (mirrors MAX request_contact flow).
+ */
+export async function sendTelegramContactRequest(
+  chatId: number | string,
+  text: string,
+  buttonText: string = '📱 Поделиться номером',
+  botType: 'customer' | 'dealer' = 'customer'
+): Promise<{ success: boolean; error?: string }> {
+  const token = botType === 'dealer' ? TG_BOT_TOKEN_DEALER : TG_BOT_TOKEN;
+  const logContext = {
+    platform: 'Telegram',
+    botType,
+    chatId: String(chatId),
+    action: 'contact_request',
+  };
+
+  log.info(logContext, '[Telegram] Sending contact request');
+
+  if (!token) {
+    log.warn(
+      { ...logContext, reason: 'token_missing' },
+      '[Telegram] Send failed: bot token not configured'
+    );
+    return { success: false, error: 'Bot token not configured' };
+  }
+
+  const url = `${TG_API_BASE}/bot${token}/sendMessage`;
+
+  const body = {
+    chat_id: chatId,
+    text,
+    parse_mode: 'HTML' as const,
+    reply_markup: {
+      keyboard: [[{ text: buttonText, request_contact: true }]],
+      one_time_keyboard: true,
+      resize_keyboard: true,
+    },
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      log.error(
+        { ...logContext, status: response.status, errorText },
+        '[Telegram] Contact request send failed: HTTP error'
+      );
+      return { success: false, error: `HTTP ${response.status}: ${errorText}` };
+    }
+
+    log.info({ ...logContext, status: response.status }, '[Telegram] Contact request sent');
+    return { success: true };
+  } catch (err) {
+    log.error({ ...logContext, err: String(err) }, '[Telegram] Contact request send failed');
+    return { success: false, error: String(err) };
+  }
+}
+
 export async function sendTelegramMessage(
   chatId: number | string,
   text: string,

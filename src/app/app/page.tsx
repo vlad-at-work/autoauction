@@ -72,8 +72,11 @@ export default function MiniAppHomePage() {
 
             if (cancelled) return;
 
-            // MAX-only gate: require phone verification before entering the app
-            if (platform === 'max' && (!exists || !data?.phoneVerified)) {
+            // Gate: require phone verification before entering the app (MAX and Telegram)
+            if (
+              (platform === 'max' || platform === 'telegram') &&
+              (!exists || !data?.phoneVerified)
+            ) {
               setLoadingState('phone_required');
               return;
             }
