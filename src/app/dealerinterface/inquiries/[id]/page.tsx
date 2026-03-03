@@ -248,7 +248,13 @@ export default function DealerInquiryPage() {
                 {myTransaction.buyerPlatform === 'MAX' && (
                   <span className="inline-flex items-center gap-1 text-xs text-emerald-600 mt-1">
                     <Shield className="h-3 w-3" />
-                    подтверждён Max
+                    номер подтвержден в Max
+                  </span>
+                )}
+                {myTransaction.buyerPlatform === 'TELEGRAM' && (
+                  <span className="inline-flex items-center gap-1 text-xs text-emerald-600 mt-1">
+                    <Shield className="h-3 w-3" />
+                    номер подтвержден в Telegram
                   </span>
                 )}
               </div>

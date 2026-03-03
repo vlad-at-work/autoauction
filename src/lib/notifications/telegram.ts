@@ -24,7 +24,7 @@ export type TelegramButton = {
 export async function sendTelegramContactRequest(
   chatId: number | string,
   text: string,
-  buttonText: string = '📱 Поделиться номером',
+  buttonText: string = '📱 Подтвердить номер',
   botType: 'customer' | 'dealer' = 'customer'
 ): Promise<{ success: boolean; error?: string }> {
   const token = botType === 'dealer' ? TG_BOT_TOKEN_DEALER : TG_BOT_TOKEN;
