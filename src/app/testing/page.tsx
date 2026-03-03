@@ -63,17 +63,20 @@ export default function TestingPage() {
             <h2 className="text-xl font-semibold">1) Что исправлено (февраль 2025)</h2>
 
             <div className="rounded-lg border bg-green-50/50 p-4">
-              <h3 className="font-medium text-green-800">✅ Проблема 1: Окно авторизации Vercel</h3>
+              <h3 className="font-medium text-green-800">
+                ✅ Проблема 1: Окно авторизации (история Vercel)
+              </h3>
               <p className="mt-1 text-sm text-green-700">
                 <strong>Проблема:</strong> При открытии мини-приложения через кнопку в MAX
-                появлялось окно авторизации Vercel (Google/GitHub OAuth).
+                появлялось окно авторизации Vercel (Google/GitHub OAuth). Это было когда приложение
+                хостилось на Vercel.
               </p>
               <p className="mt-1 text-sm text-green-700">
                 <strong>Причина:</strong> Включена защита деплоя (Deployment Protection) в Vercel.
               </p>
               <p className="mt-1 text-sm text-green-700">
-                <strong>Решение:</strong> Защита деплоя отключена. Теперь приложение открывается
-                напрямую.
+                <strong>Решение:</strong> Защита деплоя отключена. Приложение теперь на VPS в
+                reg.ru, эта проблема больше не актуальна.
               </p>
             </div>
 
@@ -399,10 +402,12 @@ export default function TestingPage() {
               </div>
 
               <div className="rounded-lg border p-4">
-                <h3 className="font-medium">Кнопки не открывают приложение</h3>
+                <h3 className="font-medium">Кнопки не открывают приложение (история Vercel)</h3>
                 <ul className="mt-1 list-disc pl-5 text-sm">
-                  <li>Проверьте, что переменная NEXT_PUBLIC_APP_URL установлена в Vercel</li>
-                  <li>Убедитесь, что защита деплоя отключена</li>
+                  <li>
+                    Проверьте, что переменная NEXT_PUBLIC_APP_URL установлена (сейчас: VPS reg.ru)
+                  </li>
+                  <li>Эта проблема была актуальна для Vercel — на VPS не требуется</li>
                 </ul>
               </div>
 

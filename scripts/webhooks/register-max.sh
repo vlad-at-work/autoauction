@@ -20,7 +20,7 @@ if [ -z "$WEBHOOK_URL" ]; then
   echo ""
   echo "Examples:"
   echo "  Development: $0 https://abc123.ngrok.io/api/webhooks/max"
-  echo "  Production:  $0 https://autoauction-two.vercel.app/api/webhooks/max"
+  echo "  Production:  $0 https://svoauto.ru/api/webhooks/max"
   exit 1
 fi
 

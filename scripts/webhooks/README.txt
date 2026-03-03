@@ -13,7 +13,7 @@ SETUP
 
 QUICK START
 -----------
-Register production webhooks (Vercel):
+Register production webhooks (VPS reg.ru):
   ./scripts/webhooks/register-all.sh
 
 Register production + development (ngrok):
@@ -55,7 +55,7 @@ IMPORTANT NOTES
 - Only ONE webhook can be active per bot at a time
 - Development webhooks OVERRIDE production
 - Always switch back to production after local testing
-- Vercel production URL: https://autoauction-two.vercel.app
+- Production URL: https://svoauto.ru
 - MAX API docs: https://dev.max.ru/docs-api
 - Telegram API docs: https://core.telegram.org/bots/api#setwebhook
 

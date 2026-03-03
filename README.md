@@ -8,7 +8,7 @@ All legacy docs were moved to `docs/archived_docs/`. This `README.md` is the sin
 
 - Runtime: Bun
 - Framework: Next.js 16 (App Router)
-- DB: PostgreSQL (Neon) via Prisma
+- DB: PostgreSQL (regru cloud) via Prisma
 - Deploy: VPS (regru) via GitHub Actions
 - Bots: Telegram Bot API + MAX Platform API
 

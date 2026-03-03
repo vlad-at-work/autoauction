@@ -30,7 +30,7 @@ export async function sendMaxMessage(
 
   log.info(logContext, '[MAX] Sending message');
 
-  if (!token || token === '<from_vercel>') {
+  if (!token) {
     log.warn(
       { ...logContext, reason: 'token_missing' },
       '[MAX] Send failed: bot token not configured'

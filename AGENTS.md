@@ -58,7 +58,7 @@ Build script is `next build --webpack` — the `--webpack` flag is intentional.
 
 ## Project Overview
 
-Next.js 16 app. Prisma + Neon PostgreSQL. Two bot platforms: MAX (Russian messenger) and Telegram. Two bots per platform: customer bot + dealer bot.
+Next.js 16 app. Prisma + PostgreSQL (regru cloud). Two bot platforms: MAX (Russian messenger) and Telegram. Two bots per platform: customer bot + dealer bot.
 
 ### What Works
 

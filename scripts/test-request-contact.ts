@@ -45,7 +45,7 @@ if (!userId) {
   process.exit(1);
 }
 
-if (!MAX_TOKEN || MAX_TOKEN === '<from_vercel>') {
+if (!MAX_TOKEN) {
   console.error('Error: MAX_BOT_TOKEN not found in .env.local');
   process.exit(1);
 }

@@ -10,8 +10,8 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Production URL (Vercel)
-PROD_URL="https://autoauction-two.vercel.app"
+# Production URL (VPS reg.ru)
+PROD_URL="https://svoauto.ru"
 
 # Development URL (ngrok - optional argument)
 DEV_URL="$1"
@@ -39,7 +39,7 @@ echo ""
 
 # Register Production Webhooks
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  PRODUCTION (Vercel)"
+echo "  PRODUCTION (VPS reg.ru)"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
