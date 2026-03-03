@@ -184,7 +184,7 @@ export const POST = withLogging('webhooks/telegram', async (request: Request) =>
         await sendTelegramMessage(
           chatId,
           'Отлично! Теперь нажмите на кнопку ниже, чтобы начать:',
-          [{ text: 'Создать заявку', web_app: { url: `${APP_URL}/app?startapp=inquiry` } }],
+          [{ text: 'Создать заявку', web_app: { url: `${APP_URL}/app?startapp=form` } }],
           'customer'
         );
 
