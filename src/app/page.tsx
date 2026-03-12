@@ -144,7 +144,8 @@ export default function Home() {
                 2
               </span>
               <p className="font-golos font-medium text-stone-700 text-base md:text-lg leading-relaxed pt-1.5">
-                Мы торгуемся за Вас и собираем предложения от дилеров по Московской области.
+                Мы соберём для вас лучшие и честные предложения от проверенных дилеров Московской
+                области.
               </p>
             </div>
             <div className="flex gap-5 items-start">

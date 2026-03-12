@@ -189,12 +189,12 @@ export function OfferForm({
 
         {/* Additional Comments */}
         <Field orientation="vertical" data-invalid={!!form.formState.errors.additionalComments}>
-          <FieldLabel htmlFor="additionalComments">Дополнительные комментарии</FieldLabel>
+          <FieldLabel htmlFor="additionalComments">Обязательные уточнения</FieldLabel>
           <FieldContent>
             <Textarea
               id="additionalComments"
               disabled={disabled}
-              placeholder="Любая дополнительная информация о предложении"
+              placeholder="Подробная информация о предложении, включая срок действия предложения"
               {...form.register('additionalComments')}
             />
             <FieldError errors={[form.formState.errors.additionalComments]} />
@@ -217,8 +217,12 @@ export function OfferForm({
             <FieldLabel htmlFor="confirmedMatch" className="text-sm font-normal leading-tight">
               Подтверждаю полное совпадение предложения автосалона с выбранной покупателем моделью,
               цветом и другими параметрами. Дополнительно могу предложить альтернативный выгодный
-              вариант
+              вариант. Гарантирую клиенту цену, указанную в предложении без дополнительных
+              &quot;накруток&quot;.
             </FieldLabel>
+            <p className="text-xs text-muted-foreground">
+              Гарантирую, что указанная цена прозрачна и не содержит скрытых наценок.
+            </p>
             <FieldError errors={[form.formState.errors.confirmedMatch]} />
           </div>
         </Field>

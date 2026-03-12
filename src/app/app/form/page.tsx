@@ -308,7 +308,7 @@ function MiniAppInquiryFormPageInner() {
           <div className="flex flex-col items-center gap-2">
             <CardTitle className="text-center text-xl">Заявка на автомобиль</CardTitle>
             <p className="text-muted-foreground text-center text-base">
-              Заполните форму — дилеры увидят запрос в течение 24 часов.
+              Заполните форму - дилеры ответят в течение 24 часов.
             </p>
             <p className="text-muted-foreground text-center text-base">
               {/* <span className="font-bold"> */}
@@ -353,7 +353,7 @@ function MiniAppInquiryFormPageInner() {
                 data-invalid={!!form.formState.errors.phone && !!form.formState.touchedFields.phone}
               >
                 <FieldLabel htmlFor="phone" className="flex items-center gap-2">
-                  Телефон
+                  Подтвержденный аккаунт
                   {verifiedPhone && (
                     <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
                       <Shield className="h-3 w-3" />

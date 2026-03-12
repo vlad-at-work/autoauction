@@ -81,7 +81,7 @@ export function OfferCard({
                 size="sm"
                 className="bg-green-600 hover:bg-green-700 text-white font-medium px-4"
               >
-                Выбрать победителем
+                Посмотреть
               </Button>
             </Link>
           ) : (
