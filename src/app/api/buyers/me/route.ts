@@ -34,6 +34,17 @@ export const GET = withLogging('buyers/me', async (request: Request) => {
 
     const platformEnum = validation.platform === 'max' ? 'MAX' : 'TELEGRAM';
 
+    // DEBUG: Log the query parameters
+    log.info(
+      {
+        platformEnum,
+        validationUserId: validation.userId,
+        platformUserIdParam,
+        queryPlatform: platformParam,
+      },
+      '[buyers/me] Querying buyer with params'
+    );
+
     // Mutual exclusivity check: dealers cannot be buyers
     const isDealer = await isPlatformUserDealer(platformEnum, validation.userId);
     if (isDealer) {
@@ -43,6 +54,16 @@ export const GET = withLogging('buyers/me', async (request: Request) => {
       );
     }
 
+    // First, check if ANY buyer exists with this platformUserId (regardless of platform)
+    const anyBuyerWithUserId = await prisma.buyer.findFirst({
+      where: { platformUserId: validation.userId },
+      select: { id: true, platform: true, phone: true, phoneVerified: true, deletedAt: true },
+    });
+    log.info(
+      { anyBuyerWithUserId },
+      '[buyers/me] Check for buyer with same platformUserId across platforms'
+    );
+
     const buyer = await prisma.buyer.findFirst({
       where: { platform: platformEnum, platformUserId: validation.userId, deletedAt: null },
       select: {
@@ -51,6 +72,8 @@ export const GET = withLogging('buyers/me', async (request: Request) => {
         phoneVerified: true,
       },
     });
+
+    log.info({ buyerFound: !!buyer, buyer }, '[buyers/me] Buyer query result');
 
     if (!buyer) {
       return NextResponse.json({ error: 'Покупатель не найден' }, { status: 404 });
