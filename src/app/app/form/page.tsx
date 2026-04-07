@@ -73,7 +73,8 @@ function MiniAppInquiryFormPageInner() {
       comment: undefined,
       consent: false,
     },
-    mode: 'onBlur',
+    mode: 'onChange',
+    reValidateMode: 'onChange',
   });
 
   const watched = useWatch({ control: form.control });
@@ -120,6 +121,19 @@ function MiniAppInquiryFormPageInner() {
 
       // Mark as ready once we have user data or after timeout
       if ((platform && platformUserId) || attempt >= 40) {
+        form
+          .trigger([
+            'platform',
+            'platformUserId',
+            'name',
+            'phone',
+            'model',
+            'submodel',
+            'transmission',
+            'color',
+            'consent',
+          ])
+          .catch(() => {});
         setReady(true);
         return;
       }
@@ -215,6 +229,7 @@ function MiniAppInquiryFormPageInner() {
 
           if (data.phone && data.phoneVerified) {
             form.setValue('phone', data.phone, { shouldValidate: true });
+            form.trigger('phone').catch(() => {});
             setVerifiedPhone(data.phone);
           }
         }
@@ -236,6 +251,7 @@ function MiniAppInquiryFormPageInner() {
     const current = watchedSubmodel ?? form.getValues('submodel');
     if (!submodels.includes(current as never)) {
       form.setValue('submodel', submodels[0], { shouldValidate: true });
+      form.trigger(['model', 'submodel']).catch(() => {});
     }
   }, [form, submodels, watchedSubmodel, watchedModel]);
 
@@ -291,6 +307,41 @@ function MiniAppInquiryFormPageInner() {
       hapticNotification('error');
     }
   }
+
+  const blockedReason = useMemo(() => {
+    if (submitState.status === 'submitting') return 'Отправляем заявку…';
+    if (submitState.status === 'success') return 'Заявка уже отправлена';
+    if (form.formState.isValid) return null;
+
+    if (!watchedConsent) return 'Подтвердите согласие на обработку данных';
+    if (!watchedModel) return 'Выберите модель автомобиля';
+    if (!watchedSubmodel) return 'Уточните модель';
+    if (!watchedTransmission) return 'Выберите коробку передач';
+    if (!watchedColor) return 'Выберите цвет';
+    if (!watched?.name || watched.name.trim().length < 2) return 'Введите имя (минимум 2 символа)';
+
+    const rawPhone = watched?.phone ?? '';
+    if (!/^\d{11}$/.test(rawPhone)) return 'Введите корректный номер: 11 цифр';
+
+    if (!watched?.platform || !watched?.platformUserId)
+      return 'Подождите, загружаем данные приложения';
+
+    return 'Проверьте поля формы';
+  }, [
+    form.formState.isValid,
+    submitState.status,
+    watched,
+    watchedColor,
+    watchedConsent,
+    watchedModel,
+    watchedSubmodel,
+    watchedTransmission,
+  ]);
+
+  const isSubmitDisabled =
+    submitState.status === 'submitting' ||
+    submitState.status === 'success' ||
+    !form.formState.isValid;
 
   if (!ready) {
     return (
@@ -622,12 +673,8 @@ function MiniAppInquiryFormPageInner() {
               <Button
                 type="submit"
                 size="lg"
-                className="text-base"
-                disabled={
-                  submitState.status === 'submitting' ||
-                  submitState.status === 'success' ||
-                  !form.formState.isValid
-                }
+                className="min-h-14 text-base font-semibold"
+                disabled={isSubmitDisabled}
               >
                 {submitState.status === 'submitting' ? (
                   'Отправляем…'
@@ -640,6 +687,10 @@ function MiniAppInquiryFormPageInner() {
                   'Отправить'
                 )}
               </Button>
+
+              {isSubmitDisabled && blockedReason && (
+                <p className="text-muted-foreground text-sm">{blockedReason}</p>
+              )}
 
               <Button asChild variant="outline" size="lg" type="button" className="text-base">
                 <Link href="/app">Назад</Link>

@@ -1,8 +1,8 @@
-# MAX/TG Rollback-First Hardening TODO
+# Buyer Form Reliability TODO
 
-- [x] Add feature-flagged strict webhook validation to MAX route (`WEBHOOK_STRICT_MODE=true` enables checks; default behavior unchanged)
-- [x] Add feature-flagged strict webhook validation to Telegram route (`WEBHOOK_STRICT_MODE=true` enables checks; default behavior unchanged)
-- [x] Add safe structured warning logs for rejected payloads (no secrets)
-- [ ] Run critical-path curl tests with strict mode OFF (behavior parity)
-- [ ] Run malformed payload curl tests with strict mode ON
-- [ ] Provide rollback commands/procedure for immediate disable via env flag
+- [x] Switch form validation to `onChange` to prevent stale disabled submit state
+- [x] Trigger validation after async auto-fill fields and submodel auto-selection
+- [x] Add submit blocked reason hint for better UX/debuggability
+- [x] Increase submit button touch target size
+- [ ] Run unit/build checks
+- [ ] Commit and push for rollback-safe deploy
