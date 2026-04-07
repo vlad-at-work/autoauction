@@ -21,8 +21,38 @@ type BotType = 'customer' | 'dealer';
 
 const log = logger.child({ route: 'webhooks/telegram' });
 
+function isStrictWebhookModeEnabled(): boolean {
+  return process.env.WEBHOOK_STRICT_MODE === 'true';
+}
+
+function validateWebhookRequestShape(
+  request: Request
+): { ok: true } | { ok: false; reason: string } {
+  const contentType = request.headers.get('content-type') || '';
+  if (!contentType.toLowerCase().includes('application/json')) {
+    return { ok: false, reason: 'invalid_content_type' };
+  }
+
+  const contentLengthHeader = request.headers.get('content-length');
+  if (contentLengthHeader) {
+    const contentLength = Number(contentLengthHeader);
+    if (!Number.isNaN(contentLength) && contentLength > 256 * 1024) {
+      return { ok: false, reason: 'payload_too_large' };
+    }
+  }
+
+  return { ok: true };
+}
+
 export const POST = withLogging('webhooks/telegram', async (request: Request) => {
   try {
+    if (isStrictWebhookModeEnabled()) {
+      const validation = validateWebhookRequestShape(request);
+      if (!validation.ok) {
+        log.warn({ reason: validation.reason }, '[Webhook/Telegram] Rejected in strict mode');
+        return NextResponse.json({ error: 'Bad request' }, { status: 400 });
+      }
+    }
     const url = new URL(request.url);
     const botParam = url.searchParams.get('bot');
     const botType: BotType = botParam === 'dealer' ? 'dealer' : 'customer';
@@ -37,6 +67,11 @@ export const POST = withLogging('webhooks/telegram', async (request: Request) =>
     }
 
     const update = (await request.json()) as Record<string, unknown>;
+
+    if (isStrictWebhookModeEnabled() && !('message' in update)) {
+      log.warn('[Webhook/Telegram] Missing message in strict mode');
+      return NextResponse.json({ error: 'Bad request' }, { status: 400 });
+    }
 
     const message = update.message as
       | {

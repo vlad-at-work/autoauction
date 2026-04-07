@@ -17,14 +17,49 @@ type BotType = 'customer' | 'dealer';
 
 const log = logger.child({ route: 'webhooks/max' });
 
+function isStrictWebhookModeEnabled(): boolean {
+  return process.env.WEBHOOK_STRICT_MODE === 'true';
+}
+
+function validateWebhookRequestShape(
+  request: Request
+): { ok: true } | { ok: false; reason: string } {
+  const contentType = request.headers.get('content-type') || '';
+  if (!contentType.toLowerCase().includes('application/json')) {
+    return { ok: false, reason: 'invalid_content_type' };
+  }
+
+  const contentLengthHeader = request.headers.get('content-length');
+  if (contentLengthHeader) {
+    const contentLength = Number(contentLengthHeader);
+    if (!Number.isNaN(contentLength) && contentLength > 256 * 1024) {
+      return { ok: false, reason: 'payload_too_large' };
+    }
+  }
+
+  return { ok: true };
+}
+
 export const POST = withLogging('webhooks/max', async (request: Request) => {
   try {
+    if (isStrictWebhookModeEnabled()) {
+      const validation = validateWebhookRequestShape(request);
+      if (!validation.ok) {
+        log.warn({ reason: validation.reason }, '[Webhook/MAX] Rejected in strict mode');
+        return NextResponse.json({ error: 'Bad request' }, { status: 400 });
+      }
+    }
+
     const url = new URL(request.url);
     const botParam = url.searchParams.get('bot');
     const botType: BotType = botParam === 'dealer' ? 'dealer' : 'customer';
     const update = (await request.json()) as Record<string, unknown>;
 
     const updateType = update.update_type as string;
+    if (isStrictWebhookModeEnabled() && !updateType) {
+      log.warn('[Webhook/MAX] Missing update_type in strict mode');
+      return NextResponse.json({ error: 'Bad request' }, { status: 400 });
+    }
     const userId =
       (update.user as Record<string, unknown>)?.user_id ||
       ((update.message as Record<string, unknown>)?.sender as Record<string, unknown>)?.user_id;
