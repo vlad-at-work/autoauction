@@ -87,11 +87,11 @@ jobs:
         if: always()
         uses: appleboy/telegram-action@v0.1.1
         with:
-          to: ${{ secrets.NOTIFICATION_TG_ID_STAGING }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN_STAGING }}
+          to: ${{ secrets.NOTIFICATION_TG_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           format: markdown
           message: |
-            *${{ job.status == 'success' && '✅ STAGING' || '❌ STAGING' }}* `${{ github.event.head_commit.message }}`
+            *${{ job.status == 'success' && '✅' || '❌' }}* `[staging] ${{ github.event.head_commit.message }}`
 
             *Repo:* `${{ github.repository }}`
             *Branch:* `${{ github.ref_name }}`
@@ -99,3 +99,4 @@ jobs:
 
             *Commit:* `${{ github.sha }}`
             ${{ github.event.head_commit.timestamp }}
+
