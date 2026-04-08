@@ -18,14 +18,22 @@
 
 Workflow: `.github/workflows/deploy.yml`
 
-### What works
+### Current deploy pipeline (source of truth)
 
 ```yaml
-- uses: oven-sh/setup-bun@v2 # no setup-node needed, bun brings its own Node
-- run: bun install # NOT npm ci / npm install
+- uses: oven-sh/setup-bun@v2
+- run: bun install (cache-aware)
 - run: bunx prisma generate
 - run: bun run build
+- deploy .next/standalone, .next/static, public via ssh-deploy
+- restart service via systemctl
 ```
+
+### Reliability notes for deploys
+
+- Keep deploy **rollback-friendly**: avoid bundling risky behavior changes with infra changes.
+- Prefer feature flags for webhook hardening (`WEBHOOK_STRICT_MODE`) and ship default-off first.
+- Add/maintain explicit migration gate (`prisma migrate deploy`) before restart when schema changes are present.
 
 ### What does NOT work
 
@@ -49,6 +57,7 @@ App restarts via: `sudo systemctl restart autoauction` (SSH, user `autoauction`)
 - `NEXT_PUBLIC_MAX_BOT_NAME`, `NEXT_PUBLIC_MAX_BOT_NAME_DEALER`
 - `NEXT_PUBLIC_TELEGRAM_BOT_NAME`
 - `NEXT_PUBLIC_SENTRY_DSN`
+- `NOTIFICATION_TG_ID`, `TELEGRAM_BOT_TOKEN` (deploy status notification step)
 
 ### Build note
 
@@ -105,28 +114,23 @@ Format: `Bearer {platform}:{botType}:{initData}`
 - `MAX_BOT_TOKEN` / `MAX_BOT_TOKEN_DEALER` — Bot tokens
 - `MAX_BOT_NAME` / `MAX_BOT_NAME_DEALER` — Bot usernames (same as NEXT*PUBLIC* variants)
 
-### Critical: Next.js Standalone Mode
+### Critical: Next.js Standalone Mode (safety-first)
 
-**1. Environment Variables Are EMBEDDED at Build Time**
+**1. Environment variable behavior must be verified, not assumed**
 
-Next.js `output: 'standalone'` **inlines** all environment variables from `.env.local` into the compiled server bundle at **build time**. You do NOT need to set these in systemd:
+- Some values may be resolved/inlined at build time in standalone output.
+- Other values are still operational runtime configuration and must be managed on server.
+- Do **not** rely on blanket assumptions like “everything is compiled in”.
+- For any sensitive/revenue-critical flow (MAX/TG tokens, webhook secrets, DB/session/admin secrets), verify where each variable is read in code and how production process receives it.
 
-- ❌ `TG_BOT_TOKEN`, `TG_BOT_TOKEN_DEALER`
-- ❌ `MAX_BOT_TOKEN`, `MAX_BOT_TOKEN_DEALER`
-- ❌ `TG_WEBHOOK_SECRET`, `TG_DEALER_WEBHOOK_SECRET`
-- ❌ Database URLs, session secrets, admin passwords
-- ❌ All other API keys and tokens
+Practical rule for operators/AI:
 
-**Only runtime/system env vars go in systemd**:
+- Treat `/home/autoauction/app/.env`, `/etc/logdy.env`, and systemd env as live operational inputs unless verified otherwise by code path + runtime checks.
+- After env/config changes, run explicit smoke checks (webhooks + bot send paths where possible).
 
-- ✅ `PORT`, `NODE_ENV`
-- ✅ `LOG_DIR`, `LOG_LEVEL` (if runtime configurable)
+**2. Instrumentation.ts caveat**
 
-Systemd service only needs minimal env vars - the app has secrets compiled in.
-
-**2. Instrumentation.ts Does Not Run in Standalone**
-
-`instrumentation.ts` only runs during build, not at runtime. For server-side libraries that need initialization (Hawk, Sentry, etc.), call `init()` at module level in the lib file, not just in `instrumentation.ts`.
+`instrumentation.ts` may not cover all runtime initialization needs in standalone execution contexts. For server-side libraries that must always initialize (Hawk/Sentry/etc.), initialize in the runtime code path that is guaranteed to execute.
 
 ---
 
@@ -142,4 +146,31 @@ Systemd service only needs minimal env vars - the app has secrets compiled in.
 
 - Unit tests: `bun run test`
 - Build must pass: `bun run build`
-- Logs: use `console.warn` (visible in production logs)
+- Treat bot delivery as business-critical: add/maintain integration coverage around webhook ingestion + outbound senders, not only UI/schema tests.
+- Logs: use structured logger in app modules; avoid relying on ad-hoc console output as primary observability.
+
+## AI Handoff Hygiene (keep this current)
+
+- Prefer `README.md` + current code over old archived handoffs.
+- If writing handoff notes for another AI (including Claude-style), do not add self-attribution chatter. Keep it factual, current, and action-oriented.
+- Before major edits, quickly verify assumptions against:
+  - `.github/workflows/deploy.yml`
+  - `src/app/api/webhooks/max/route.ts`
+  - `src/app/api/webhooks/telegram/route.ts`
+  - `src/lib/notifications/{max,telegram}.ts`
+
+## Runtime Config Safety (important)
+
+- Do not assume all secrets/config are safely handled only by build-time inlining.
+- Next.js standalone may inline some env values at build time, but runtime/service configuration still matters and must be verified per variable usage.
+- Treat server env files (`/home/autoauction/app/.env`, `/etc/logdy.env`) and systemd environment as operational source-of-truth for deployed behavior unless code proves otherwise.
+- For reliability changes, prefer explicit verification over assumptions:
+  - inspect code path where env is read,
+  - verify deployed unit/env files,
+  - run smoke checks after restart.
+
+## Current Reliability Priorities
+
+- Keep risky webhook hardening behind `WEBHOOK_STRICT_MODE` (default-off rollout first).
+- Add webhook idempotency to prevent duplicate side effects on retries/replays.
+- Improve outbound message confidence with integration-level tests (provider-facing send paths + delivery/error signal checks), not only unit tests.

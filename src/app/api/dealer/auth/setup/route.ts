@@ -19,6 +19,10 @@ export const POST = withLogging('dealer/auth/setup', async (request: Request) =>
     const validation = validateWebAppRequest(authHeader, 'dealer');
 
     if (!validation.valid) {
+      log.warn(
+        { error: validation.error, userId: validation.userId, platform: validation.platform },
+        '[DealerAuth] Invalid webapp data'
+      );
       return NextResponse.json({ error: validation.error }, { status: 401 });
     }
 
@@ -26,6 +30,10 @@ export const POST = withLogging('dealer/auth/setup', async (request: Request) =>
     const { startParam } = body;
 
     if (!startParam) {
+      log.warn(
+        { userId: validation.userId, platform: validation.platform },
+        '[DealerAuth] Missing startParam'
+      );
       return NextResponse.json({ error: 'Код приглашения обязателен' }, { status: 400 });
     }
 
@@ -38,8 +46,14 @@ export const POST = withLogging('dealer/auth/setup', async (request: Request) =>
     } else if (/^\d{6}$/.test(startParam)) {
       token = startParam;
     } else {
+      log.warn({ startParam, userId: validation.userId }, '[DealerAuth] Invalid token format');
       return NextResponse.json({ error: 'Неверный формат кода' }, { status: 400 });
     }
+
+    log.info(
+      { token, userId: validation.userId, platform: platformEnum },
+      '[DealerAuth] Looking up invite token'
+    );
 
     const dealer = await prisma.dealer.findFirst({
       where: {
@@ -49,14 +63,37 @@ export const POST = withLogging('dealer/auth/setup', async (request: Request) =>
     });
 
     if (!dealer) {
+      log.warn(
+        { token, userId: validation.userId },
+        '[DealerAuth] Invalid invite token - not found'
+      );
       return NextResponse.json({ error: 'Неверный код приглашения' }, { status: 400 });
     }
 
     if (!isInviteTokenValid(dealer.inviteTokenExpiresAt)) {
+      log.warn(
+        {
+          token,
+          userId: validation.userId,
+          dealerId: dealer.id,
+          expiresAt: dealer.inviteTokenExpiresAt,
+        },
+        '[DealerAuth] Invite token expired'
+      );
       return NextResponse.json({ error: 'Срок действия кода истек' }, { status: 400 });
     }
 
     if (dealer.platform && dealer.platformUserId && dealer.platformUserId !== validation.userId) {
+      log.warn(
+        {
+          token,
+          userId: validation.userId,
+          dealerId: dealer.id,
+          existingPlatform: dealer.platform,
+          existingPlatformUserId: dealer.platformUserId,
+        },
+        '[DealerAuth] Dealer already bound to different user'
+      );
       return NextResponse.json(
         { error: 'Аккаунт уже привязан к другому пользователю' },
         { status: 409 }

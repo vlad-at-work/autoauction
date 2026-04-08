@@ -364,6 +364,30 @@ Real-time log viewer at `http://your-server:8080`:
 - Search by user ID, inquiry ID, etc.
 - JSON expansion for structured logs
 
+### Current Ops Access Modes (Logdy)
+
+Use one of these modes depending on risk/access needs:
+
+- **Public + password-protected (current emergency-friendly mode)**
+  - `logdy.service` bind: `--ui-ip 0.0.0.0 --port 8080`
+  - firewall: `ufw allow 8080/tcp`
+  - access URL: `http://79.174.80.170:8080` (or your domain/IP)
+- **Private + SSH tunnel (preferred hardened mode)**
+  - `logdy.service` bind: `--ui-ip 127.0.0.1 --port 8080`
+  - firewall: no public 8080 rule
+  - local tunnel helper: `scripts/logdy-tunnel-dev.sh` (or launcher `scripts/logdy-launch.command`)
+  - local access URL: `http://127.0.0.1:18080`
+
+Quick verification checklist:
+
+```bash
+# On server
+systemctl is-active logdy
+ss -tulpen | grep 8080
+ufw status | grep 8080 || true
+curl -I http://127.0.0.1:8080
+```
+
 ### Documentation
 
 - **Full deployment guide**: `docs/DEPLOYMENT_LOGGING_SETUP.md`

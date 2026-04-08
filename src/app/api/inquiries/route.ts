@@ -64,6 +64,10 @@ export const POST = withLogging('inquiries', async (request: Request) => {
     const authHeader = request.headers.get('authorization');
     const validation = validateWebAppRequest(authHeader);
     if (!validation.valid || !validation.userId || !validation.platform) {
+      log.warn(
+        { error: validation.error, userId: validation.userId, platform: validation.platform },
+        '[Inquiry] Invalid auth for inquiry creation'
+      );
       return NextResponse.json(
         { error: 'Неавторизованно: ' + (validation.error || 'unknown error') },
         { status: 401 }
@@ -75,6 +79,7 @@ export const POST = withLogging('inquiries', async (request: Request) => {
     // Rate limit: 10 requests per minute per user
     const rateLimitResult = checkRateLimit(`inquiries:${authUserId}`, 10, 60 * 1000);
     if (!rateLimitResult.success) {
+      log.warn({ userId: authUserId, platform: authPlatform }, '[Inquiry] Rate limited');
       return NextResponse.json(
         { error: 'Слишком много запросов. Попробуйте позже.' },
         {
@@ -90,6 +95,10 @@ export const POST = withLogging('inquiries', async (request: Request) => {
     const parsed = inquiryCreateSchema.safeParse(body);
 
     if (!parsed.success) {
+      log.warn(
+        { userId: authUserId, platform: authPlatform, errors: parsed.error.flatten() },
+        '[Inquiry] Invalid request schema'
+      );
       return NextResponse.json(
         {
           error: 'Некорректный запрос',
@@ -102,10 +111,12 @@ export const POST = withLogging('inquiries', async (request: Request) => {
     const input = parsed.data;
 
     if (input.platformUserId !== authUserId) {
+      log.warn({ authUserId, inputUserId: input.platformUserId }, '[Inquiry] User ID mismatch');
       return NextResponse.json({ error: 'Нет доступа' }, { status: 403 });
     }
 
     if (input.platform !== authPlatform) {
+      log.warn({ authPlatform, inputPlatform: input.platform }, '[Inquiry] Platform mismatch');
       return NextResponse.json({ error: 'Нет доступа' }, { status: 403 });
     }
 

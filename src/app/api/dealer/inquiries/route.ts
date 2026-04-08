@@ -18,10 +18,19 @@ export const GET = withLogging('dealer/inquiries', async (request: Request) => {
     const validation = validateWebAppRequest(authHeader, 'dealer');
 
     if (!validation.valid) {
+      log.warn(
+        { error: validation.error, userId: validation.userId, platform: validation.platform },
+        '[DealerInquiries] Invalid auth'
+      );
       return NextResponse.json({ error: validation.error }, { status: 401 });
     }
 
     const platformEnum = validation.platform === 'max' ? 'MAX' : 'TELEGRAM';
+
+    log.info(
+      { userId: validation.userId, platform: platformEnum },
+      '[DealerInquiries] Looking up dealer'
+    );
 
     const dealer = await prisma.dealer.findFirst({
       where: {
@@ -36,8 +45,14 @@ export const GET = withLogging('dealer/inquiries', async (request: Request) => {
     });
 
     if (!dealer) {
+      log.warn(
+        { userId: validation.userId, platform: platformEnum },
+        '[DealerInquiries] Dealer not found or inactive'
+      );
       return NextResponse.json({ error: 'Дилер не найден' }, { status: 404 });
     }
+
+    log.info({ dealerId: dealer.id }, '[DealerInquiries] Fetching inquiries');
 
     const inquiries = await prisma.inquiry.findMany({
       where: {
