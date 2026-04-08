@@ -1,0 +1,101 @@
+name: Deploy to VPS (Staging)
+
+on:
+  push:
+    branches: [staging]
+  workflow_dispatch:
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Cache node_modules
+        id: cache-nm
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('bun.lock', 'prisma/schema.prisma') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        if: steps.cache-nm.outputs.cache-hit != 'true'
+        run: bun install
+
+      - name: Generate Prisma client
+        run: bunx prisma generate
+
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-staging-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-staging-
+
+      - name: Build (staging)
+        run: bun run build
+        env:
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL_STAGING }}
+          NEXT_PUBLIC_TELEGRAM_BOT_NAME: ${{ secrets.NEXT_PUBLIC_TELEGRAM_BOT_NAME_STAGING }}
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN_STAGING }}
+
+      - name: Copy request-logger into standalone
+        run: cp request-logger.js .next/standalone/
+
+      - name: Deploy standalone build (staging)
+        uses: easingthemes/ssh-deploy@v5.1.0
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_KEY_STAGING }}
+          REMOTE_HOST: ${{ secrets.VPS_HOST_STAGING }}
+          REMOTE_USER: autoauction-staging
+          SOURCE: ".next/standalone/"
+          TARGET: "/home/autoauction-staging/app/"
+          EXCLUDE: ".env"
+
+      - name: Deploy static assets (staging)
+        uses: easingthemes/ssh-deploy@v5.1.0
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_KEY_STAGING }}
+          REMOTE_HOST: ${{ secrets.VPS_HOST_STAGING }}
+          REMOTE_USER: autoauction-staging
+          SOURCE: ".next/static/"
+          TARGET: "/home/autoauction-staging/app/.next/static/"
+
+      - name: Deploy public folder (staging)
+        uses: easingthemes/ssh-deploy@v5.1.0
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_KEY_STAGING }}
+          REMOTE_HOST: ${{ secrets.VPS_HOST_STAGING }}
+          REMOTE_USER: autoauction-staging
+          SOURCE: "public/"
+          TARGET: "/home/autoauction-staging/app/public/"
+
+      - name: Restart app (staging)
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST_STAGING }}
+          username: autoauction-staging
+          key: ${{ secrets.VPS_SSH_KEY_STAGING }}
+          script: sudo systemctl restart autoauction-staging
+
+      - name: Send Telegram Notification (staging)
+        if: always()
+        uses: appleboy/telegram-action@v0.1.1
+        with:
+          to: ${{ secrets.NOTIFICATION_TG_ID_STAGING }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN_STAGING }}
+          format: markdown
+          message: |
+            *${{ job.status == 'success' && '✅ STAGING' || '❌ STAGING' }}* `${{ github.event.head_commit.message }}`
+
+            *Repo:* `${{ github.repository }}`
+            *Branch:* `${{ github.ref_name }}`
+            ${{ github.actor }}
+
+            *Commit:* `${{ github.sha }}`
+            ${{ github.event.head_commit.timestamp }}
