@@ -20,7 +20,11 @@ const proxyAgent = TELEGRAM_PROXY_URL ? new ProxyAgent(TELEGRAM_PROXY_URL) : nul
 
 function telegramFetch(url: string, init: RequestInit): Promise<Response> {
   if (proxyAgent) {
-    return undiciFetch(url, { ...init, dispatcher: proxyAgent }) as unknown as Promise<Response>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return undiciFetch(url, {
+      ...init,
+      dispatcher: proxyAgent,
+    } as any) as unknown as Promise<Response>;
   }
   return fetch(url, init);
 }
