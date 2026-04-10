@@ -5,7 +5,7 @@
  */
 
 import { logger } from '@/lib/logger';
-import { ProxyAgent } from 'undici';
+import { ProxyAgent, fetch as undiciFetch } from 'undici';
 
 const log = logger.child({ module: 'platform/Telegram' });
 
@@ -20,7 +20,7 @@ const proxyAgent = TELEGRAM_PROXY_URL ? new ProxyAgent(TELEGRAM_PROXY_URL) : nul
 
 function telegramFetch(url: string, init: RequestInit): Promise<Response> {
   if (proxyAgent) {
-    return fetch(url, { ...init, dispatcher: proxyAgent } as Parameters<typeof fetch>[1]);
+    return undiciFetch(url, { ...init, dispatcher: proxyAgent }) as Promise<Response>;
   }
   return fetch(url, init);
 }
