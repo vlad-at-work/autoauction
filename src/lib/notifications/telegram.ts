@@ -5,12 +5,25 @@
  */
 
 import { logger } from '@/lib/logger';
+import { ProxyAgent } from 'undici';
 
 const log = logger.child({ module: 'platform/Telegram' });
 
 const TG_API_BASE = 'https://api.telegram.org';
 const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN || '';
 const TG_BOT_TOKEN_DEALER = process.env.TG_BOT_TOKEN_DEALER || '';
+
+// Optional HTTP/SOCKS5 proxy for reaching api.telegram.org
+// Set TELEGRAM_PROXY_URL=http://user:pass@host:port or socks5://user:pass@host:port
+const TELEGRAM_PROXY_URL = process.env.TELEGRAM_PROXY_URL || '';
+const proxyAgent = TELEGRAM_PROXY_URL ? new ProxyAgent(TELEGRAM_PROXY_URL) : null;
+
+function telegramFetch(url: string, init: RequestInit): Promise<Response> {
+  if (proxyAgent) {
+    return fetch(url, { ...init, dispatcher: proxyAgent } as Parameters<typeof fetch>[1]);
+  }
+  return fetch(url, init);
+}
 
 export type TelegramButton = {
   text: string;
@@ -60,7 +73,7 @@ export async function sendTelegramContactRequest(
   };
 
   try {
-    const response = await fetch(url, {
+    const response = await telegramFetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -78,7 +91,14 @@ export async function sendTelegramContactRequest(
     log.info({ ...logContext, status: response.status }, '[Telegram] Contact request sent');
     return { success: true };
   } catch (err) {
-    log.error({ ...logContext, err: String(err) }, '[Telegram] Contact request send failed');
+    const cause =
+      err instanceof Error
+        ? ((err as NodeJS.ErrnoException).cause ?? (err as NodeJS.ErrnoException).code)
+        : undefined;
+    log.error(
+      { ...logContext, err: String(err), cause: String(cause) },
+      '[Telegram] Contact request send failed'
+    );
     return { success: false, error: String(err) };
   }
 }
@@ -131,7 +151,7 @@ export async function sendTelegramMessage(
   try {
     log.debug({ ...logContext, url, textLength: text.length }, '[Telegram] POST request');
 
-    const response = await fetch(url, {
+    const response = await telegramFetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -151,7 +171,14 @@ export async function sendTelegramMessage(
     log.info({ ...logContext, status: response.status }, '[Telegram] Message sent successfully');
     return { success: true };
   } catch (err) {
-    log.error({ ...logContext, err: String(err) }, '[Telegram] Send failed: exception');
+    const cause =
+      err instanceof Error
+        ? ((err as NodeJS.ErrnoException).cause ?? (err as NodeJS.ErrnoException).code)
+        : undefined;
+    log.error(
+      { ...logContext, err: String(err), cause: String(cause) },
+      '[Telegram] Send failed: exception'
+    );
     return { success: false, error: String(err) };
   }
 }

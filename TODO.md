@@ -1,9 +1,6 @@
-# Docs Freshness Pass
+# Staging Stabilization TODO
 
-- [x] Reviewed current project context and critical operational state
-- [x] Updated `AGENTS.md` with:
-  - [x] explicit no-self-attribution handoff hygiene
-  - [x] runtime config safety guidance (avoid fragile env assumptions)
-  - [x] concise current reliability priorities
-- [x] Updated `README.md` with current Logdy access modes + quick verification checklist
-- [ ] Optional next pass (deferred): prune/archive redundant old docs if requested
+- [x] Review current staging workflow vs production and keep changes minimal.
+- [x] Restore Telegram deploy notification in `.github/workflows/deploy-staging.yml` using existing repo secrets.
+- [ ] Perform read-only VPS diagnostics for disk/memory/load/services/log pressure.
+- [ ] Summarize diagnosis and define safe next steps toward "small staging frontend change → manual merge → stable prod promotion".
