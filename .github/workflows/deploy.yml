@@ -113,6 +113,41 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: sudo systemctl restart autoauction
 
+      - name: Deploy Telegram poller script
+        uses: easingthemes/ssh-deploy@v5.1.0
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.VPS_HOST }}
+          REMOTE_USER: autoauction
+          SOURCE: "scripts/telegram-poller.js"
+          TARGET: "/home/autoauction/app/scripts/"
+
+      - name: Deploy systemd unit
+        uses: easingthemes/ssh-deploy@v5.1.0
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.VPS_HOST }}
+          REMOTE_USER: autoauction
+          SOURCE: "systemd/autoauction-tg-poller.service"
+          TARGET: "/home/autoauction/app/systemd/"
+
+      - name: Install and restart Telegram poller
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: autoauction
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            # Create state directory
+            sudo mkdir -p /var/lib/autoauction
+            sudo chown autoauction:autoauction /var/lib/autoauction
+            # Install systemd unit
+            sudo cp /home/autoauction/app/systemd/autoauction-tg-poller.service /etc/systemd/system/
+            sudo systemctl daemon-reload
+            sudo systemctl enable autoauction-tg-poller
+            sudo systemctl restart autoauction-tg-poller
+
       - name: Send Telegram Notification
         if: always()
         uses: appleboy/telegram-action@v0.1.1

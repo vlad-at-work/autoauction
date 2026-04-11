@@ -1,0 +1,21 @@
+[Unit]
+Description=AutoAuction Telegram Poller
+After=network.target autoauction.service
+Wants=autoauction.service
+
+[Service]
+Type=simple
+User=autoauction
+WorkingDirectory=/home/autoauction/app
+EnvironmentFile=/home/autoauction/app/.env
+ExecStart=/usr/bin/node scripts/telegram-poller.js
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=autoauction-tg-poller
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

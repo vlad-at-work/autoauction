@@ -75,6 +75,24 @@ jobs:
           SOURCE: "public/"
           TARGET: "/home/autoauction-staging/app/public/"
 
+      - name: Deploy Telegram poller script (staging)
+        uses: easingthemes/ssh-deploy@v5.1.0
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_KEY_STAGING }}
+          REMOTE_HOST: ${{ secrets.VPS_HOST_STAGING }}
+          REMOTE_USER: autoauction-staging
+          SOURCE: "scripts/telegram-poller.js"
+          TARGET: "/home/autoauction-staging/app/scripts/"
+
+      - name: Deploy systemd unit (staging)
+        uses: easingthemes/ssh-deploy@v5.1.0
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_KEY_STAGING }}
+          REMOTE_HOST: ${{ secrets.VPS_HOST_STAGING }}
+          REMOTE_USER: autoauction-staging
+          SOURCE: "systemd/autoauction-tg-poller-staging.service"
+          TARGET: "/home/autoauction-staging/app/systemd/"
+
       - name: Deploy Prisma schema (staging)
         uses: easingthemes/ssh-deploy@v5.1.0
         with:
@@ -111,6 +129,23 @@ jobs:
           username: autoauction-staging
           key: ${{ secrets.VPS_SSH_KEY_STAGING }}
           script: sudo systemctl restart autoauction-staging
+
+      - name: Install and restart Telegram poller (staging)
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST_STAGING }}
+          username: autoauction-staging
+          key: ${{ secrets.VPS_SSH_KEY_STAGING }}
+          script: |
+            set -e
+            # Create state directory if needed
+            sudo mkdir -p /var/lib/autoauction-staging
+            sudo chown autoauction-staging:autoauction-staging /var/lib/autoauction-staging
+            # Install/update systemd unit
+            sudo cp /home/autoauction-staging/app/systemd/autoauction-tg-poller-staging.service /etc/systemd/system/
+            sudo systemctl daemon-reload
+            sudo systemctl enable autoauction-tg-poller-staging
+            sudo systemctl restart autoauction-tg-poller-staging
 
       - name: Send Telegram Notification (staging)
         if: always()

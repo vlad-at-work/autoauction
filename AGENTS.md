@@ -174,3 +174,52 @@ Practical rule for operators/AI:
 - Keep risky webhook hardening behind `WEBHOOK_STRICT_MODE` (default-off rollout first).
 - Add webhook idempotency to prevent duplicate side effects on retries/replays.
 - Improve outbound message confidence with integration-level tests (provider-facing send paths + delivery/error signal checks), not only unit tests.
+
+---
+
+## Logs & Observability
+
+### Application Logs
+
+Structured logs are written to:
+
+| Environment    | Log File                               | Service                       |
+| -------------- | -------------------------------------- | ----------------------------- |
+| **Production** | `/var/log/autoauction/app.log`         | `autoauction.service`         |
+| **Staging**    | `/var/log/autoauction-staging/app.log` | `autoauction-staging.service` |
+
+**Logdy web UI** (production only):
+
+- URL: `http://<vps-ip>:8080` (VPN/tunnel required)
+- Reads from: `/var/log/autoauction/app.log`
+- Service: `logdy.service`
+- Command: `tail -F /var/log/autoauction/app.log | /usr/local/bin/logdy --ui-pass ${LOGDY_PASS} --port 8080 --ui-ip 0.0.0.0`
+
+### Poller Logs (Staging)
+
+The Telegram poller writes structured JSON logs to systemd journal:
+
+```bash
+# View poller logs
+journalctl -u autoauction-tg-poller-staging -f
+
+# View recent history
+journalctl -u autoauction-tg-poller-staging -n 50 --no-pager
+```
+
+### Log Format
+
+All services output structured JSON logs:
+
+```json
+{"level":"info","ts":"2026-04-11T04:01:01.243Z","bot":"customer","offset":0,"message":"Starting polling loop"}
+{"level":"error","ts":"2026-04-11T04:05:22.123Z","bot":"customer","err":"connect timeout","message":"Polling error"}
+```
+
+**When working on this codebase, agents should:**
+
+- **Always check logs first** when debugging issues (don't guess)
+- Use `journalctl -u <service> -f` for real-time monitoring
+- Use `tail -f /var/log/autoauction/app.log | jq '.'` for structured filtering
+- Check both application logs AND poller logs for Telegram-related issues
+- Look for patterns across log sources (app + poller + nginx if applicable)
