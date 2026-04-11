@@ -99,6 +99,15 @@ All features are working end-to-end:
 - Webhook verification: `X-Telegram-Bot-Api-Secret-Token` header
 - Telegram customer bot uses **long-polling** (DPI bypass) instead of webhooks — see `scripts/telegram-poller.js` and `autoauction-tg-poller.service`
 
+### Menu Button (Web App)
+
+The persistent "Open App" button in the chat input bar is configured via `setChatMenuButton`. **Important**: The domain must be allowlisted in @BotFather first — the API accepts any URL, but clients won't render the button for unregistered domains.
+
+```bash
+# Configure via script (domain must already be allowlisted in BotFather)
+node scripts/setup-telegram-menu-button.js --env-file=.env.staging
+```
+
 ## WebApp Auth Header
 
 Format: `Bearer {platform}:{botType}:{initData}`

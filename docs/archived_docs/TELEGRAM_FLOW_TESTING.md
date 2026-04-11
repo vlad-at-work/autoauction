@@ -187,13 +187,24 @@ NEXT_PUBLIC_TELEGRAM_BOT_NAME="autoauction_bot"  # For client-side links
 
 ### Step 2: Configure the Mini App
 
+**Critical**: The domain must be allowlisted in BotFather. The Bot API accepts any URL via `setChatMenuButton`, but Telegram clients silently refuse to show the button unless the domain was registered through BotFather first.
+
+**Via BotFather (required for new domains):**
+
 1. Send `/mybots` to BotFather
 2. Select your bot
 3. Choose "Bot Settings" → "Menu Button" → "Configure Menu Button"
-4. Send the URL to your app (development or production):
-   - Dev: `http://localhost:3000/app` (won't work from real Telegram, use ngrok)
-   - Staging: `https://your-staging-url.vercel.app/app`
-   - Production: `https://your-production-url.com/app`
+4. Send the URL to your app:
+   - Dev: `http://localhost:3000/app` (use ngrok for HTTPS)
+   - Staging: `https://staging.svoauto.ru/app`
+   - Production: `https://svoauto.ru/app`
+
+**Via Script (after domain is allowlisted):**
+
+```bash
+# Set menu button via API (domain must already be allowlisted)
+node scripts/setup-telegram-menu-button.js --env-file=.env.staging
+```
 
 ### Step 3: Test the mini app
 
