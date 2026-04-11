@@ -304,7 +304,7 @@ async function handleDealerInviteTelegram(chatId: number, firstName: string, par
     '[Webhook/Telegram] Valid invite, sending welcome'
   );
 
-  const text = `Добро пожаловать, ${firstName}!\n\nВаш код активации для ${dealer.name}: ${token}\n\nНажмите кнопку ниже, чтобы открыть приложение.`;
+  const text = `Добро пожаловать, ${firstName}!\n\nНажмите кнопку ниже, чтобы активировать аккаунт для ${dealer.name} и открыть панель дилера.`;
 
   const buttons = [
     {
