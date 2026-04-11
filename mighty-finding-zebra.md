@@ -23,7 +23,7 @@ The "auction" is reversed: buyers post demand, sellers bid down to win the custo
 | UI        | Radix UI, shadcn/ui, Tailwind CSS v4, Framer Motion                          |
 | Forms     | React Hook Form + Zod v4 (Russian error messages)                            |
 | Bots      | Custom HTTP calls to MAX API + Telegram Bot API                              |
-| Logging   | Pino structured JSON                                                         |
+| Logging   | Pino-style JSON via `request-logger.js` + structured app logs                |
 | Errors    | Hawk.so                                                                      |
 | Testing   | Bun (unit) + Playwright (E2E)                                                |
 | Deploy    | Ubuntu + nginx + GitHub Actions rsync (svoauto.ru), Next.js standalone build |
@@ -496,26 +496,42 @@ Once a `Transaction` is created, the snapshotted buyer/dealer info is never upda
 
 ## Deployment Architecture (Current)
 
+Two environments on the same VPS (`79.174.80.170`, reg.ru):
+
 ```
 GitHub repo
     │
-    │  push to main
+    │  push to main → deploy.yml
+    │  push to staging → deploy-staging.yml
     ▼
 GitHub Actions
-    │  npm run build (Next.js standalone)
+    │  bun install + bunx prisma generate
+    │  bun run build (= next build --webpack, NEXT_PUBLIC_* from GitHub Secrets)
+    │  cp request-logger.js .next/standalone/
     │  rsync .next/standalone/ → Ubuntu server
+    │  prisma migrate deploy (SSH)
+    │  write HAWK_TOKEN to server .env (SSH)
+    │  systemctl restart autoauction[-staging]
+    │  deploy + restart Telegram poller
     ▼
-Ubuntu server (svoauto.ru)
-    ├── nginx (reverse proxy → port 3000)
-    │   └── serves static files directly from .next/static/
-    └── systemd service
-        └── node server.js  (Next.js standalone)
-            └── connects to Neon PostgreSQL (cloud)
+Ubuntu VPS (svoauto.ru)
+    ├── nginx (reverse proxy)
+    │   ├── port 443 → port 3000 (production)
+    │   └── port 3001 (staging, internal)
+    ├── systemd: autoauction.service (port 3000)
+    │   └── node server.js --require request-logger.js
+    │       └── connects to Neon PostgreSQL (cloud)
+    ├── systemd: autoauction-staging.service (port 3001)
+    └── systemd: autoauction-tg-poller.service
+        └── scripts/telegram-poller.js (long-poll → POST /api/webhooks/telegram)
 ```
 
-**Key implication**: Next.js `output: 'standalone'` means the build output is a self-contained Node.js server. The rsync copies this to the Ubuntu server and systemd restarts it. No Docker, no Vercel — fully self-hosted.
+**Key facts**:
 
-**Env vars** must be present on the Ubuntu server (not in the repo). Check `/etc/systemd/system/` for the service unit file to see how they're injected.
+- `NEXT_PUBLIC_*` vars are baked into the bundle at build time from GitHub Secrets
+- Server-side secrets live in `/home/autoauction/app/.env` (not in repo)
+- `request-logger.js` is preloaded via `node --require` — logs every HTTP request with `ip` and `ua` fields
+- Telegram uses long-polling (DPI bypass) instead of webhooks for the customer bot
 
 ---
 
