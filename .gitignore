@@ -48,3 +48,4 @@ next-env.d.ts
 .env.sentry-build-plugin
 .staging_deploy_key
 .staging_deploy_key.pub
+delmelogger.txt

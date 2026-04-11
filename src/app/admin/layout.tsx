@@ -8,6 +8,7 @@ import {
   CheckCircle,
   Bell,
   Trash2,
+  Terminal,
 } from 'lucide-react';
 
 import { AdminMobileNav } from '@/components/admin/admin-mobile-nav';
@@ -20,6 +21,7 @@ const navItems = [
   { href: '/admin/offers', label: 'Предложения', icon: Tag },
   { href: '/admin/transactions', label: 'Транзакции', icon: CheckCircle },
   { href: '/admin/notifications', label: 'Оповещения', icon: Bell },
+  { href: '/admin/logger', label: 'Логгер', icon: Terminal },
   { href: '/admin/clear-db', label: 'Очистить БД', icon: Trash2 },
 ];
 

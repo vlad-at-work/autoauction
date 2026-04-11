@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Check, Loader2 } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
@@ -11,7 +11,6 @@ import { PageTransition } from '@/components/page-transition';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TopBar } from '@/components/ui/top-bar';
-import { usePolling } from '@/hooks/use-polling';
 import { useWebApp } from '@/hooks/use-webapp';
 import { detectPlatform, getWebApp } from '@/app/app/webapp-ready';
 import { formatPrice, formatRelativeTime } from '@/lib/inquiry-utils';
@@ -115,22 +114,33 @@ export default function InquiryDetailPage() {
     };
   }, [router]);
 
-  // Fetch inquiry with polling
-  const fetcher = useCallback(async (): Promise<InquiryDetail | null> => {
-    if (!platformUserId || !platform || !initData) return null;
-    const data = await getInquiryDetail(inquiryId, platform, initData);
-    if (!data) {
-      router.replace('/app/dashboard');
-      return null;
+  // Fetch inquiry manually (no auto-polling)
+  const [inquiry, setInquiry] = useState<InquiryDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchInquiry = useCallback(async () => {
+    if (!platformUserId || !platform || !initData) return;
+
+    setLoading(true);
+    try {
+      const data = await getInquiryDetail(inquiryId, platform, initData);
+      if (!data) {
+        router.replace('/app/dashboard');
+        return;
+      }
+      setInquiry(data);
+    } catch (err) {
+      console.error('Failed to fetch inquiry:', err);
+    } finally {
+      setLoading(false);
     }
-    return data;
   }, [inquiryId, initData, platform, platformUserId, router]);
 
-  const { data: inquiry, loading } = usePolling<InquiryDetail | null>({
-    fetcher,
-    interval: 10000,
-    enabled: ready && !!platformUserId && !!platform && !!initData,
-  });
+  useEffect(() => {
+    if (ready && platformUserId && platform && initData) {
+      fetchInquiry();
+    }
+  }, [ready, platformUserId, platform, initData, fetchInquiry]);
 
   // Fetch inquiry limits
   const [limits, setLimits] = useState<InquiryLimits | null>(null);
@@ -219,9 +229,21 @@ export default function InquiryDetailPage() {
           </div>
 
           <div className="mt-6">
-            <h2 className="mb-4 text-xl font-semibold">
-              Предложения дилеров ({inquiry._count.offers})
-            </h2>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold">
+                Предложения дилеров ({inquiry._count.offers})
+              </h2>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchInquiry}
+                disabled={loading}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                Обновить
+              </Button>
+            </div>
 
             {offersByDealer.length === 0 ? (
               <div className="text-muted-foreground rounded-lg border bg-muted/30 p-8 text-center text-base">

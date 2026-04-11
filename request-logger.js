@@ -44,6 +44,17 @@ function log(level, obj, msg) {
 
 // --- monkeypatch http.createServer ---
 
+// Skip logging for internal/noisy endpoints
+const SKIP_URLS = [
+  '/api/admin/logs',      // Logger polling itself - prevents recursion
+  '/api/health',          // Health checks
+];
+
+function shouldSkipLog(url) {
+  if (!url) return false;
+  return SKIP_URLS.some(skip => url.startsWith(skip));
+}
+
 const originalCreateServer = http.createServer;
 
 http.createServer = function patchedCreateServer(...args) {
@@ -55,16 +66,24 @@ http.createServer = function patchedCreateServer(...args) {
     const method = req.method;
     const url = req.url;
 
+    // Skip noisy endpoints (only internal/logger endpoints)
+    if (shouldSkipLog(url)) {
+      return;
+    }
+
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const ua = req.headers['user-agent'];
+
     const onFinish = () => {
       cleanup();
       const ms = Date.now() - start;
-      log('info', { method, url, status: res.statusCode, ms }, 'request');
+      log('info', { method, url, status: res.statusCode, ms, ip, ua }, 'request');
     };
 
     const onClose = () => {
       cleanup();
       const ms = Date.now() - start;
-      log('warn', { method, url, ms }, 'request aborted');
+      log('warn', { method, url, ms, ip, ua }, 'request aborted');
     };
 
     function cleanup() {

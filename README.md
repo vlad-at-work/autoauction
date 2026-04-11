@@ -1,229 +1,225 @@
-# AutoAuction
+# AutoAuction (svoauto.ru)
 
-AutoAuction is a car inquiry/offer platform connecting **buyers** (Telegram/MAX mini-app) with **dealers** (separate dealer mini-app). Buyers create inquiries, dealers submit competing offers (up to 5 per dealer per inquiry), buyers accept up to 3 offers per inquiry, and the system records **transactions** with immutable snapshots for billing.
-
-All legacy docs were moved to `docs/archived_docs/`. This `README.md` is the single living spec + runbook going forward.
+A **reverse-auction platform for car purchases** (LADA vehicles), operating as a mini-app inside **MAX** (VK's messenger) and **Telegram**. Buyers submit car inquiries; all registered dealers compete by submitting price offers; the buyer accepts up to 3 offers; the system records transactions with immutable snapshots for billing.
 
 ## Tech Stack
 
-- Runtime: Bun
-- Framework: Next.js 16 (App Router)
-- DB: PostgreSQL (regru cloud) via Prisma
-- Deploy: VPS (regru) via GitHub Actions
-- Bots: Telegram Bot API + MAX Platform API
+| Layer     | Technology                                                                    |
+| --------- | ----------------------------------------------------------------------------- |
+| Runtime   | Bun                                                                           |
+| Framework | Next.js 16 (App Router), React 19                                             |
+| DB        | Neon PostgreSQL via Prisma 5                                                  |
+| Auth      | Custom HMAC-SHA256 WebApp validation + HTTP Basic Auth (admin)                |
+| UI        | Radix UI, shadcn/ui, Tailwind CSS v4, Framer Motion                           |
+| Forms     | React Hook Form + Zod v4 (Russian error messages)                             |
+| Bots      | Custom HTTP calls to MAX API + Telegram Bot API                               |
+| Logging   | Pino-style JSON via `request-logger.js` (monkeypatch) + structured app logs   |
+| Errors    | Hawk.so                                                                       |
+| Testing   | Bun (unit) + Playwright (E2E)                                                 |
+| Deploy    | Ubuntu VPS (reg.ru) + nginx + GitHub Actions rsync, Next.js standalone output |
 
-## App Layouts & Routes
+## App Routes
 
-**Buyer mini-app**
+**Buyer mini-app** (`/app/*`):
 
-- Entry: `/app`
-- Create inquiry: `/app/form`
-- Dashboard: `/app/dashboard`
-- Inquiry detail: `/app/inquiry/[inquiryId]`
+- `/app` — Entry / platform detection / phone-gate routing
+- `/app/form` — Inquiry creation form
+- `/app/dashboard` — Buyer's inquiry list (manual refresh)
+- `/app/inquiry/[id]` — Inquiry detail + offers
+- `/app/inquiry/[id]/offer/[offerId]` — Accept offer confirmation
 
-**Dealer mini-app**
+**Dealer mini-app** (`/dealerinterface/*`):
 
-- Entry: `/dealerinterface`
-- Setup password (first time): `/dealerinterface/setup`
-- Login: `/dealerinterface/login`
-- Dashboard: `/dealerinterface/dashboard`
-- Inquiry detail + offer form: `/dealerinterface/inquiry/[id]`
+- `/dealerinterface` — Entry / auth check / invite token handling
+- `/dealerinterface/setup` — First-time account claim (set password)
+- `/dealerinterface/inquiries` — Active + archived inquiry tabs
+- `/dealerinterface/inquiries/[id]` — Inquiry detail + offer form
 
-**Admin**
+**Admin** (`/admin/*`, HTTP Basic Auth):
 
-- Dashboard: `/admin`
-- Buyers: `/admin/buyers`
-- Dealers: `/admin/dealers`
-- Inquiries: `/admin/inquiries`
-- Offers: `/admin/offers`
-- Transactions: `/admin/transactions` (includes billing fields)
+- `/admin` — Dashboard
+- `/admin/buyers`, `/admin/dealers`, `/admin/inquiries`, `/admin/offers`, `/admin/transactions`
+- `/admin/logger` — Live structured log viewer (polls every 2s, filter, expand rows, copy JSON)
+- `/admin/notifications` — Mass broadcast
 
 ## Data Model (Prisma)
 
-- `Buyer` (unique: `(platform, platformUserId)`)
-  - Inquiry limit: `inquiriesUsedThisMonth` (max 2), `inquiryLimitResetAt` (rolling 15-day reset window)
-- `Dealer` (unique: `(platform, platformUserId)`; nullable until claimed)
-  - `passwordHash` set by dealer on first login
-  - `platformChatId` stored for notifications
-- `Inquiry`
-  - `expiresAt` defaults to 24h from creation
-- `Offer`
-  - Multiple per dealer per inquiry (cap enforced in API = 5)
-- `Transaction`
-  - Unique per `(inquiryId, dealerId)`
-  - Max 3 per inquiry enforced in API
-  - Stores immutable snapshots (`offerPrice`, `dealerName`, `inquiryModel`, etc.)
-  - Manual bookkeeping fields: `amount`, `invoicedAt`, `billedAt`, `paidAt`, `voidedAt`
-- `PasswordResetCode`
-  - 6-digit, expires after 10 minutes
+```
+Buyer (unique: platform + platformUserId)
+  phone, phoneVerified
+  inquiriesUsedThisMonth (max 2), inquiryLimitResetAt (rolling 15-day window)
+  └── has many Inquiry
 
-## Environment Variables (`.env.local`)
+Inquiry
+  Contact: name, email, phone
+  Car: model, submodel, transmission, color, comment
+  expiresAt (24h from creation), deletedAt (soft)
+  ├── has many Offer
+  └── has many Transaction
 
-Do not commit secrets; this list is names/meaning only.
+Dealer (unique: platform + platformUserId; nullable until claimed)
+  inviteToken (6-digit), inviteTokenExpiresAt (7 days)
+  passwordHash, platformChatId
+  └── has many Offer, Transaction
 
-**Database**
+Offer (max 5 per dealer per inquiry)
 
-- `POSTGRES_PRISMA_URL` (pooling)
-- `POSTGRES_URL_NON_POOLING` (direct)
+Transaction (max 3 per inquiry; unique per dealerId+inquiryId)
+  — immutable snapshot of buyer contact, platform identity, car details, dealer info
+  — billing fields: amount, invoicedAt, billedAt, paidAt, voidedAt
+```
 
-**Admin auth**
+**Soft deletes everywhere**: all models have `deletedAt`. Every Prisma query must filter `deletedAt: null`.
 
-- `ADMIN_USERNAME`
-- `ADMIN_PASSWORD`
+## Environment Variables
 
-**Dealer session**
+Server-side secrets live in `/home/autoauction/app/.env` (not in repo). `NEXT_PUBLIC_*` vars are baked in at build time via GitHub Secrets → build env.
 
-- `SESSION_SECRET` (signs dealer session + claim tokens)
+**Database:**
 
-**Telegram (customer bot)**
+- `POSTGRES_PRISMA_URL` (pooling), `POSTGRES_URL_NON_POOLING` (direct)
 
-- `TG_BOT_TOKEN`
-- `TG_BOT_NAME`
-- `TG_WEBHOOK_SECRET`
-- `NEXT_PUBLIC_TELEGRAM_BOT_NAME` (used for deep links)
+**Admin:**
 
-**Telegram (dealer bot)**
+- `ADMIN_USERNAME`, `ADMIN_PASSWORD`
 
-- `TG_BOT_TOKEN_DEALER`
-- `TG_BOT_NAME_DEALER`
-- `TG_DEALER_WEBHOOK_SECRET`
+**Dealer session:**
 
-**MAX (customer bot)**
+- `SESSION_SECRET`
 
-- `MAX_BOT_TOKEN`
-- `MAX_BOT_NAME`
-- `NEXT_PUBLIC_MAX_BOT_NAME` (used for deep links)
+**Hawk error tracking:**
 
-**MAX (dealer bot)**
+- `HAWK_TOKEN` — written to server `.env` by deploy workflow; also needs to be present at build for `NEXT_PUBLIC_SENTRY_DSN`
 
-- `MAX_BOT_TOKEN_DEALER`
-- `MAX_BOT_NAME_DEALER`
-- `NEXT_PUBLIC_MAX_BOT_NAME_DEALER`
+**Telegram (customer bot):**
 
-**Deep-link base URL (required)**
+- `TG_BOT_TOKEN`, `TG_BOT_NAME`, `TG_WEBHOOK_SECRET`
+- `NEXT_PUBLIC_TELEGRAM_BOT_NAME`
 
-- `NEXT_PUBLIC_APP_URL`
-  - Used for Telegram `web_app` buttons and dealer/buyer notification buttons.
-  - Example: `https://autoauction.ru`
+**Telegram (dealer bot):**
+
+- `TG_BOT_TOKEN_DEALER`, `TG_BOT_NAME_DEALER`, `TG_DEALER_WEBHOOK_SECRET`
+
+**MAX (customer bot):**
+
+- `MAX_BOT_TOKEN`, `MAX_BOT_NAME`, `NEXT_PUBLIC_MAX_BOT_NAME`
+
+**MAX (dealer bot):**
+
+- `MAX_BOT_TOKEN_DEALER`, `MAX_BOT_NAME_DEALER`, `NEXT_PUBLIC_MAX_BOT_NAME_DEALER`
+
+**App URL (build-time, baked in):**
+
+- `NEXT_PUBLIC_APP_URL` — e.g. `https://svoauto.ru`; used in all bot deep-link buttons
 
 ## Core Flows
 
-### Buyer flow (create inquiry → offers → accept)
+### 1. Buyer onboarding (phone verification)
 
-1. **Phone verification gate** (both MAX and Telegram):
-   - Buyer opens the customer bot for the first time → receives a welcome message with a native **"Share phone"** button (`request_contact`).
-   - Buyer taps the button → platform sends contact to the webhook → phone is normalized and stored on the `Buyer` record (`phoneVerified: true`).
-   - Bot replies with a "Create inquiry" button that opens the mini-app.
-   - If buyer opens `/app` without a verified phone, they see a gate screen instructing them to confirm their number in the bot chat first.
-2. Buyer opens `/app` in Telegram/MAX WebView (phone already verified).
-3. App validates WebApp `initData` server-side and routes to:
-   - `/app/form` (first time) or
-   - `/app/dashboard` (existing buyer).
-4. Buyer submits inquiry → `POST /api/inquiries`
-   - Upserts buyer, checks rolling limit, creates inquiry with 24h expiry.
-   - Sends buyer confirmation notification.
-   - Notifies all **active + claimed** dealers (platform bound) via dealer bots.
-5. Dealer submits offer(s) → `POST /api/dealerinterface/offer`
-   - Cap: 5 offers per dealer per inquiry.
-   - Buyer gets a notification with a button to open offers (`/app?startapp=inquiry:<id>`).
-6. Buyer accepts an offer → `POST /api/transactions`
-   - Cap: 3 accepted offers per inquiry.
-   - Creates transaction with immutable snapshots + reveals buyer contact data to the dealer.
-   - Notifies dealer (accepted) via dealer bot with "Open inquiry" button.
+Both platforms require phone verification before inquiry creation:
 
-### Dealer flow (pre-created dealer → claim → password → offers)
+1. Buyer opens `?start=` link → bot sends `request_contact` button
+2. Buyer taps → platform sends contact → webhook calls `normalizePhone()` → `Buyer.phoneVerified = true`
+3. Bot replies with "Create inquiry" button (opens mini-app)
+4. Without verified phone, `/app` shows a gate screen
 
-Simple language:
+Existing buyers before phone verification was added must `/start` the bot again.
 
-1. Admin creates a dealer profile in `/admin/dealers` (no platform IDs required).
-2. Admin opens dealer detail page and copies the **invite link** (Telegram/MAX).
-3. Dealer opens the invite link on their phone → dealer mini-app binds that phone account to the dealer profile.
-4. Dealer sets password on first run and becomes logged in (session cookie, long-lived).
-5. Dealer sees inquiries, submits offers, and receives notifications.
+### 2. Buyer creates inquiry
 
-Fallback behavior:
+1. `/app` validates `initData` (HMAC), detects platform, routes to `/app/form` or `/app/dashboard`
+2. `POST /api/inquiries` — upserts buyer, checks rolling limit (2/15 days), creates inquiry with 24h expiry, notifies buyer + all active claimed dealers
 
-- If there is **exactly one** unclaimed dealer in the system, opening the dealer mini-app can auto-bind without an invite link.
-- If there are **multiple** unclaimed dealers, the dealer must use an invite link.
+### 3. Dealer submits offer
 
-### Admin flow
+1. Dealer sees inquiry in `/dealerinterface/inquiries`
+2. `POST /api/dealer/offers` — validates (not expired, ≤5 per dealer, no accepted transaction yet), creates Offer, notifies buyer
 
-- Admin uses `/admin` (Basic Auth).
-- CRUD: buyers, dealers, inquiries, offers, transactions.
-- Transactions show immutable snapshots + editable billing fields.
+### 4. Buyer accepts offer
+
+1. `POST /api/transactions` — validates (≤3 per inquiry, 1 per dealer, not expired), creates Transaction with immutable snapshot, notifies buyer + dealer
+
+### 5. Dealer onboarding via invite
+
+1. Admin creates dealer in `/admin/dealers`, opens detail page, copies invite link (MAX/Telegram)
+2. Dealer opens `?start=TOKEN` link → bot sends welcome + "Open mini-app" button → token in `?startapp=`
+3. `POST /api/dealer/auth/setup` — validates token, binds platform+userId, clears token, dealer becomes active
+
+Fallback: if exactly one unclaimed dealer exists, opening the dealer mini-app auto-binds without an invite link.
 
 ## Notifications & Deep Links
 
-Buyer notifications (customer bots):
+All notification functions live in `src/lib/notifications/index.ts` and dispatch to both MAX and Telegram.
 
-- Offer notifications include an "Open offers" button using `startapp=inquiry:<inquiryId>`.
+Deep link payload format (URL-safe, `_` separator):
 
-Dealer notifications (dealer bots):
+- `inquiry_ID` → opens dealer inquiry detail
+- `offer_INQUIRY_OFFER` → opens buyer offer view
+- `accepted_INQUIRY_ID` → opens dealer inquiry detail
 
-- New inquiry + acceptance notifications include "Open inquiry" button using `startapp=inquiry:<inquiryId>`.
+MAX buttons use `open_app` type with `payload`. Telegram buttons use `web_app: { url: ... }` with the full `?startapp=` URL appended.
 
-MAX caveat:
+## Telegram DPI Bypass Poller
 
-- MAX may respond with `"Unknown recipient"` until webhook/subscription + user-initiated chat requirements are satisfied (see `docs/archived_docs/MAX_WEBHOOK_RESEARCH.md`).
+Russia blocks direct Telegram connections. Production uses a **long-polling proxy** instead of webhooks for Telegram customer bot:
+
+- Script: `scripts/telegram-poller.js`
+- Service: `autoauction-tg-poller.service` (production), `autoauction-tg-poller-staging.service` (staging)
+- State file: `/var/lib/autoauction/tg-poller-offset.json`
+- Logs: `journalctl -u autoauction-tg-poller -f`
+
+The poller calls `getUpdates` on the Telegram API and forwards each update to the local app server (`http://localhost:3000/api/webhooks/telegram?bot=customer`). MAX webhooks work normally.
 
 ## Webhook Management
 
-The app supports **dual-bot architecture**: separate bots for customers (buyers) and dealers on both Telegram and MAX platforms. Webhooks are configured via API (not UI).
+| Platform | Bot                            | Webhook URL                         |
+| -------- | ------------------------------ | ----------------------------------- |
+| MAX      | Customer                       | `/api/webhooks/max?bot=customer`    |
+| MAX      | Dealer                         | `/api/webhooks/max?bot=dealer`      |
+| Telegram | Customer                       | via poller (not webhook)            |
+| Telegram | Dealer (autoauctiondealer_bot) | `/api/webhooks/telegram?bot=dealer` |
 
-### Current Status (Production)
-
-| Platform | Bot                            | Status    | Webhook URL                           |
-| -------- | ------------------------------ | --------- | ------------------------------------- |
-| MAX      | Customer (id5010035001_bot)    | ✅ Active | `/api/webhooks/max?bot=customer`      |
-| MAX      | Dealer (id5010035001_1_bot)    | ✅ Active | `/api/webhooks/max?bot=dealer`        |
-| Telegram | Customer (autoauction_bot)     | ✅ Active | `/api/webhooks/telegram?bot=customer` |
-| Telegram | Dealer (autoauctiondealer_bot) | ✅ Active | `/api/webhooks/telegram?bot=dealer`   |
-
-### Management Scripts
+Register/check webhooks:
 
 ```bash
-# Check current webhook status
 ./scripts/check-hooks.sh
-
-# Register/update all webhooks (production)
-./scripts/setup-hooks.sh
-
-# Register webhooks for development (e.g., ngrok)
-./scripts/setup-hooks.sh https://abc123.ngrok.io
-
-# Delete all webhooks (switch to polling)
+./scripts/setup-hooks.sh           # production
+./scripts/setup-hooks.sh https://… # custom domain
 ./scripts/delete-hooks.sh
 ```
 
-### Manual Webhook Setup (if needed)
+## Deploy
 
-Replace `$APP_URL` with your actual domain (e.g., `https://autoauction.ru`).
+Two environments on the same VPS (`79.174.80.170`):
 
-**MAX Platform:**
+| Env        | Branch    | Port | Service                       | Log file                               |
+| ---------- | --------- | ---- | ----------------------------- | -------------------------------------- |
+| Production | `main`    | 3000 | `autoauction.service`         | `/var/log/autoauction/app.log`         |
+| Staging    | `staging` | 3001 | `autoauction-staging.service` | `/var/log/autoauction-staging/app.log` |
+
+GitHub Actions pipeline (both workflows identical except for env/paths):
+
+1. `bun install` (cached)
+2. `bunx prisma generate`
+3. `bun run build` (with `NEXT_PUBLIC_*` from GitHub Secrets)
+4. `cp request-logger.js .next/standalone/`
+5. rsync `.next/standalone/` → `/home/autoauction[-staging]/app/`
+6. rsync static assets, public/, prisma/
+7. `prisma@5.22.0 migrate deploy` (SSH)
+8. Write `HAWK_TOKEN` to server `.env` (SSH)
+9. `systemctl restart autoauction[-staging]`
+10. Deploy + restart Telegram poller
+11. Send Telegram status notification
+
+**`NEXT_PUBLIC_*` vars** are baked into the bundle at build time. Server-side secrets read from `/home/autoauction/app/.env` at runtime — the deploy workflow writes `HAWK_TOKEN`; all other secrets must be pre-populated on the server.
+
+### Build command
 
 ```bash
-# Customer bot
-curl -X POST https://platform-api.max.ru/subscriptions \
-  -H "Authorization: $MAX_BOT_TOKEN" \
-  -d '{"url": "'$APP_URL'/api/webhooks/max?bot=customer"}'
-
-# Dealer bot
-curl -X POST https://platform-api.max.ru/subscriptions \
-  -H "Authorization: $MAX_BOT_TOKEN_DEALER" \
-  -d '{"url": "'$APP_URL'/api/webhooks/max?bot=dealer"}'
+bun run build           # = next build --webpack (--webpack flag is intentional)
 ```
 
-**Telegram:**
-
-```bash
-# Customer bot
-curl -X POST "https://api.telegram.org/bot$TG_BOT_TOKEN/setWebhook" \
-  -d '{"url": "'$APP_URL'/api/webhooks/telegram?bot=customer", "secret_token": "'$TG_WEBHOOK_SECRET'"}'
-
-# Dealer bot
-curl -X POST "https://api.telegram.org/bot$TG_BOT_TOKEN_DEALER/setWebhook" \
-  -d '{"url": "'$APP_URL'/api/webhooks/telegram?bot=dealer", "secret_token": "'$TG_DEALER_WEBHOOK_SECRET'"}'
-```
+Do NOT use npm/npx for install — Linux native binaries (lightningcss, @tailwindcss/oxide) are missing from npm-generated lockfiles on macOS.
 
 ## Local Dev
 
@@ -233,258 +229,170 @@ bun install
 bun dev
 ```
 
-## Automated Tests
-
-### Unit Tests (Fast, No DB)
+## Tests
 
 ```bash
-bun test
+bun test                    # unit (fast, no DB)
+bun run test:live-db        # integration (live DB)
+bun run test:e2e            # Playwright, headless (requires dev server on :3000)
+bun run test:e2e:ui         # Playwright with UI
+bun run test:full           # unit → integration → E2E
+bun run test:cleanup        # remove test_ prefixed DB rows
 ```
 
-### Integration Tests (Live DB)
+E2E requires `MOCK_WEBAPP_AUTH="true"` in `.env.local` — automatically disabled in production.
 
-```bash
-bun run test:live-db
-```
-
-### E2E Tests (Playwright)
-
-Requires dev server running on `:3000` with `MOCK_WEBAPP_AUTH=true` in `.env.local`:
-
-```bash
-# Terminal 1: Start dev server
-bun dev
-
-# Terminal 2: Run E2E tests
-bun run test:e2e           # Headless
-bun run test:e2e:ui        # With UI viewer
-bun run test:e2e:prod      # Against production
-```
-
-### Full Test Suite
-
-Runs unit → integration → E2E with cleanup between:
-
-```bash
-bun run test:full
-```
-
-### Test Data Cleanup
-
-```bash
-bun run test:cleanup       # Clean test_ prefixed data
-bun run db:clear           # Nuclear option (dev only)
-```
-
-### Build
-
-```bash
-bun run build
-```
-
-### Mock Auth (Development Only)
-
-For E2E testing without real Telegram/MAX accounts, add to `.env.local`:
-
-```env
-MOCK_WEBAPP_AUTH="true"
-```
-
-This enables mock authentication via headers:
+Mock auth header format (dev only):
 
 ```
 Authorization: Bearer mock:<platform>:<botType>:<userId>
 ```
 
-**⚠️ Only works in development** — Automatically disabled in production.
+## Logging & Observability
 
-## Manual Test (Two Phones) — Condensed
+### Admin logger (primary)
 
-### Admin (computer)
+`/admin/logger` — live in-app log viewer. Polls `/api/admin/logs` every 2s. Each entry is a single compressed line; click to expand all fields. Checkboxes + "Copy (N)" to export as JSON.
 
-1. Open `/admin` (Basic Auth).
-2. Create dealer in `/admin/dealers/new`.
-3. Open the dealer → copy invite link (Telegram or MAX) → send to Phone 1 (dealer).
+The underlying log file is tailed by `/api/admin/logs` (excludes itself from logging to avoid recursion).
 
-### Phone 1 (Dealer)
+### Log files
 
-1. Open invite link in the dealer messenger (Telegram/MAX) → opens dealer mini-app.
-2. Set password (first time) → lands on dealer dashboard.
-3. Wait for buyer inquiry → open inquiry → submit 3 offers (e.g. 1,500,000 → 1,450,000 → 1,400,000).
-4. After buyer accepts, confirm you receive acceptance notification and can see buyer contact info in the dealer inquiry view.
+| Env        | File                                   |
+| ---------- | -------------------------------------- |
+| Production | `/var/log/autoauction/app.log`         |
+| Staging    | `/var/log/autoauction-staging/app.log` |
 
-### Phone 2 (Buyer)
+Every HTTP request is logged by `request-logger.js` (preloaded via `node --require`). Each entry includes: `method`, `url`, `status`, `ms`, `ip` (x-forwarded-for or socket), `ua`. Internal endpoints (`/api/admin/logs`, `/api/health`) are excluded.
 
-1. Open customer bot → tap **"Share phone"** button → confirm in native dialog.
-2. Bot replies with "Create inquiry" button → tap to open mini-app.
-3. Create inquiry in the form (phone field pre-filled and read-only from verified contact).
-4. Confirm inquiry appears on buyer dashboard and offer notifications arrive.
-5. Open offers from notification (or dashboard) → accept best offer.
-6. Confirm UI updates: accepted offer marked, other offers disabled for that dealer, acceptance counter increments.
-
-## Troubleshooting
-
-- Dealer sees "not registered": admin must create dealer and/or send invite link; dealer can also share their platform ID to admin.
-- Dealer sees "needs invite": there are multiple unclaimed dealers; use invite link from admin dealer detail.
-- Buttons open wrong domain: set `NEXT_PUBLIC_APP_URL` to your production domain.
-- Notifications missing: ensure dealer is claimed (`platform`, `platformUserId` set) and bot tokens are configured.
-- Buyer sees "confirm your number in bot chat": buyer needs to go to the customer bot chat and share their phone via the `request_contact` button. Existing users (before phone verification was added) must type `/start` in the bot chat to trigger the button again.
-
----
-
-## Production Logging & Monitoring
-
-Structured JSON logging to `/var/log/autoauction/app.log`:
+App code uses structured pino-style JSON with contextual fields (`route`, `platform`, `updateType`, etc.).
 
 ```bash
-# View live logs
+# Live tail with pretty-print
 tail -f /var/log/autoauction/app.log | jq '.'
 
-# Search specific flows
-grep "[MAX]" /var/log/autoauction/app.log           # MAX platform
-grep "[Telegram]" /var/log/autoauction/app.log      # Telegram platform
-grep "[Notify]" /var/log/autoauction/app.log        # Notification flows
-grep '"level":50' /var/log/autoauction/app.log      # Errors only
+# Errors only
+grep '"level":50' /var/log/autoauction/app.log
+
+# Telegram poller logs
+journalctl -u autoauction-tg-poller -f
 ```
 
-### Logdy Web UI
+### Logdy (secondary, production only)
 
-Real-time log viewer at `http://your-server:8080`:
-
-- Filter by platform (MAX/Telegram)
-- Filter by module (notifications, http, etc.)
-- Search by user ID, inquiry ID, etc.
-- JSON expansion for structured logs
-
-### Current Ops Access Modes (Logdy)
-
-Use one of these modes depending on risk/access needs:
-
-- **Public + password-protected (current emergency-friendly mode)**
-  - `logdy.service` bind: `--ui-ip 0.0.0.0 --port 8080`
-  - firewall: `ufw allow 8080/tcp`
-  - access URL: `http://79.174.80.170:8080` (or your domain/IP)
-- **Private + SSH tunnel (preferred hardened mode)**
-  - `logdy.service` bind: `--ui-ip 127.0.0.1 --port 8080`
-  - firewall: no public 8080 rule
-  - local tunnel helper: `scripts/logdy-tunnel-dev.sh` (or launcher `scripts/logdy-launch.command`)
-  - local access URL: `http://127.0.0.1:18080`
-
-Quick verification checklist:
+A Logdy process reads `app.log` and exposes a web UI on port 8080 (`logdy.service`). Tunnel via SSH to access it locally:
 
 ```bash
-# On server
-systemctl is-active logdy
-ss -tulpen | grep 8080
-ufw status | grep 8080 || true
-curl -I http://127.0.0.1:8080
+ssh -L 18080:127.0.0.1:8080 root@79.174.80.170
+# then open http://127.0.0.1:18080
 ```
 
-### Documentation
+### Log rotation
 
-- **Full deployment guide**: `docs/DEPLOYMENT_LOGGING_SETUP.md`
-- **Logging reference**: `docs/LOGGING_REFERENCE.md`
-
-### Common Issues
-
-- **No logs in `/var/log/autoauction/`**: Check `LOG_DIR` env var and directory permissions (should be `autoauction:autoauction`).
-- **Logdy not accessible**: Check firewall (port 8080) and service status (`systemctl status logdy`).
-
-### Log Safety (Disk Usage)
-
-Log rotation prevents disk fill-up. Config: `/etc/logrotate.d/autoauction`
-
-```bash
-/var/log/autoauction/app.log {
-    daily              # Rotate every day
-    rotate 30          # Keep 30 days
-    compress           # Gzip old logs (~90% reduction)
-    delaycompress      # Keep today+yesterday uncompressed
-    missingok          # Don't error if log missing
-    notifempty         # Don't rotate empty logs
-    create 0644 autoauction autoauction
-}
-```
-
-**Max disk usage**: ~2 days uncompressed + 28 days compressed  
-**Example**: 100 MB/day logs → max ~220 MB disk usage
-
-**Check status**:
-
-```bash
-ls -lh /var/log/autoauction/              # Current log size
-ls -lt /var/log/autoauction/ | head -5   # Rotation history
-du -sh /var/log/autoauction/              # Total directory size
-logrotate -f /etc/logrotate.d/autoauction # Force rotation now
-```
-
-**Emergency cleanup** (if disk full):
+`/etc/logrotate.d/autoauction` — daily, 30 days, compressed. Emergency cleanup:
 
 ```bash
 systemctl stop autoauction
-gzip /var/log/autoauction/app.log  # Compress current
-# OR: > /var/log/autoauction/app.log  # Truncate (data loss)
+gzip /var/log/autoauction/app.log   # or truncate: > /var/log/autoauction/app.log
 systemctl start autoauction
 ```
 
----
+## Server Configuration
 
-## Server Configuration (Versioned)
-
-All server configs live in the repo for disaster recovery. These are **reference copies** of the configs running on the VPS.
+Reference copies of running server configs are versioned in the repo for disaster recovery:
 
 ```
 systemd/
-├── autoauction.service   # Main app service (port 3000)
-├── logdy.service         # Log viewer service (port 8080)
-└── logrotate.conf        # Log rotation config
+├── autoauction.service               # Main app (port 3000)
+├── autoauction-tg-poller.service     # Telegram poller (production)
+├── autoauction-tg-poller-staging.service
+├── logdy.service                     # Log viewer (port 8080, prod only)
+└── logrotate.conf
 
 nginx/
-├── autoauction.conf      # Site config (reverse proxy + SSL)
-└── nginx.conf            # Stock nginx config (for reference)
+├── autoauction.conf                  # Reverse proxy + SSL
+└── nginx.conf
 ```
 
-### Setup from Scratch
+**Secrets not in repo** (must be configured manually on server):
 
-If rebuilding the server:
+- `/home/autoauction/app/.env` — all bot tokens, DB URLs, session secret, etc.
+- `/etc/logdy.env` — Logdy web UI password
+- SSL certificates (managed by certbot)
+
+### Rebuild from scratch
 
 ```bash
-# 1. Create user and install Node.js
+# 1. Create system user
 useradd -m -s /bin/bash autoauction
-usermod -aG sudo autoauction
-# Install Node.js 22 via NVM...
 
-# 2. Create log directory
-mkdir -p /var/log/autoauction
-chown autoauction:autoauction /var/log/autoauction
+# 2. Create log + state directories
+mkdir -p /var/log/autoauction /var/lib/autoauction
+chown autoauction:autoauction /var/log/autoauction /var/lib/autoauction
 
-# 3. Copy systemd configs
+# 3. Install systemd units
 sudo cp systemd/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable autoauction logdy
+sudo systemctl enable autoauction autoauction-tg-poller logdy
 
-# 4. Copy logrotate config
+# 4. Log rotation
 sudo cp systemd/logrotate.conf /etc/logrotate.d/autoauction
 
-# 5. Setup nginx
+# 5. nginx
 sudo cp nginx/autoauction.conf /etc/nginx/sites-available/
 sudo ln -s /etc/nginx/sites-available/autoauction /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 
-# 6. Get SSL certificate
+# 6. SSL
 sudo certbot --nginx -d svoauto.ru
 
-# 7. Create /etc/logdy.env with password
+# 7. Logdy password
+echo 'LOGDY_PASS=yourpassword' | sudo tee /etc/logdy.env
 sudo chmod 600 /etc/logdy.env
 
-# 8. Deploy app (via GitHub Actions or manually)
-# 9. Create .env file on server with secrets
+# 8. App secrets
+# Create /home/autoauction/app/.env with all secrets
+
+# 9. First deploy — push to main branch
 ```
 
-**Secrets that remain manual** (not in repo):
+## Troubleshooting
 
-- `/home/autoauction/app/.env` — app secrets (DB, bot tokens, etc.)
-- `/etc/logdy.env` — Logdy web UI password
-- SSL certificates (managed by certbot)
+| Symptom                          | Check                                                                                                               |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Dealer sees "not registered"     | Admin must create dealer and send invite link                                                                       |
+| Dealer sees "needs invite"       | Multiple unclaimed dealers; use invite link                                                                         |
+| Buttons open wrong domain        | `NEXT_PUBLIC_APP_URL` must match production domain                                                                  |
+| Notifications not arriving       | Dealer must be claimed (`platformUserId` set); verify bot tokens                                                    |
+| Buyer sees "confirm your number" | Buyer must `/start` the customer bot and share phone                                                                |
+| Telegram updates not processed   | Check `journalctl -u autoauction-tg-poller -f`; check poller offset file                                            |
+| Log spam from one IP             | Check nginx access log (`/var/log/nginx/access.log`) for IP + UA; likely stale mini-app WebView in Telegram Desktop |
 
-**Note**: The actual running configs are still on the server. The repo copies are for reference and disaster recovery only.
+## Business Rules (Hard Limits)
+
+| Rule                                | Limit                   | Enforced in                      |
+| ----------------------------------- | ----------------------- | -------------------------------- |
+| Buyer inquiry limit                 | 2 per 15 days (rolling) | `POST /api/inquiries`            |
+| Inquiry lifetime                    | 24 hours                | `expiresAt`, checked everywhere  |
+| Max accepted offers per inquiry     | 3                       | `POST /api/transactions`         |
+| Max accepted per dealer per inquiry | 1                       | `POST /api/transactions`         |
+| Max offers per dealer per inquiry   | 5                       | `POST /api/dealer/offers`        |
+| Phone must be verified              | Yes                     | `/api/buyers/me` + frontend gate |
+| Invite token lifetime               | 7 days                  | `isInviteTokenValid()`           |
+| Rate limit (inquiry creation)       | 10/min per user         | in-memory limiter                |
+| Rate limit (webhooks)               | 60/min per userId       | in-memory limiter                |
+
+In-memory rate limiter resets on every restart — fine for single-process VPS, trap if ever scaled horizontally.
+
+## Pre-Production Checklist
+
+1. All 4 bot webhook URLs registered (MAX customer/dealer, Telegram dealer; Telegram customer via poller)
+2. `TG_WEBHOOK_SECRET` + `TG_DEALER_WEBHOOK_SECRET` match registered secrets
+3. All 4 bot tokens set in server `.env`
+4. `POSTGRES_PRISMA_URL` pointing to correct Neon DB branch
+5. `NEXT_PUBLIC_APP_URL` = `https://svoauto.ru` (prod) in GitHub Secrets
+6. `ADMIN_USERNAME` / `ADMIN_PASSWORD` set
+7. `MOCK_WEBAPP_AUTH` NOT set (or `false`) in production `.env`
+8. Prisma migrations applied (`prisma migrate deploy`)
+9. nginx config + SSL certificate active
+10. Systemd services enabled and auto-restart configured
