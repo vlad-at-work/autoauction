@@ -103,7 +103,7 @@ jobs:
           script: |
             set -e
             cd /home/autoauction/app
-            npx prisma@5 migrate deploy --schema prisma/schema.prisma
+            npx --yes prisma@5.22.0 migrate deploy --schema prisma/schema.prisma
 
       - name: Restart app
         uses: appleboy/ssh-action@v1.2.0
