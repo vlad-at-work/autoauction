@@ -75,6 +75,35 @@ jobs:
           SOURCE: "public/"
           TARGET: "/home/autoauction-staging/app/public/"
 
+      - name: Deploy Prisma schema (staging)
+        uses: easingthemes/ssh-deploy@v5.1.0
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_KEY_STAGING }}
+          REMOTE_HOST: ${{ secrets.VPS_HOST_STAGING }}
+          REMOTE_USER: autoauction-staging
+          SOURCE: "prisma/schema.prisma"
+          TARGET: "/home/autoauction-staging/app/prisma/"
+
+      - name: Deploy Prisma migrations (staging)
+        uses: easingthemes/ssh-deploy@v5.1.0
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_KEY_STAGING }}
+          REMOTE_HOST: ${{ secrets.VPS_HOST_STAGING }}
+          REMOTE_USER: autoauction-staging
+          SOURCE: "prisma/migrations/"
+          TARGET: "/home/autoauction-staging/app/prisma/migrations/"
+
+      - name: Run Prisma migrations (staging)
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST_STAGING }}
+          username: autoauction-staging
+          key: ${{ secrets.VPS_SSH_KEY_STAGING }}
+          script: |
+            set -e
+            cd /home/autoauction-staging/app
+            npx prisma migrate deploy --schema prisma/schema.prisma
+
       - name: Restart app (staging)
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -87,11 +116,11 @@ jobs:
         if: always()
         uses: appleboy/telegram-action@v0.1.1
         with:
-          to: ${{ secrets.NOTIFICATION_TG_ID_STAGING }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN_STAGING }}
+          to: ${{ secrets.NOTIFICATION_TG_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           format: markdown
           message: |
-            *${{ job.status == 'success' && '✅ STAGING' || '❌ STAGING' }}* `${{ github.event.head_commit.message }}`
+            *${{ job.status == 'success' && '✅' || '❌' }}* `[staging] ${{ github.event.head_commit.message }}`
 
             *Repo:* `${{ github.repository }}`
             *Branch:* `${{ github.ref_name }}`
@@ -99,3 +128,4 @@ jobs:
 
             *Commit:* `${{ github.sha }}`
             ${{ github.event.head_commit.timestamp }}
+

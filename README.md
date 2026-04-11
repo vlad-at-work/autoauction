@@ -38,10 +38,6 @@ All legacy docs were moved to `docs/archived_docs/`. This `README.md` is the sin
 - Offers: `/admin/offers`
 - Transactions: `/admin/transactions` (includes billing fields)
 
-**Legacy dealer dashboard (basic auth; optional)**
-
-- `/dealer/*` and `/api/offers` are protected by legacy `DEALER_CREDENTIALS` and are not used by the dealer mini-app flow.
-
 ## Data Model (Prisma)
 
 - `Buyer` (unique: `(platform, platformUserId)`)
@@ -109,10 +105,6 @@ Do not commit secrets; this list is names/meaning only.
 - `NEXT_PUBLIC_APP_URL`
   - Used for Telegram `web_app` buttons and dealer/buyer notification buttons.
   - Example: `https://autoauction.ru`
-
-**Legacy (optional)**
-
-- `DEALER_CREDENTIALS` (basic auth for `/dealer/*` and `/api/offers`)
 
 ## Core Flows
 
