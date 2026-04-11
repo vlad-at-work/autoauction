@@ -130,7 +130,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY_STAGING }}
           script: |
             sed -i '/^HAWK_TOKEN=/d' /home/autoauction-staging/app/.env
-            echo 'HAWK_TOKEN=${{ secrets.HAWK_TOKEN }}' >> /home/autoauction-staging/app/.env
+            echo 'HAWK_TOKEN=${{ secrets.HAWK_TOKEN_STAGING }}' >> /home/autoauction-staging/app/.env
 
       - name: Restart app (staging)
         uses: appleboy/ssh-action@v1.2.0
