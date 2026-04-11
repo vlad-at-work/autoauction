@@ -317,7 +317,7 @@ async function handleDealerInvite(userId: number, firstName: string, param: stri
 
   await sendMaxMessage(
     userId,
-    `Добро пожаловать, ${dealer.name || firstName}!\n\nВаш код активации: ${token}\n\nНажмите кнопку ниже, чтобы открыть приложение.`,
+    `Добро пожаловать, ${dealer.name || firstName}!\n\nНажмите кнопку ниже, чтобы активировать аккаунт и открыть панель дилера.`,
     [
       {
         type: 'open_app',
