@@ -6,6 +6,7 @@ import { Loader2, RefreshCw } from 'lucide-react';
 
 import { getWebApp, detectPlatform } from '@/app/app/webapp-ready';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getShortId, getIdColorClass, formatPrice } from '@/lib/inquiry-utils';
 
@@ -244,14 +245,16 @@ export default function DealerInquiriesPage() {
           {activeInquiries.length === 0 ? (
             <div className="flex flex-col items-center gap-4">
               <p className="text-muted-foreground text-sm py-8 text-center">Нет активных заявок.</p>
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleRefresh}
                 disabled={refreshLoading}
-                className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2"
               >
                 <RefreshCw className={`size-4 ${refreshLoading ? 'animate-spin' : ''}`} />
                 обновить список
-              </button>
+              </Button>
             </div>
           ) : (
             <>
@@ -349,14 +352,16 @@ export default function DealerInquiriesPage() {
                 })}
               </ul>
               <div className="flex justify-center pt-4">
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={handleRefresh}
                   disabled={refreshLoading}
-                  className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center gap-2"
                 >
                   <RefreshCw className={`size-4 ${refreshLoading ? 'animate-spin' : ''}`} />
                   обновить список
-                </button>
+                </Button>
               </div>
             </>
           )}
@@ -375,14 +380,16 @@ export default function DealerInquiriesPage() {
               <p className="text-muted-foreground text-sm py-8 text-center">
                 Здесь будут заявки, в которых ваше предложение было принято покупателем.
               </p>
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleRefresh}
                 disabled={refreshLoading}
-                className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2"
               >
                 <RefreshCw className={`size-4 ${refreshLoading ? 'animate-spin' : ''}`} />
                 обновить список
-              </button>
+              </Button>
             </div>
           ) : (
             <>
@@ -452,14 +459,16 @@ export default function DealerInquiriesPage() {
                 })}
               </ul>
               <div className="flex justify-center pt-4">
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={handleRefresh}
                   disabled={refreshLoading}
-                  className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center gap-2"
                 >
                   <RefreshCw className={`size-4 ${refreshLoading ? 'animate-spin' : ''}`} />
                   обновить список
-                </button>
+                </Button>
               </div>
             </>
           )}

@@ -120,9 +120,9 @@ export default function DashboardPage() {
       <div className="min-h-screen w-full">
         <TopBar disableNewInquiry={!hasInquiriesLeft} />
         <div className="mx-auto max-w-2xl px-4 py-6">
-          {/* Inquiry limits banner with refresh */}
+          {/* Inquiry limits banner */}
           {limits && (
-            <div className="mb-4 flex items-center justify-between rounded-lg border bg-zinc-50 px-5 py-4">
+            <div className="mb-4 rounded-lg border bg-zinc-50 px-5 py-4">
               <div className="text-base">
                 {limits.remaining > 0 ? (
                   <span>
@@ -144,16 +144,6 @@ export default function DashboardPage() {
                   <span className="text-muted-foreground">Заявки закончились</span>
                 )}
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={fetchInquiries}
-                disabled={loading}
-                className="flex items-center gap-2"
-              >
-                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                Обновить
-              </Button>
             </div>
           )}
 
@@ -169,6 +159,20 @@ export default function DashboardPage() {
               renderItem={(inquiry) => <InquiryCard inquiry={inquiry} />}
             />
           )}
+
+          {/* Refresh button at bottom */}
+          <div className="flex justify-center pt-6">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchInquiries}
+              disabled={loading}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              Обновить
+            </Button>
+          </div>
         </div>
       </div>
     </PageTransition>
