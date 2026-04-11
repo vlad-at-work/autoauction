@@ -1,8 +1,7 @@
 import { prisma } from '@/lib/db';
 import { logger, withLogging } from '@/lib/logger';
+import { sendTelegramMessage } from '@/lib/notifications/telegram';
 
-const TG_API_BASE = 'https://api.telegram.org';
-const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN || '';
 const MAX_API_BASE = 'https://platform-api.max.ru';
 const MAX_BOT_TOKEN = process.env.MAX_BOT_TOKEN || '';
 
@@ -15,17 +14,9 @@ async function sendTelegram(
   chatId: string,
   text: string
 ): Promise<{ ok: boolean; error?: string }> {
-  try {
-    const res = await fetch(`${TG_API_BASE}/bot${TG_BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text }),
-    });
-    if (!res.ok) return { ok: false, error: `HTTP ${res.status}: ${await res.text()}` };
-    return { ok: true };
-  } catch (err) {
-    return { ok: false, error: String(err) };
-  }
+  // Use the proper telegram module that supports proxy via TELEGRAM_PROXY_URL
+  const result = await sendTelegramMessage(chatId, text, undefined, 'customer');
+  return { ok: result.success, error: result.error };
 }
 
 async function sendMax(userId: string, text: string): Promise<{ ok: boolean; error?: string }> {
