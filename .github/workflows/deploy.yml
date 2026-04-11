@@ -105,6 +105,16 @@ jobs:
             cd /home/autoauction/app
             npx --yes prisma@5.22.0 migrate deploy --schema prisma/schema.prisma
 
+      - name: Update HAWK_TOKEN in .env
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: autoauction
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            sed -i '/^HAWK_TOKEN=/d' /home/autoauction/app/.env
+            echo 'HAWK_TOKEN=${{ secrets.HAWK_TOKEN }}' >> /home/autoauction/app/.env
+
       - name: Restart app
         uses: appleboy/ssh-action@v1.2.0
         with:
