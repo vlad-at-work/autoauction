@@ -214,7 +214,7 @@ export default function LoggerPage() {
   const [isPaused, setIsPaused] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const logContainerRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -238,11 +238,6 @@ export default function LoggerPage() {
     }
   }, [filter]);
 
-  // Clear selection when log lines refresh
-  useEffect(() => {
-    setSelected(new Set());
-  }, [logs]);
-
   // Auto-scroll to bottom when not paused
   useEffect(() => {
     if (logContainerRef.current && !isPaused) {
@@ -261,25 +256,23 @@ export default function LoggerPage() {
     };
   }, [filter, isPaused, fetchLogs]);
 
-  const toggleSelect = useCallback((index: number) => {
+  const toggleSelect = useCallback((raw: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(index)) next.delete(index);
-      else next.add(index);
+      if (next.has(raw)) next.delete(raw);
+      else next.add(raw);
       return next;
     });
   }, []);
 
   const copySelected = () => {
-    const entries = Array.from(selected)
-      .sort((a, b) => a - b)
-      .map((i) => {
-        try {
-          return JSON.parse(logs[i]);
-        } catch {
-          return logs[i];
-        }
-      });
+    const entries = Array.from(selected).map((raw) => {
+      try {
+        return JSON.parse(raw);
+      } catch {
+        return raw;
+      }
+    });
     const payload = entries.length === 1 ? entries[0] : entries;
     navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
     setSelected(new Set());
@@ -406,8 +399,8 @@ export default function LoggerPage() {
             <LogRow
               key={index}
               raw={line}
-              selected={selected.has(index)}
-              onToggleSelect={() => toggleSelect(index)}
+              selected={selected.has(line)}
+              onToggleSelect={() => toggleSelect(line)}
               anySelected={selected.size > 0}
             />
           ))
