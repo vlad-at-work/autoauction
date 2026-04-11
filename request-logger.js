@@ -71,16 +71,19 @@ http.createServer = function patchedCreateServer(...args) {
       return;
     }
 
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const ua = req.headers['user-agent'];
+
     const onFinish = () => {
       cleanup();
       const ms = Date.now() - start;
-      log('info', { method, url, status: res.statusCode, ms }, 'request');
+      log('info', { method, url, status: res.statusCode, ms, ip, ua }, 'request');
     };
 
     const onClose = () => {
       cleanup();
       const ms = Date.now() - start;
-      log('warn', { method, url, ms }, 'request aborted');
+      log('warn', { method, url, ms, ip, ua }, 'request aborted');
     };
 
     function cleanup() {
