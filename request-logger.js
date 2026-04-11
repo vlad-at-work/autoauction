@@ -44,13 +44,10 @@ function log(level, obj, msg) {
 
 // --- monkeypatch http.createServer ---
 
-// Endpoints to skip logging (too noisy or internal)
+// Skip logging for internal/noisy endpoints
 const SKIP_URLS = [
-  '/api/admin/logs',      // Logger polling itself
+  '/api/admin/logs',      // Logger polling itself - prevents recursion
   '/api/health',          // Health checks
-  '/_next/',              // Next.js static assets
-  '/favicon.ico',
-  '/icon.png',
 ];
 
 function shouldSkipLog(url) {
@@ -69,7 +66,7 @@ http.createServer = function patchedCreateServer(...args) {
     const method = req.method;
     const url = req.url;
 
-    // Skip noisy endpoints
+    // Skip noisy endpoints (only internal/logger endpoints)
     if (shouldSkipLog(url)) {
       return;
     }

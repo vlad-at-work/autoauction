@@ -1,6 +1,6 @@
 'use client';
 
-import { Loader2 } from 'lucide-react';
+import { Loader2, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -8,7 +8,7 @@ import { AnimatedList } from '@/components/animated-list';
 import { InquiryCard } from '@/components/inquiry-card';
 import { PageTransition } from '@/components/page-transition';
 import { TopBar } from '@/components/ui/top-bar';
-import { usePolling } from '@/hooks/use-polling';
+import { Button } from '@/components/ui/button';
 import { getMyInquiries, type Inquiry, type InquiryLimits } from '@/lib/api/inquiries';
 import { pluralize } from '@/lib/utils';
 import { detectPlatform, getWebApp } from '@/app/app/webapp-ready';
@@ -53,19 +53,29 @@ export default function DashboardPage() {
     };
   }, [router]);
 
-  // Fetch inquiries with polling
-  const fetcher = useCallback(async (): Promise<DashboardData> => {
-    if (!platformUserId || !platform || !initData) {
-      return { inquiries: [], limits: null };
+  // Fetch inquiries manually (no auto-polling)
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchInquiries = useCallback(async () => {
+    if (!platformUserId || !platform || !initData) return;
+
+    setLoading(true);
+    try {
+      const result = await getMyInquiries(initData, platform);
+      setData(result);
+    } catch (err) {
+      console.error('Failed to fetch inquiries:', err);
+    } finally {
+      setLoading(false);
     }
-    return getMyInquiries(initData, platform);
   }, [initData, platform, platformUserId]);
 
-  const { data, loading } = usePolling<DashboardData>({
-    fetcher,
-    interval: 12000,
-    enabled: ready && !!platformUserId && !!platform && !!initData,
-  });
+  useEffect(() => {
+    if (ready && platformUserId && platform && initData) {
+      fetchInquiries();
+    }
+  }, [ready, platformUserId, platform, initData, fetchInquiries]);
 
   const inquiries = data?.inquiries ?? [];
   const limits = data?.limits ?? null;
@@ -110,7 +120,7 @@ export default function DashboardPage() {
       <div className="min-h-screen w-full">
         <TopBar disableNewInquiry={!hasInquiriesLeft} />
         <div className="mx-auto max-w-2xl px-4 py-6">
-          {/* Inquiry limits banner */}
+          {/* Inquiry limits banner with refresh */}
           {limits && (
             <div className="mb-4 flex items-center justify-between rounded-lg border bg-zinc-50 px-5 py-4">
               <div className="text-base">
@@ -134,6 +144,16 @@ export default function DashboardPage() {
                   <span className="text-muted-foreground">Заявки закончились</span>
                 )}
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchInquiries}
+                disabled={loading}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                Обновить
+              </Button>
             </div>
           )}
 
