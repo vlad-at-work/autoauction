@@ -53,10 +53,6 @@ mock.module('@/lib/db', () => ({
   },
 }));
 
-mock.module('@/lib/auth/dealer-invite', () => ({
-  isInviteTokenValid: (_expiresAt: unknown) => true,
-}));
-
 mock.module('@/lib/hawk', () => ({
   captureError: () => {},
 }));
