@@ -14,10 +14,6 @@ mock.module('@/lib/db', () => ({
   prisma: {},
 }));
 
-mock.module('@/lib/auth/dealer-invite', () => ({
-  isInviteTokenValid: () => true,
-}));
-
 import { POST } from '@/app/api/webhooks/max/route';
 
 function makeRequest(body: Record<string, unknown>, bot = 'customer') {
