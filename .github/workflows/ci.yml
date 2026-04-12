@@ -37,7 +37,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nextjs-
 
-      - name: Run tests
+      - name: Run unit + route tests
         run: bun run test
 
       - name: Build
@@ -48,3 +48,33 @@ jobs:
           NEXT_PUBLIC_MAX_BOT_NAME_DEALER: placeholder
           NEXT_PUBLIC_TELEGRAM_BOT_NAME: placeholder
           NEXT_PUBLIC_SENTRY_DSN: placeholder
+
+  integration:
+    name: Integration tests (Neon DB)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Cache node_modules
+        id: cache-nm
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('bun.lock', 'prisma/schema.prisma') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        if: steps.cache-nm.outputs.cache-hit != 'true'
+        run: bun install
+
+      - name: Generate Prisma client
+        if: steps.cache-nm.outputs.cache-hit != 'true'
+        run: bunx prisma generate
+
+      - name: Run integration tests
+        run: bun run test:integration
+        env:
+          POSTGRES_PRISMA_URL: ${{ secrets.NEON_TEST_DATABASE_URL }}
