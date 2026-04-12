@@ -7,10 +7,6 @@ import { prisma } from '@/lib/db';
 
 export async function cleanupTestData(testPrefix: string) {
   // Delete in reverse order of dependencies
-  await prisma.passwordResetCode.deleteMany({
-    where: { dealer: { username: { startsWith: testPrefix } } },
-  });
-
   await prisma.transaction.deleteMany({
     where: { dealer: { username: { startsWith: testPrefix } } },
   });
